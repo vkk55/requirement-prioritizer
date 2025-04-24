@@ -1,0 +1,1 @@
+export interface Requirement {id: string;title: string;jira_epic_id?: string;jira_field_value?: string;created_at: string;weighted_score?: number;rank?: number;}export interface Criteria {id: string;name: string;weight: number;scale_min: number;scale_max: number;}export interface RequirementScore {id: string;requirement_id: string;criteria_id: string;score: number;}

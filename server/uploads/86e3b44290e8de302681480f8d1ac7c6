@@ -1,0 +1,667 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<title>Viseven JIRA</title>
+<style type="text/css">
+table {
+    mso-displayed-decimal-separator:"\.";
+    mso-displayed-thousand-separator:"\,";
+}
+body
+{
+    margin: 0px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    color:black;
+}
+
+</style>
+<META HTTP-EQUIV="Content-Type" Content="application/vnd.ms-excel; charset=UTF-8">
+<!-- JRA-7598 - ensure fields (e.g. description) occupy only one cell - even fields containing newlines. -->
+<!--
+Vertical align all cells to the top, in order to align all issue rows of issuetable to the top,
+since Excel does not use or save the css files it is hardcoded here.
+-->
+<style>
+@page
+{
+mso-page-orientation:landscape;
+margin:.25in .25in .5in .25in;
+mso-header-margin:.5in;
+mso-footer-margin:.25in;
+mso-footer-data:"&R&P of &N";
+mso-horizontal-page-align:center;
+mso-vertical-page-align:center;
+}
+
+td.issuekey,
+td.issuetype,
+td.status {
+    mso-style-parent: "";
+    mso-number-format: \@;
+    text-align: left;
+}
+br
+{
+    mso-data-placement:same-cell;
+}
+
+td
+{
+    vertical-align: top;
+}
+</style>
+
+<!--[if gte mso 9]><xml>
+<x:ExcelWorkbook>
+<x:ExcelWorksheets>
+<x:ExcelWorksheet>
+<x:Name>general_report</x:Name>
+<x:WorksheetOptions>
+<x:Print>
+<x:ValidPrinterInfo/>
+</x:Print>
+</x:WorksheetOptions>
+</x:ExcelWorksheet>
+</x:ExcelWorksheets>
+</x:ExcelWorkbook>
+</xml><![endif]-->
+</head>
+<body>
+
+<table border="1">
+    <tr bgcolor="#082480" height="60">
+        <td colspan="13">
+            <img src="https://jira.viseven.com/jira-logo-scaled.png" width="210" height="60" border="0" alt="Viseven JIRA">
+        </td>
+    </tr>
+    <tr>
+        <td colspan="13">
+            <a href="https://jira.viseven.com/issues/?jql=project+%3D+EWP+AND+resolution+%3D+Unresolved+AND+labels+%3D+November2025Candidate+ORDER+BY+priority+DESC%2C+updated+DESC">Viseven JIRA</a>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="13">
+            Displaying <strong>18</strong> issues at <strong>24/04/25 22:19</strong>.
+        </td>
+    </tr>
+</table>
+
+
+
+
+                            <issuetable-web-component data-content="issues">
+                <table id="issuetable"  border="1" cellpadding="3" cellspacing="1" width="100%">
+                        <thead>
+        <tr class="rowHeader">
+            
+                                                            <th scope="col" class="colHeaderLink headerrow-issuekey" data-id="issuekey">
+                            Key
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-summary" data-id="summary">
+                            Summary
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-priority" data-id="priority">
+                            Priority
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-status" data-id="status">
+                            Status
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-assignee" data-id="assignee">
+                            Assignee
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-created" data-id="created">
+                            Created
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-updated" data-id="updated">
+                            Updated
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-timespent" data-id="timespent">
+                            Time Spent
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-labels" data-id="labels">
+                            Labels
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-customfield_22314" data-id="customfield_22314">
+                            Rough Estimate
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-customfield_13500" data-id="customfield_13500">
+                            Related Customer(s)
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-customfield_26402" data-id="customfield_26402">
+                            Prioritization
+                                                    </th>
+                                                
+                                                            <th scope="col" class="colHeaderLink headerrow-customfield_22313" data-id="customfield_22313">
+                            Weight
+                                                    </th>
+                                                                    </tr>
+    </thead>
+    <tbody>
+                    
+
+                <tr id="issuerow2680959" rel="2680959" data-issuekey="EWP-106237" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-106237" href="https://jira.viseven.com/browse/EWP-106237">EWP-106237</a>
+</td>
+                                            <td class="summary"><p>
+                [Iteration 1][BETA] Image Translator in eWizard Editor
+    </p>
+</td>
+                                            <td class="priority">           Critical
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Diana Zvarych
+    </td>
+                                            <td class="created"> 19/04/24 13:38 </td>
+                                            <td class="updated"> 22/04/25 10:37 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    CustomerRetention, July2025, July2025Eliminated, March2025, MovesTheNeedle, November2025, November2025Candidate, Q2-2024, ewp-roadmap-task</td>
+                                            <td class="customfield_22314">    560
+</td>
+                                            <td class="customfield_13500">    Abbvie, Bayer, Ipsen, Janssen, Merck, Novartis</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    10
+</td>
+                    </tr>
+
+
+                <tr id="issuerow2986977" rel="2986977" data-issuekey="EWP-121071" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-121071" href="https://jira.viseven.com/browse/EWP-121071">EWP-121071</a>
+</td>
+                                            <td class="summary"><p>
+                WMT: Manage content actions based on the status of the item and its matadata
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Estimation&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;jira-issue-status-tooltip-desc&quot;&gt;Project Management Status (Step 06)&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Estimation&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;jira-issue-status-tooltip-desc&quot;&gt;Project Management Status (Step 06)&lt;/span&gt;" tabindex="0">Estimation</span>    </td>
+                                            <td class="assignee">            Olena Pfau
+    </td>
+                                            <td class="created"> 30/10/24 09:28 </td>
+                                            <td class="updated"> 24/04/25 10:29 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    July2025, July2025Eliminated, MovesTheNeedle, November2025, November2025Candidate, ewp-roadmap-task</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    AbbVie, Ipsen</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313"></td>
+                    </tr>
+
+
+                <tr id="issuerow2986989" rel="2986989" data-issuekey="EWP-121081" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-121081" href="https://jira.viseven.com/browse/EWP-121081">EWP-121081</a>
+</td>
+                                            <td class="summary"><p>
+                WMT: Rules for asset status transitioning
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Estimation&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;jira-issue-status-tooltip-desc&quot;&gt;Project Management Status (Step 06)&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Estimation&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;jira-issue-status-tooltip-desc&quot;&gt;Project Management Status (Step 06)&lt;/span&gt;" tabindex="0">Estimation</span>    </td>
+                                            <td class="assignee">            Olena Pfau
+    </td>
+                                            <td class="created"> 30/10/24 09:28 </td>
+                                            <td class="updated"> 24/04/25 10:28 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    July2025, July2025Eliminated, MovesTheNeedle, November2025, November2025Candidate, ewp-roadmap-task</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    AbbVie</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313"></td>
+                    </tr>
+
+
+                <tr id="issuerow3209636" rel="3209636" data-issuekey="EWP-132608" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-132608" href="https://jira.viseven.com/browse/EWP-132608">EWP-132608</a>
+</td>
+                                            <td class="summary"><p>
+                [Planner] Delete campaign templates
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Yurii Protsiuk
+    </td>
+                                            <td class="created"> 18/04/25 12:29 </td>
+                                            <td class="updated"> 23/04/25 15:59 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    Ipsen</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    10
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3173312" rel="3173312" data-issuekey="EWP-130525" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-130525" href="https://jira.viseven.com/browse/EWP-130525">EWP-130525</a>
+</td>
+                                            <td class="summary"><p>
+                Rewrite eWizard CLI to send logs to Graylog over API getaway
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-default jira-issue-status-lozenge-new aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" tabindex="0">Backlog</span>    </td>
+                                            <td class="assignee">            Iryna Novytska
+    </td>
+                                            <td class="created"> 21/03/25 14:38 </td>
+                                            <td class="updated"> 23/04/25 15:23 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    November2025, November2025Candidate, TechDebt</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313"></td>
+                    </tr>
+
+
+                <tr id="issuerow3202958" rel="3202958" data-issuekey="EWP-132336" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-132336" href="https://jira.viseven.com/browse/EWP-132336">EWP-132336</a>
+</td>
+                                            <td class="summary"><p>
+                [2nd iteration] eWizard.js upgrade to v6
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-default jira-issue-status-lozenge-new aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" tabindex="0">Backlog</span>    </td>
+                                            <td class="assignee">            Iryna Novytska
+    </td>
+                                            <td class="created"> 14/04/25 16:29 </td>
+                                            <td class="updated"> 23/04/25 15:11 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    November2025, November2025Candidate, TechDebt</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313"></td>
+                    </tr>
+
+
+                <tr id="issuerow2688096" rel="2688096" data-issuekey="EWP-106491" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-106491" href="https://jira.viseven.com/browse/EWP-106491">EWP-106491</a>
+</td>
+                                            <td class="summary"><p>
+                [2nd iteration] Support ewizard.js 6 content in editor
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Development&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Development&lt;/span&gt;" tabindex="0">Development</span>    </td>
+                                            <td class="assignee">            Liudmyla Globa
+    </td>
+                                            <td class="created"> 24/04/24 11:15 </td>
+                                            <td class="updated"> 23/04/25 15:11 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    November2025, November2025Candidate, Q2-2024, Q3-2024, ewp-roadmap-task</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    AbbVie, Bayer, Ipsen</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313"></td>
+                    </tr>
+
+
+                <tr id="issuerow2423047" rel="2423047" data-issuekey="EWP-95832" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-95832" href="https://jira.viseven.com/browse/EWP-95832">EWP-95832</a>
+</td>
+                                            <td class="summary"><p>
+                Smart Update for Master Template Update
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Diana Zvarych
+    </td>
+                                            <td class="created"> 14/11/23 15:30 </td>
+                                            <td class="updated"> 22/04/25 10:37 </td>
+                                            <td class="timespent">4500</td>
+                                            <td class="labels">    November2025, November2025Candidate, Q3-2024, RM2024</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    10
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3140511" rel="3140511" data-issuekey="EWP-128951" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-128951" href="https://jira.viseven.com/browse/EWP-128951">EWP-128951</a>
+</td>
+                                            <td class="summary"><p>
+                [Olainfarm] My Tasks Dashboard in NaviGate
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Anna Malivska
+    </td>
+                                            <td class="created"> 27/02/25 12:14 </td>
+                                            <td class="updated"> 18/04/25 17:00 </td>
+                                            <td class="timespent">1800</td>
+                                            <td class="labels">    NaviGate, November2025, November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    Olainfarm</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    7
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3164434" rel="3164434" data-issuekey="EWP-130040" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-130040" href="https://jira.viseven.com/browse/EWP-130040">EWP-130040</a>
+</td>
+                                            <td class="summary"><p>
+                [Planner] Support for Portfolio presentations - Merge existing
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Yurii Protsiuk
+    </td>
+                                            <td class="created"> 17/03/25 14:21 </td>
+                                            <td class="updated"> 18/04/25 15:44 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    CustomerRetention, November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    10
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3119250" rel="3119250" data-issuekey="EWP-127904" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-127904" href="https://jira.viseven.com/browse/EWP-127904">EWP-127904</a>
+</td>
+                                            <td class="summary"><p>
+                [Planner] Support for Portfolio presentations - Create New
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Pavlo Voitko
+    </td>
+                                            <td class="created"> 11/02/25 09:30 </td>
+                                            <td class="updated"> 18/04/25 15:44 </td>
+                                            <td class="timespent">5400</td>
+                                            <td class="labels">    CustomerRetention, November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    10
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3079071" rel="3079071" data-issuekey="EWP-125877" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-125877" href="https://jira.viseven.com/browse/EWP-125877">EWP-125877</a>
+</td>
+                                            <td class="summary"><p>
+                [NAVIGATE] Enable &quot;Update existing&quot; for content items after &quot;Copy to my library&quot;
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Estimation&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;jira-issue-status-tooltip-desc&quot;&gt;Project Management Status (Step 06)&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Estimation&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;jira-issue-status-tooltip-desc&quot;&gt;Project Management Status (Step 06)&lt;/span&gt;" tabindex="0">Estimation</span>    </td>
+                                            <td class="assignee">            Anna Malivska
+    </td>
+                                            <td class="created"> 11/01/25 19:06 </td>
+                                            <td class="updated"> 18/04/25 15:25 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    July2025, July2025Eliminated, November2025, November2025Candidate, TechDebt</td>
+                                            <td class="customfield_22314">    117
+</td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    10
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3207458" rel="3207458" data-issuekey="EWP-132491" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-132491" href="https://jira.viseven.com/browse/EWP-132491">EWP-132491</a>
+</td>
+                                            <td class="summary"><p>
+                [Modular] - Show tree structure in Module Editor
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-default jira-issue-status-lozenge-new aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" tabindex="0">Backlog</span>    </td>
+                                            <td class="assignee">            Anna Malivska
+    </td>
+                                            <td class="created"> 17/04/25 10:42 </td>
+                                            <td class="updated"> 18/04/25 15:19 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    November2025, November2025Candidate, TechDebt</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    9
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3162580" rel="3162580" data-issuekey="EWP-129928" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-129928" href="https://jira.viseven.com/browse/EWP-129928">EWP-129928</a>
+</td>
+                                            <td class="summary"><p>
+                 [Modular] Iteration 2 - Show &#39;Recommended from Planner&#39; modules in DA popup
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-default jira-issue-status-lozenge-new aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Backlog&lt;/span&gt;" tabindex="0">Backlog</span>    </td>
+                                            <td class="assignee">            Nadiia Andrushchenko
+    </td>
+                                            <td class="created"> 14/03/25 14:09 </td>
+                                            <td class="updated"> 18/04/25 15:14 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    November2025, November2025Candidate, Roadmap</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    </td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    5
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3196820" rel="3196820" data-issuekey="EWP-131829" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-131829" href="https://jira.viseven.com/browse/EWP-131829">EWP-131829</a>
+</td>
+                                            <td class="summary"><p>
+                [Planner][AI][NaviGate] Global/Local Campaign Template Type Limitation during Save
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Yurii Protsiuk
+    </td>
+                                            <td class="created"> 09/04/25 11:34 </td>
+                                            <td class="updated"> 18/04/25 11:02 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    CustomerRetention, November2025, November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    Ipsen</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    10
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3177801" rel="3177801" data-issuekey="EWP-130798" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-130798" href="https://jira.viseven.com/browse/EWP-130798">EWP-130798</a>
+</td>
+                                            <td class="summary"><p>
+                [Planner][AI] Build dependency from asset to milestone
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Yurii Protsiuk
+    </td>
+                                            <td class="created"> 26/03/25 10:17 </td>
+                                            <td class="updated"> 16/04/25 19:34 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    CustomerRetention, November2025, November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    ipsen</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    9
+</td>
+                    </tr>
+
+
+                <tr id="issuerow2904496" rel="2904496" data-issuekey="EWP-116037" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-116037" href="https://jira.viseven.com/browse/EWP-116037">EWP-116037</a>
+</td>
+                                            <td class="summary"><p>
+                [Planner] Show months and days on the Gantt chart
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">    <em>Unassigned</em>
+</td>
+                                            <td class="created"> 07/09/24 17:18 </td>
+                                            <td class="updated"> 15/04/25 09:32 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    CustomerRetention, November2025, November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    All_clients</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    9
+</td>
+                    </tr>
+
+
+                <tr id="issuerow3067212" rel="3067212" data-issuekey="EWP-125063" class="issuerow">
+                                            <td class="issuekey">
+
+    <a class="issue-link" data-issue-key="EWP-125063" href="https://jira.viseven.com/browse/EWP-125063">EWP-125063</a>
+</td>
+                                            <td class="summary"><p>
+                [Planner] Improve navigation for Collaborators when working with email notifications
+    </p>
+</td>
+                                            <td class="priority">           Major
+    </td>
+                                            <td class="status">
+                <span class=" jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-inprogress jira-issue-status-lozenge-indeterminate aui-lozenge-subtle jira-issue-status-lozenge-max-width-medium" data-tooltip="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" title="&lt;span class=&quot;jira-issue-status-tooltip-title&quot;&gt;Analysis&lt;/span&gt;" tabindex="0">Analysis</span>    </td>
+                                            <td class="assignee">            Yurii Protsiuk
+    </td>
+                                            <td class="created"> 02/01/25 12:08 </td>
+                                            <td class="updated"> 15/04/25 09:30 </td>
+                                            <td class="timespent"></td>
+                                            <td class="labels">    CustomerRetention, November2025, November2025Candidate</td>
+                                            <td class="customfield_22314"></td>
+                                            <td class="customfield_13500">    Ipsen</td>
+                                            <td class="customfield_26402">
+</td>
+                                            <td class="customfield_22313">    8
+</td>
+                    </tr>
+                </tbody>
+    </table>
+    </issuetable-web-component>
+    <div class="end-of-stable-message"></div>
+            <table border="1" >
+<tr>
+    <td bgcolor="#dddddd" colspan="13"><font size="1">
+        Generated at Thu Apr 24 22:19:24 EEST 2025 by Krishna Venugopal using Jira 9.12.12#9120012-sha1:9afad32836b39ea19f5a357a6aae8106be665a8f.
+    </font></td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -6,11 +6,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY server/package*.json ./server/
 
 # Install dependencies
 RUN npm install --legacy-peer-deps
-RUN cd server && npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -29,4 +27,4 @@ ENV PORT=3001
 EXPOSE 3001
 
 # Start the server
-CMD ["node", "server/index.js"]
+CMD ["npm", "start"]

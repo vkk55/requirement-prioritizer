@@ -1,14 +1,16 @@
-# Use Node.js LTS version
+# Build stage
 FROM node:20-slim as builder
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files for both client and server
 COPY package*.json ./
+COPY server/package*.json ./server/
 
-# Install dependencies
+# Install dependencies for both client and server
 RUN npm install
+RUN cd server && npm install
 
 # Copy source code
 COPY . .
@@ -21,13 +23,22 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install production dependencies
 COPY package*.json ./
+COPY server/package*.json ./server/
+RUN npm install --production
+RUN cd server && npm install --production
+
+# Copy built files and server code
 COPY --from=builder /app/dist ./dist
 COPY server ./server
 
-# Install production dependencies only
-RUN npm install --production
+# Create uploads directory
+RUN mkdir -p server/uploads
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3001
 
 # Expose port
 EXPOSE 3001

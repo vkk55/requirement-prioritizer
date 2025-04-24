@@ -9,8 +9,8 @@ COPY package*.json ./
 COPY server/package*.json ./server/
 
 # Install dependencies for both client and server
-RUN npm install
-RUN cd server && npm install
+RUN npm install --legacy-peer-deps
+RUN cd server && npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -26,8 +26,8 @@ WORKDIR /app
 # Copy package files and install production dependencies
 COPY package*.json ./
 COPY server/package*.json ./server/
-RUN npm install --production
-RUN cd server && npm install --production
+RUN npm install --production --legacy-peer-deps
+RUN cd server && npm install --production --legacy-peer-deps
 
 # Copy built files and server code
 COPY --from=builder /app/dist ./dist

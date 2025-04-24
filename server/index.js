@@ -8,7 +8,14 @@ const fs = require('fs');
 const helmet = require('helmet');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const upload = multer({ dest: uploadsDir });
 
 // Security headers
 app.use(helmet());
@@ -726,11 +733,6 @@ app.post('/api/requirements/fix-ranks', (req, res) => {
     });
   }
 });
-
-// Create uploads directory if it doesn't exist
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
-}
 
 // Serve React app for any unknown routes in production
 if (process.env.NODE_ENV === 'production') {

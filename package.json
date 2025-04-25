@@ -15,7 +15,9 @@
   "dependencies": {
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.17.1",
     "@mui/material": "^5.15.6",
+    "@vitejs/plugin-react": "^4.2.1",
     "axios": "^1.6.7",
     "chart.js": "^4.4.1",
     "cors": "^2.8.5",
@@ -25,9 +27,8 @@
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
-    "xlsx": "^0.18.5",
     "vite": "^5.0.8",
-    "@vitejs/plugin-react": "^4.2.1"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

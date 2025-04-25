@@ -59,6 +59,31 @@ if (process.env.NODE_ENV === 'production') {
 let requirements = new Map();
 let criteria = new Map();
 
+// === File-based persistence setup ===
+const dataDir = path.join(__dirname, 'data');
+const requirementsFile = path.join(dataDir, 'requirements.json');
+const criteriaFile = path.join(dataDir, 'criteria.json');
+
+function saveData() {
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(requirementsFile, JSON.stringify(Array.from(requirements.entries()), null, 2));
+  fs.writeFileSync(criteriaFile, JSON.stringify(Array.from(criteria.entries()), null, 2));
+}
+
+function loadData() {
+  if (fs.existsSync(requirementsFile)) {
+    const reqArr = JSON.parse(fs.readFileSync(requirementsFile));
+    requirements = new Map(reqArr);
+  }
+  if (fs.existsSync(criteriaFile)) {
+    const critArr = JSON.parse(fs.readFileSync(criteriaFile));
+    criteria = new Map(critArr);
+  }
+}
+
+// Load data on startup
+loadData();
+
 // Helper function to normalize column names
 function normalizeColumnNames(data) {
   if (data.length === 0) return [];
@@ -477,11 +502,11 @@ app.post('/api/requirements/import', upload.single('file'), (req, res) => {
         relatedCustomers: row.relatedCustomers || '',
         prioritization: row.prioritization || 0,
         weight: row.weight || 0,
-        // Additional fields for scoring and ranking
         score: requirements.has(row.key) ? requirements.get(row.key).score : 0,
         criteria: requirements.has(row.key) ? requirements.get(row.key).criteria : {},
         lastScored: requirements.has(row.key) ? requirements.get(row.key).lastScored : null,
-        rank: requirements.has(row.key) ? requirements.get(row.key).rank : nextRank++
+        rank: requirements.has(row.key) ? requirements.get(row.key).rank : nextRank++,
+        comments: requirements.has(row.key) ? requirements.get(row.key).comments || '' : ''
       };
 
       if (requirements.has(row.key)) {
@@ -495,6 +520,8 @@ app.post('/api/requirements/import', upload.single('file'), (req, res) => {
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
+
+    saveData();
 
     res.json({
       success: true,
@@ -534,6 +561,8 @@ app.post('/api/requirements/:key/score', (req, res) => {
   requirement.criteria = criteria;
   requirement.lastScored = new Date().toISOString();
   requirements.set(key, requirement);
+
+  saveData();
 
   res.json({
     success: true,
@@ -690,6 +719,8 @@ app.post('/api/requirements/:key/rank', (req, res) => {
     requirement.rank = rank;
     requirements.set(key, requirement);
 
+    saveData();
+
     res.json({
       success: true,
       data: requirement
@@ -732,6 +763,20 @@ app.post('/api/requirements/fix-ranks', (req, res) => {
       message: error.message
     });
   }
+});
+
+// === New endpoint to update comments ===
+app.post('/api/requirements/:key/comments', (req, res) => {
+  const { key } = req.params;
+  const { comments } = req.body;
+  if (!requirements.has(key)) {
+    return res.status(404).json({ error: 'Not found', message: `Requirement with key ${key} not found` });
+  }
+  const requirement = requirements.get(key);
+  requirement.comments = comments || '';
+  requirements.set(key, requirement);
+  saveData();
+  res.json({ success: true, data: requirement });
 });
 
 // Serve React app for any unknown routes in production

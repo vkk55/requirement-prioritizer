@@ -48,12 +48,19 @@ interface Criterion {
   scale_max: number;
 }
 
+// Add comments to Requirement interface
+type RequirementWithComments = Requirement & { comments?: string };
+
 export const StackRank = () => {
-  const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [requirements, setRequirements] = useState<RequirementWithComments[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
-  const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
+  const [selectedRequirement, setSelectedRequirement] = useState<RequirementWithComments | null>(null);
+  const [sortBy, setSortBy] = useState<'score' | 'rank'>('score');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
+  const [savingComment, setSavingComment] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRequirements();
@@ -64,11 +71,7 @@ export const StackRank = () => {
     try {
       const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria');
       const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to fetch criteria');
-      }
-      
+      if (!result.success) throw new Error(result.message || 'Failed to fetch criteria');
       setCriteria(result.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch criteria');
@@ -80,20 +83,10 @@ export const StackRank = () => {
     try {
       const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements');
       const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to fetch requirements');
-      }
-      
-      // Sort requirements by score (descending) and rank
-      const sortedRequirements = (result.data || []).sort((a: Requirement, b: Requirement) => {
-        if (a.rank === b.rank) {
-          return b.score - a.score;
-        }
-        return a.rank - b.rank;
-      });
-
-      setRequirements(sortedRequirements);
+      if (!result.success) throw new Error(result.message || 'Failed to fetch requirements');
+      let reqs = result.data || [];
+      reqs = reqs.map((r: any) => ({ ...r, comments: r.comments || '' }));
+      setRequirements(reqs);
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch requirements');
@@ -101,35 +94,73 @@ export const StackRank = () => {
     }
   };
 
+  // Sorting logic
+  const sortedRequirements = [...requirements].sort((a, b) => {
+    if (sortBy === 'score') {
+      return sortOrder === 'desc' ? b.score - a.score : a.score - b.score;
+    } else {
+      return sortOrder === 'desc' ? b.rank - a.rank : a.rank - b.rank;
+    }
+  });
+
+  const handleSort = (field: 'score' | 'rank') => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder(field === 'score' ? 'desc' : 'asc');
+    }
+  };
+
   const handleRankChange = async (key: string, newRank: string) => {
     try {
-      // Validate input
       const rankValue = parseInt(newRank);
       if (isNaN(rankValue) || rankValue < 0 || !Number.isInteger(rankValue)) {
         setError('Rank must be a non-negative whole number');
         return;
       }
-
       const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/rank`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rank: rankValue }),
       });
-
       const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to update rank');
-      }
-
-      await fetchRequirements(); // Refresh the list to get the sorted order
+      if (!result.success) throw new Error(result.message || 'Failed to update rank');
+      // Do not auto-sort after rank update
+      fetchRequirements();
       setError('');
       setSuccess('Rank updated successfully');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rank');
       console.error('Error updating rank:', err);
+    }
+  };
+
+  const handleCommentChange = (key: string, value: string) => {
+    setEditingComment((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleCommentSave = async (key: string) => {
+    setSavingComment(key);
+    try {
+      const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comments: editingComment[key] || '' }),
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to save comment');
+      setRequirements((prev) => prev.map(r => r.key === key ? { ...r, comments: editingComment[key] } : r));
+      setEditingComment((prev) => {
+        const updated = { ...prev };
+        updated[key] = '';
+        return updated;
+      });
+      setSuccess('Comment saved!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save comment');
+    } finally {
+      setSavingComment(null);
     }
   };
 
@@ -242,13 +273,14 @@ export const StackRank = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Rank</TableCell>
+              <TableCell onClick={() => handleSort('rank')} style={{ cursor: 'pointer' }}>Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
               <TableCell>Requirement</TableCell>
-              <TableCell align="right">Score</TableCell>
+              <TableCell align="right" onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
+              <TableCell>Comments</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {requirements.map((requirement) => (
+            {sortedRequirements.map((requirement) => (
               <TableRow key={requirement.key}>
                 <TableCell>
                   <TextField
@@ -282,6 +314,26 @@ export const StackRank = () => {
                 </TableCell>
                 <TableCell align="right">
                   {requirement.score?.toFixed(2) || 0}
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
+                    onChange={(e) => handleCommentChange(requirement.key, e.target.value)}
+                    size="small"
+                    multiline
+                    minRows={1}
+                    maxRows={4}
+                    sx={{ width: 180 }}
+                  />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ ml: 1, mt: 1 }}
+                    disabled={savingComment === requirement.key}
+                    onClick={() => handleCommentSave(requirement.key)}
+                  >
+                    Save
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -329,6 +381,15 @@ export const StackRank = () => {
               <ListItem>
                 <ListItemText primary="Related Customers" secondary={selectedRequirement.relatedCustomers || 'None'} />
               </ListItem>
+              {/* Show weights for each criterion */}
+              {criteria.length > 0 && (
+                <ListItem>
+                  <ListItemText
+                    primary="Criteria Weights"
+                    secondary={criteria.map(c => `${c.name}: ${c.weight}`).join(', ')}
+                  />
+                </ListItem>
+              )}
             </List>
           </DialogContent>
           <DialogActions>

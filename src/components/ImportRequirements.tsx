@@ -133,16 +133,16 @@ const ImportRequirements: React.FC = () => {
       formData.append('file', file);
       formData.append('mapping', JSON.stringify(selectedColumns));
 
-      const response = await fetch('http://localhost:3001/api/requirements/preview', {
+      const previewResponse = await fetch('https://requirement-prioritizer.onrender.com/api/requirements/preview', {
         method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!previewResponse.ok) {
+        throw new Error(`HTTP error! status: ${previewResponse.status}`);
       }
 
-      const data = await response.json();
+      const data = await previewResponse.json();
       if (data.error) {
         throw new Error(data.message || 'Preview failed');
       }
@@ -168,7 +168,7 @@ const ImportRequirements: React.FC = () => {
       formData.append('file', file);
       formData.append('mapping', JSON.stringify(selectedColumns));
 
-      const response = await fetch('http://localhost:3001/api/requirements/import', {
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements/import', {
         method: 'POST',
         body: formData,
       });

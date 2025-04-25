@@ -62,7 +62,7 @@ export const StackRank = () => {
 
   const fetchCriteria = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/criteria');
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria');
       const result = await response.json();
       
       if (!result.success) {
@@ -78,7 +78,7 @@ export const StackRank = () => {
 
   const fetchRequirements = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/requirements');
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements');
       const result = await response.json();
       
       if (!result.success) {
@@ -110,7 +110,7 @@ export const StackRank = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/api/requirements/${key}/rank`, {
+      const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/rank`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export const StackRank = () => {
 
   const handleFixRanks = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/requirements/fix-ranks', {
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements/fix-ranks', {
         method: 'POST',
       });
 

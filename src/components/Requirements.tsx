@@ -59,7 +59,7 @@ export const Requirements = () => {
 
   const fetchCriteria = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/criteria');
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria');
       const result = await response.json();
       
       if (!result.success) {
@@ -75,7 +75,7 @@ export const Requirements = () => {
 
   const fetchRequirements = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/requirements');
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements');
       const result = await response.json();
       
       if (!result.success) {
@@ -114,7 +114,7 @@ export const Requirements = () => {
 
       const weightedScore = totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
 
-      const response = await fetch(`http://localhost:3001/api/requirements/${key}/score`, {
+      const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/score`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

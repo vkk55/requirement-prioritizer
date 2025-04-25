@@ -40,12 +40,12 @@ export const Settings = () => {
   const initializeCriteria = async () => {
     try {
       // First try to fetch existing criteria
-      const response = await fetch('http://localhost:3001/api/criteria');
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria');
       const result = await response.json();
       
       // If no criteria exist, initialize with defaults
       if (!result.data || result.data.length === 0) {
-        const initResponse = await fetch('http://localhost:3001/api/criteria/init', {
+        const initResponse = await fetch('https://requirement-prioritizer.onrender.com/api/criteria/init', {
           method: 'POST'
         });
         const initResult = await initResponse.json();
@@ -67,7 +67,7 @@ export const Settings = () => {
 
   const fetchCriteria = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/criteria');
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria');
       const result = await response.json();
       
       if (!result.success) {
@@ -89,7 +89,7 @@ export const Settings = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:3001/api/criteria', {
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ export const Settings = () => {
 
   const handleDeleteCriteria = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/criteria/${id}`, {
+      const response = await fetch(`https://requirement-prioritizer.onrender.com/api/criteria/${id}`, {
         method: 'DELETE',
       });
 

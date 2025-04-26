@@ -65,19 +65,35 @@ const requirementsFile = path.join(dataDir, 'requirements.json');
 const criteriaFile = path.join(dataDir, 'criteria.json');
 
 function saveData() {
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  fs.writeFileSync(requirementsFile, JSON.stringify(Array.from(requirements.entries()), null, 2));
-  fs.writeFileSync(criteriaFile, JSON.stringify(Array.from(criteria.entries()), null, 2));
+  try {
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    fs.writeFileSync(requirementsFile, JSON.stringify(Array.from(requirements.entries()), null, 2));
+    console.log(`[saveData] requirements.json written with ${requirements.size} entries.`);
+    fs.writeFileSync(criteriaFile, JSON.stringify(Array.from(criteria.entries()), null, 2));
+    console.log(`[saveData] criteria.json written with ${criteria.size} entries.`);
+  } catch (err) {
+    console.error('[saveData] Error writing data files:', err);
+  }
 }
 
 function loadData() {
-  if (fs.existsSync(requirementsFile)) {
-    const reqArr = JSON.parse(fs.readFileSync(requirementsFile));
-    requirements = new Map(reqArr);
-  }
-  if (fs.existsSync(criteriaFile)) {
-    const critArr = JSON.parse(fs.readFileSync(criteriaFile));
-    criteria = new Map(critArr);
+  try {
+    if (fs.existsSync(requirementsFile)) {
+      const reqArr = JSON.parse(fs.readFileSync(requirementsFile));
+      requirements = new Map(reqArr);
+      console.log(`[loadData] requirements.json loaded with ${requirements.size} entries.`);
+    } else {
+      console.log('[loadData] requirements.json does not exist.');
+    }
+    if (fs.existsSync(criteriaFile)) {
+      const critArr = JSON.parse(fs.readFileSync(criteriaFile));
+      criteria = new Map(critArr);
+      console.log(`[loadData] criteria.json loaded with ${criteria.size} entries.`);
+    } else {
+      console.log('[loadData] criteria.json does not exist.');
+    }
+  } catch (err) {
+    console.error('[loadData] Error reading data files:', err);
   }
 }
 

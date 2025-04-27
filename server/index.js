@@ -6,8 +6,14 @@ const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
+const { Pool } = require('pg');
 
 const app = express();
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -54,51 +60,6 @@ app.use(express.json());
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));
 }
-
-// In-memory storage for requirements and criteria
-let requirements = new Map();
-let criteria = new Map();
-
-// === File-based persistence setup ===
-const dataDir = path.join(__dirname, 'data');
-const requirementsFile = path.join(dataDir, 'requirements.json');
-const criteriaFile = path.join(dataDir, 'criteria.json');
-
-function saveData() {
-  try {
-    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(requirementsFile, JSON.stringify(Array.from(requirements.entries()), null, 2));
-    console.log(`[saveData] requirements.json written with ${requirements.size} entries.`);
-    fs.writeFileSync(criteriaFile, JSON.stringify(Array.from(criteria.entries()), null, 2));
-    console.log(`[saveData] criteria.json written with ${criteria.size} entries.`);
-  } catch (err) {
-    console.error('[saveData] Error writing data files:', err);
-  }
-}
-
-function loadData() {
-  try {
-    if (fs.existsSync(requirementsFile)) {
-      const reqArr = JSON.parse(fs.readFileSync(requirementsFile));
-      requirements = new Map(reqArr);
-      console.log(`[loadData] requirements.json loaded with ${requirements.size} entries.`);
-    } else {
-      console.log('[loadData] requirements.json does not exist.');
-    }
-    if (fs.existsSync(criteriaFile)) {
-      const critArr = JSON.parse(fs.readFileSync(criteriaFile));
-      criteria = new Map(critArr);
-      console.log(`[loadData] criteria.json loaded with ${criteria.size} entries.`);
-    } else {
-      console.log('[loadData] criteria.json does not exist.');
-    }
-  } catch (err) {
-    console.error('[loadData] Error reading data files:', err);
-  }
-}
-
-// Load data on startup
-loadData();
 
 // Helper function to normalize column names
 function normalizeColumnNames(data) {
@@ -214,22 +175,12 @@ app.post('/api/jira/test', async (req, res) => {
 });
 
 // Get all requirements
-app.get('/api/requirements', (req, res) => {
+app.get('/api/requirements', async (req, res) => {
   try {
-    const requirementsList = Array.from(requirements.values()).map(req => ({
-      ...req,
-      rank: req.rank || 0 // Ensure rank is initialized
-    }));
-
-    res.json({
-      success: true,
-      data: requirementsList
-    });
+    const result = await pool.query('SELECT * FROM requirements');
+    res.json({ success: true, data: result.rows });
   } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch requirements',
-      message: error.message
-    });
+    res.status(500).json({ error: 'Failed to fetch requirements', message: error.message });
   }
 });
 
@@ -587,54 +538,30 @@ app.post('/api/requirements/:key/score', (req, res) => {
 });
 
 // Get all criteria
-app.get('/api/criteria', (req, res) => {
-  const criteriaList = Array.from(criteria.values());
-  res.json({
-    success: true,
-    data: criteriaList
-  });
+app.get('/api/criteria', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM criteria');
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch criteria', message: error.message });
+  }
 });
 
 // Add new criterion
-app.post('/api/criteria', (req, res) => {
+app.post('/api/criteria', async (req, res) => {
+  const { id, name, weight, scale_min, scale_max } = req.body;
   try {
-    const { name, weight, scale_min, scale_max } = req.body;
-    
-    if (!name || weight === undefined || scale_min === undefined || scale_max === undefined) {
-      return res.status(400).json({
-        error: 'Missing required fields',
-        message: 'Name, weight, scale_min, and scale_max are required'
-      });
-    }
-
-    const id = name.toLowerCase().replace(/\s+/g, '_');
-    
-    if (criteria.has(id)) {
-      return res.status(400).json({
-        error: 'Duplicate criterion',
-        message: `Criterion with name "${name}" already exists`
-      });
-    }
-
-    const criterion = {
-      id,
-      name,
-      weight: parseFloat(weight),
-      scale_min: parseInt(scale_min),
-      scale_max: parseInt(scale_max)
-    };
-
-    criteria.set(id, criterion);
-
-    res.json({
-      success: true,
-      data: criterion
-    });
+    await pool.query(
+      `INSERT INTO criteria (id, name, weight, scale_min, scale_max)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (id) DO UPDATE SET
+         name=EXCLUDED.name, weight=EXCLUDED.weight, scale_min=EXCLUDED.scale_min, scale_max=EXCLUDED.scale_max
+      `,
+      [id, name, weight, scale_min, scale_max]
+    );
+    res.json({ success: true });
   } catch (error) {
-    res.status(500).json({
-      error: 'Failed to add criterion',
-      message: error.message
-    });
+    res.status(500).json({ error: 'Failed to save criterion', message: error.message });
   }
 });
 
@@ -712,40 +639,14 @@ app.post('/api/criteria/init', (req, res) => {
 });
 
 // Update requirement rank
-app.post('/api/requirements/:key/rank', (req, res) => {
+app.post('/api/requirements/:key/rank', async (req, res) => {
+  const { key } = req.params;
+  const { rank } = req.body;
   try {
-    const { key } = req.params;
-    const { rank } = req.body;
-
-    if (!requirements.has(key)) {
-      return res.status(404).json({
-        error: 'Not found',
-        message: `Requirement with key ${key} not found`
-      });
-    }
-
-    if (typeof rank !== 'number' || rank < 0 || !Number.isInteger(rank)) {
-      return res.status(400).json({
-        error: 'Invalid rank',
-        message: 'Rank must be a non-negative whole number'
-      });
-    }
-
-    const requirement = requirements.get(key);
-    requirement.rank = rank;
-    requirements.set(key, requirement);
-
-    saveData();
-
-    res.json({
-      success: true,
-      data: requirement
-    });
+    await pool.query('UPDATE requirements SET rank = $1 WHERE key = $2', [rank, key]);
+    res.json({ success: true });
   } catch (error) {
-    res.status(500).json({
-      error: 'Failed to update rank',
-      message: error.message
-    });
+    res.status(500).json({ error: 'Failed to update rank', message: error.message });
   }
 });
 
@@ -782,17 +683,15 @@ app.post('/api/requirements/fix-ranks', (req, res) => {
 });
 
 // === New endpoint to update comments ===
-app.post('/api/requirements/:key/comments', (req, res) => {
+app.post('/api/requirements/:key/comments', async (req, res) => {
   const { key } = req.params;
   const { comments } = req.body;
-  if (!requirements.has(key)) {
-    return res.status(404).json({ error: 'Not found', message: `Requirement with key ${key} not found` });
+  try {
+    await pool.query('UPDATE requirements SET comments = $1 WHERE key = $2', [comments, key]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update comments', message: error.message });
   }
-  const requirement = requirements.get(key);
-  requirement.comments = comments || '';
-  requirements.set(key, requirement);
-  saveData();
-  res.json({ success: true, data: requirement });
 });
 
 // Serve React app for any unknown routes in production
@@ -807,4 +706,56 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Create requirements table
+pool.query(`
+  CREATE TABLE IF NOT EXISTS requirements (
+    key TEXT PRIMARY KEY,
+    summary TEXT,
+    priority TEXT,
+    status TEXT,
+    assignee TEXT,
+    created TIMESTAMP,
+    updated TIMESTAMP,
+    timeSpent TEXT,
+    labels TEXT,
+    roughEstimate TEXT,
+    relatedCustomers TEXT,
+    prioritization INTEGER,
+    weight INTEGER,
+    score REAL,
+    criteria JSONB,
+    lastScored TIMESTAMP,
+    rank INTEGER,
+    comments TEXT
+  )
+`);
+
+// Create criteria table
+pool.query(`
+  CREATE TABLE IF NOT EXISTS criteria (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    weight INTEGER,
+    scale_min INTEGER,
+    scale_max INTEGER
+  )
+`);
+
+app.post('/api/requirements', async (req, res) => {
+  const r = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO requirements (key, summary, priority, status, assignee, created, updated, timeSpent, labels, roughEstimate, relatedCustomers, prioritization, weight, score, criteria, lastScored, rank, comments)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+       ON CONFLICT (key) DO UPDATE SET
+         summary=EXCLUDED.summary, priority=EXCLUDED.priority, status=EXCLUDED.status, assignee=EXCLUDED.assignee, updated=EXCLUDED.updated, timeSpent=EXCLUDED.timeSpent, labels=EXCLUDED.labels, roughEstimate=EXCLUDED.roughEstimate, relatedCustomers=EXCLUDED.relatedCustomers, prioritization=EXCLUDED.prioritization, weight=EXCLUDED.weight, score=EXCLUDED.score, criteria=EXCLUDED.criteria, lastScored=EXCLUDED.lastScored, rank=EXCLUDED.rank, comments=EXCLUDED.comments
+      `,
+      [r.key, r.summary, r.priority, r.status, r.assignee, r.created, r.updated, r.timeSpent, r.labels, r.roughEstimate, r.relatedCustomers, r.prioritization, r.weight, r.score, r.criteria, r.lastScored, r.rank, r.comments]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to save requirement', message: error.message });
+  }
 });

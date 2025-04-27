@@ -549,8 +549,12 @@ app.get('/api/criteria', async (req, res) => {
 
 // Add new criterion
 app.post('/api/criteria', async (req, res) => {
-  const { id, name, weight, scale_min, scale_max } = req.body;
+  let { id, name, weight, scale_min, scale_max } = req.body;
   try {
+    if (!id) {
+      if (!name) throw new Error('Name is required to generate id');
+      id = name.toLowerCase().replace(/\s+/g, '_');
+    }
     await pool.query(
       `INSERT INTO criteria (id, name, weight, scale_min, scale_max)
        VALUES ($1, $2, $3, $4, $5)
@@ -585,32 +589,28 @@ app.delete('/api/criteria/:id', (req, res) => {
 });
 
 // Initialize criteria with existing ones
-app.post('/api/criteria/init', (req, res) => {
+app.post('/api/criteria/init', async (req, res) => {
   try {
     const initialCriteria = [
       {
-        id: 'customer_retention',
         name: 'Customer Retention',
         weight: 24,
         scale_min: 1,
         scale_max: 5
       },
       {
-        id: 'move_the_needle',
         name: 'Move the Needle',
         weight: 26,
         scale_min: 1,
         scale_max: 5
       },
       {
-        id: 'strategic_alignment',
         name: 'Strategic Alignment',
         weight: 25,
         scale_min: 1,
         scale_max: 5
       },
       {
-        id: 'tech_debt',
         name: 'Tech Debt',
         weight: 25,
         scale_min: 1,
@@ -618,18 +618,22 @@ app.post('/api/criteria/init', (req, res) => {
       }
     ];
 
-    // Clear existing criteria
-    criteria.clear();
+    // Insert each criterion with a generated id
+    for (const c of initialCriteria) {
+      const id = c.name.toLowerCase().replace(/\s+/g, '_');
+      await pool.query(
+        `INSERT INTO criteria (id, name, weight, scale_min, scale_max)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (id) DO UPDATE SET
+           name=EXCLUDED.name, weight=EXCLUDED.weight, scale_min=EXCLUDED.scale_min, scale_max=EXCLUDED.scale_max
+        `,
+        [id, c.name, c.weight, c.scale_min, c.scale_max]
+      );
+    }
 
-    // Add initial criteria
-    initialCriteria.forEach(criterion => {
-      criteria.set(criterion.id, criterion);
-    });
-
-    res.json({
-      success: true,
-      data: initialCriteria
-    });
+    // Fetch and return all criteria
+    const result = await pool.query('SELECT * FROM criteria');
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     res.status(500).json({
       error: 'Failed to initialize criteria',

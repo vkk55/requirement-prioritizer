@@ -419,11 +419,7 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
           row[field] = worksheet[cell] ? worksheet[cell].v : '';
         }
       }
-      // Clean up relatedCustomers: trim and ensure string
-      if (row.relatedCustomers !== undefined && row.relatedCustomers !== null) {
-        row.relatedCustomers = String(row.relatedCustomers).trim();
-        console.log('Importing relatedCustomers:', row.relatedCustomers);
-      }
+      console.log('Raw Excel row data:', { row });
       if (Object.keys(row).length > 0) {
         data.push(row);
       }
@@ -433,67 +429,97 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
     for (const row of data) {
       if (!row.key) continue;
       
+      console.log('Processing row with key:', row.key);
+      console.log('Original row data:', {
+        timeSpent: row.timeSpent,
+        roughEstimate: row.roughEstimate,
+        relatedCustomers: row.relatedCustomers
+      });
+      
       // Clean and prepare the data
       const cleanedData = {
         summary: row.summary || '',
         priority: row.priority || '',
         status: row.status || '',
         assignee: row.assignee || '',
-        timeSpent: row.timeSpent || '',  // Ensure timeSpent is included
+        timeSpent: row.timeSpent || '',
         labels: row.labels || '',
-        roughEstimate: row.roughEstimate || '',  // Ensure roughEstimate is included
-        relatedCustomers: row.relatedCustomers ? String(row.relatedCustomers).trim() : '',  // Clean relatedCustomers
+        roughEstimate: row.roughEstimate || '',
+        relatedCustomers: row.relatedCustomers ? String(row.relatedCustomers).trim() : '',
         prioritization: parseIntOrNull(row.prioritization),
         weight: parseIntOrNull(row.weight)
       };
 
+      console.log('Cleaned data:', {
+        timeSpent: cleanedData.timeSpent,
+        roughEstimate: cleanedData.roughEstimate,
+        relatedCustomers: cleanedData.relatedCustomers
+      });
+
       const existing = await pool.query('SELECT * FROM requirements WHERE key = $1', [row.key]);
       
       if (existing.rows.length > 0) {
+        console.log(`Updating existing requirement: ${row.key}`);
         // Update with all fields explicitly mentioned
-        await pool.query(
-          `UPDATE requirements 
-           SET summary=$1, priority=$2, status=$3, assignee=$4, 
-               timeSpent=$5, labels=$6, roughEstimate=$7, 
-               relatedCustomers=$8, prioritization=$9, weight=$10 
-           WHERE key=$11`,
-          [
-            cleanedData.summary,
-            cleanedData.priority,
-            cleanedData.status,
-            cleanedData.assignee,
-            cleanedData.timeSpent,
-            cleanedData.labels,
-            cleanedData.roughEstimate,
-            cleanedData.relatedCustomers,
-            cleanedData.prioritization,
-            cleanedData.weight,
-            row.key
-          ]
-        );
+        try {
+          await pool.query(
+            `UPDATE requirements 
+             SET summary=$1, priority=$2, status=$3, assignee=$4, 
+                 timeSpent=$5, labels=$6, roughEstimate=$7, 
+                 relatedCustomers=$8, prioritization=$9, weight=$10 
+             WHERE key=$11
+             RETURNING timeSpent, roughEstimate, relatedCustomers`,
+            [
+              cleanedData.summary,
+              cleanedData.priority,
+              cleanedData.status,
+              cleanedData.assignee,
+              cleanedData.timeSpent,
+              cleanedData.labels,
+              cleanedData.roughEstimate,
+              cleanedData.relatedCustomers,
+              cleanedData.prioritization,
+              cleanedData.weight,
+              row.key
+            ]
+          ).then(result => {
+            console.log('Updated values in database:', result.rows[0]);
+          });
+        } catch (error) {
+          console.error('Error updating requirement:', error);
+          throw error;
+        }
       } else {
-        // Insert with all fields explicitly mentioned
-        await pool.query(
-          `INSERT INTO requirements (
-             key, summary, priority, status, assignee, 
-             timeSpent, labels, roughEstimate, 
-             relatedCustomers, prioritization, weight
-           )
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-          [
-            row.key,
-            cleanedData.summary,
-            cleanedData.priority,
-            cleanedData.status,
-            cleanedData.assignee,
-            cleanedData.timeSpent,
-            cleanedData.labels,
-            cleanedData.roughEstimate,
-            cleanedData.relatedCustomers,
-            cleanedData.prioritization,
-            cleanedData.weight
-          ]
-        );
+        console.log(`Inserting new requirement: ${row.key}`);
+        try {
+          await pool.query(
+            `INSERT INTO requirements (
+               key, summary, priority, status, assignee, 
+               timeSpent, labels, roughEstimate, 
+               relatedCustomers, prioritization, weight
+             )
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+             RETURNING timeSpent, roughEstimate, relatedCustomers`,
+            [
+              row.key,
+              cleanedData.summary,
+              cleanedData.priority,
+              cleanedData.status,
+              cleanedData.assignee,
+              cleanedData.timeSpent,
+              cleanedData.labels,
+              cleanedData.roughEstimate,
+              cleanedData.relatedCustomers,
+              cleanedData.prioritization,
+              cleanedData.weight
+            ]
+          ).then(result => {
+            console.log('Inserted values in database:', result.rows[0]);
+          });
+        } catch (error) {
+          console.error('Error inserting requirement:', error);
+          throw error;
+        }
       }
     }
 

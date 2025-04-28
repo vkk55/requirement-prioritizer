@@ -47,6 +47,9 @@ interface Requirement {
   rank?: number;
   criteria: Record<string, number>;
   customers?: string[];
+  relatedCustomers?: string;
+  status?: string;
+  labels?: string[];
 }
 
 interface ScoreRange {
@@ -209,24 +212,23 @@ const Analytics: React.FC = () => {
         }]
       };
     }
-
     const customerCount: Record<string, number> = {};
-    let totalCustomers = 0;
-
     requirements.forEach(req => {
-      if (req.customers && Array.isArray(req.customers)) {
-        req.customers.forEach(customer => {
-          if (customer) {
-            customerCount[customer] = (customerCount[customer] || 0) + 1;
-            totalCustomers++;
-          }
-        });
+      // Try both customers (array) and relatedCustomers (string)
+      let customers: string[] = [];
+      if (Array.isArray(req.customers)) {
+        customers = req.customers;
+      } else if (typeof req.relatedCustomers === 'string' && req.relatedCustomers.trim()) {
+        customers = req.relatedCustomers.split(',').map(c => c.trim()).filter(Boolean);
       }
+      customers.forEach(customer => {
+        if (customer) {
+          customerCount[customer] = (customerCount[customer] || 0) + 1;
+        }
+      });
     });
-
     const labels = Object.keys(customerCount);
-    const data = labels.map(label => (customerCount[label] / requirements.length) * 100);
-
+    const data = labels.map(label => customerCount[label]);
     return {
       labels,
       datasets: [{
@@ -243,23 +245,72 @@ const Analytics: React.FC = () => {
     };
   }, [requirements]);
 
-  const scatterData = useMemo(() => {
-    const sortedReqs = [...requirements].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
-    const data: ScatterDataPoint[] = sortedReqs.map(req => ({
-      x: req.score ?? 0,
-      y: req.rank ?? 0
-    }));
-
+  const statusData = useMemo(() => {
+    if (!Array.isArray(requirements) || requirements.length === 0) {
+      return {
+        labels: [],
+        datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
+      };
+    }
+    const statusCount: Record<string, number> = {};
+    requirements.forEach(req => {
+      const status = req.status || 'Unknown';
+      statusCount[status] = (statusCount[status] || 0) + 1;
+    });
+    const labels = Object.keys(statusCount);
+    const data = labels.map(label => statusCount[label]);
     return {
-      datasets: [
-        {
-          data,
-          backgroundColor: 'rgba(75, 192, 192, 0.6)',
-          pointStyle: 'circle' as const,
-          pointRadius: 5,
-          showLine: false,
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: [
+          'rgba(255, 205, 86, 0.8)',
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+        ],
+        borderWidth: 1,
+      }]
+    };
+  }, [requirements]);
+
+  const labelData = useMemo(() => {
+    if (!Array.isArray(requirements) || requirements.length === 0) {
+      return {
+        labels: [],
+        datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
+      };
+    }
+    const labelCount: Record<string, number> = {};
+    requirements.forEach(req => {
+      let labels: string[] = [];
+      if (Array.isArray(req.labels)) {
+        labels = req.labels as string[];
+      } else if (typeof req.labels === 'string' && req.labels && String.prototype.trim.call(req.labels)) {
+        labels = (req.labels as string).split(',').map((l: string) => l.trim()).filter(Boolean);
+      }
+      labels.forEach(label => {
+        if (label) {
+          labelCount[label] = (labelCount[label] || 0) + 1;
         }
-      ]
+      });
+    });
+    const labels = Object.keys(labelCount);
+    const data = labels.map(label => labelCount[label]);
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+        ],
+        borderWidth: 1,
+      }]
     };
   }, [requirements]);
 
@@ -367,6 +418,46 @@ const Analytics: React.FC = () => {
     }
   }), []);
 
+  const scoreRangeData = useMemo(() => {
+    if (!Array.isArray(requirements) || requirements.length === 0) {
+      return {
+        labels: [],
+        datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
+      };
+    }
+    const ranges = [
+      { label: '1-2', min: 1, max: 2 },
+      { label: '2-3', min: 2, max: 3 },
+      { label: '3-4', min: 3, max: 4 },
+      { label: '4-5', min: 4, max: 5.0001 }, // include 5 in last bucket
+    ];
+    const rangeCounts = [0, 0, 0, 0];
+    requirements.forEach(req => {
+      const score = typeof req.score === 'number' ? req.score : null;
+      if (score !== null) {
+        for (let i = 0; i < ranges.length; i++) {
+          if (score >= ranges[i].min && score < ranges[i].max) {
+            rangeCounts[i]++;
+            break;
+          }
+        }
+      }
+    });
+    return {
+      labels: ranges.map(r => r.label),
+      datasets: [{
+        data: rangeCounts,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+        ],
+        borderWidth: 1,
+      }]
+    };
+  }, [requirements]);
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -389,13 +480,7 @@ const Analytics: React.FC = () => {
         Analytics
       </Typography>
       <Divider sx={{ mb: 2 }} />
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-          <Bar data={distributionData} options={distributionOptions} />
-        </Card>
-        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-          <Scatter data={scatterData} options={correlationOptions} />
-        </Card>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr' }, gap: 4 }}>
         <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Criteria
@@ -407,6 +492,24 @@ const Analytics: React.FC = () => {
             Requirements by Customer
           </Typography>
           <Pie data={customerData} options={pieChartOptions} />
+        </Card>
+        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+          <Typography variant="h6" gutterBottom align="center">
+            Requirements by Status
+          </Typography>
+          <Pie data={statusData} options={pieChartOptions} />
+        </Card>
+        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+          <Typography variant="h6" gutterBottom align="center">
+            Requirements by Label
+          </Typography>
+          <Pie data={labelData} options={pieChartOptions} />
+        </Card>
+        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+          <Typography variant="h6" gutterBottom align="center">
+            Requirements by Score Range
+          </Typography>
+          <Pie data={scoreRangeData} options={pieChartOptions} />
         </Card>
       </Box>
     </Stack>

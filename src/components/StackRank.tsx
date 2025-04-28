@@ -25,7 +25,7 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon } from '@mui/icons-material';
+import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 
 interface Requirement {
@@ -379,15 +379,18 @@ export const StackRank = () => {
                       size="small"
                       inputProps={{ min: 0, step: 1, style: { width: '60px' } }}
                       sx={success && success.includes(requirement.key) ? { border: '2px solid #4caf50', borderRadius: 1 } : {}}
+                      InputProps={{
+                        endAdornment: (
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleRankSave(requirement.key)}
+                          >
+                            <SaveIcon fontSize="small" />
+                          </IconButton>
+                        )
+                      }}
                     />
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      sx={{ ml: 1, mt: 1 }}
-                      onClick={() => handleRankSave(requirement.key)}
-                    >
-                      <Check fontSize="small" />
-                    </IconButton>
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -421,16 +424,19 @@ export const StackRank = () => {
                       minRows={1}
                       maxRows={4}
                       sx={{ width: 180, ...(success && success.includes('saved') && savingComment === requirement.key ? { border: '2px solid #4caf50', borderRadius: 1 } : {}) }}
+                      InputProps={{
+                        endAdornment: (
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            disabled={savingComment === requirement.key}
+                            onClick={() => handleCommentSave(requirement.key)}
+                          >
+                            <SaveIcon fontSize="small" />
+                          </IconButton>
+                        )
+                      }}
                     />
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      sx={{ ml: 1, mt: 1 }}
-                      disabled={savingComment === requirement.key}
-                      onClick={() => handleCommentSave(requirement.key)}
-                    >
-                      <Check fontSize="small" />
-                    </IconButton>
                   </TableCell>
                   <TableCell>
                     <IconButton color="error" size="small" onClick={() => handleDelete(requirement.key)}>

@@ -156,10 +156,10 @@ export const StackRank = () => {
       setConfirmDialog({ open: true, key, newRank: value });
       return;
     }
-    await doRankSave(key, value);
+    await doRankSave(key, value, false);
   };
 
-  const doRankSave = async (key: string, value: string) => {
+  const doRankSave = async (key: string, value: string, fixRanksAfter = false) => {
     try {
       const rankValue = parseInt(value);
       const oldRank = requirements.find(r => r.key === key)?.rank;
@@ -171,6 +171,12 @@ export const StackRank = () => {
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to update rank');
       console.log('Rank updated for', key, 'to', rankValue);
+      if (fixRanksAfter) {
+        // Call backend to fix ranks
+        await fetch('https://requirement-prioritizer.onrender.com/api/requirements/fix-ranks', { method: 'POST' });
+      }
+      setSortBy('rank');
+      setSortOrder('asc');
       await fetchRequirements();
       setEditingRank(prev => ({ ...prev, [key]: '' }));
       setRankError(prev => ({ ...prev, [key]: '' }));
@@ -505,7 +511,7 @@ export const StackRank = () => {
           <DialogActions>
             <Button onClick={() => setConfirmDialog(null)}>Cancel</Button>
             <Button onClick={async () => {
-              await doRankSave(confirmDialog.key, confirmDialog.newRank);
+              await doRankSave(confirmDialog.key, confirmDialog.newRank, true);
               setConfirmDialog(null);
             }} color="primary" variant="contained">OK</Button>
           </DialogActions>

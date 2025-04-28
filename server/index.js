@@ -372,7 +372,7 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
 });
 
 // Import requirements from Excel
-app.post('/api/requirements/import', upload.single('file'), (req, res) => {
+app.post('/api/requirements/import', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -383,7 +383,6 @@ app.post('/api/requirements/import', upload.single('file'), (req, res) => {
 
     // Get field mapping from request
     const mapping = req.body.mapping ? JSON.parse(req.body.mapping) : {};
-    
     if (!mapping.key) {
       return res.status(400).json({
         error: 'Invalid mapping',
@@ -395,11 +394,7 @@ app.post('/api/requirements/import', upload.single('file'), (req, res) => {
     const workbook = XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    
-    // Get the range of the worksheet
     const range = XLSX.utils.decode_range(worksheet['!ref']);
-    
-    // Get headers from the first row
     const headers = [];
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const cell = worksheet[XLSX.utils.encode_cell({r: 0, c: C})];
@@ -422,77 +417,35 @@ app.post('/api/requirements/import', upload.single('file'), (req, res) => {
       }
     }
 
-    // Get the highest current rank
-    const highestRank = Math.max(
-      -1,
-      ...Array.from(requirements.values()).map(r => r.rank || 0)
-    );
-    let nextRank = highestRank + 1;
-
-    // Validate and process each row
-    const results = {
-      total: data.length,
-      updated: 0,
-      added: 0,
-      errors: []
-    };
-
-    data.forEach((row, index) => {
-      if (!row.key) {
-        results.errors.push(`Row ${index + 2}: Missing Key field`);
-        return;
-      }
-
-      // Create or update requirement
-      const requirement = {
-        key: row.key,
-        summary: row.summary || '',
-        priority: row.priority || '',
-        status: row.status || '',
-        assignee: row.assignee || '',
-        created: row.created || new Date().toISOString(),
-        updated: row.updated || new Date().toISOString(),
-        timeSpent: row.timeSpent || '',
-        labels: row.labels || '',
-        roughEstimate: row.roughEstimate || '',
-        relatedCustomers: row.relatedCustomers || '',
-        prioritization: row.prioritization || 0,
-        weight: row.weight || 0,
-        score: requirements.has(row.key) ? requirements.get(row.key).score : 0,
-        criteria: requirements.has(row.key) ? requirements.get(row.key).criteria : {},
-        lastScored: requirements.has(row.key) ? requirements.get(row.key).lastScored : null,
-        rank: requirements.has(row.key) ? requirements.get(row.key).rank : nextRank++,
-        comments: requirements.has(row.key) ? requirements.get(row.key).comments || '' : ''
-      };
-
-      if (requirements.has(row.key)) {
-        results.updated++;
+    // For each row, insert or update in PostgreSQL
+    for (const row of data) {
+      if (!row.key) continue;
+      const existing = await pool.query('SELECT * FROM requirements WHERE key = $1', [row.key]);
+      if (existing.rows.length > 0) {
+        // Update
+        await pool.query(
+          `UPDATE requirements SET summary=$1, priority=$2, status=$3, assignee=$4, timeSpent=$5, labels=$6, roughEstimate=$7, relatedCustomers=$8, prioritization=$9, weight=$10 WHERE key=$11`,
+          [row.summary, row.priority, row.status, row.assignee, row.timeSpent, row.labels, row.roughEstimate, row.relatedCustomers, row.prioritization, row.weight, row.key]
+        );
       } else {
-        results.added++;
+        // Insert
+        await pool.query(
+          `INSERT INTO requirements (key, summary, priority, status, assignee, timeSpent, labels, roughEstimate, relatedCustomers, prioritization, weight)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+          [row.key, row.summary, row.priority, row.status, row.assignee, row.timeSpent, row.labels, row.roughEstimate, row.relatedCustomers, row.prioritization, row.weight]
+        );
       }
-
-      requirements.set(row.key, requirement);
-    });
+    }
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
 
-    saveData();
-
-    res.json({
-      success: true,
-      message: 'Requirements imported successfully',
-      results
-    });
-
+    res.json({ success: true, message: 'Requirements imported successfully' });
   } catch (error) {
     console.error('Import error:', error);
-    
-    // Clean up uploaded file if it exists
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-
     res.status(500).json({
       error: 'Import failed',
       message: error.message

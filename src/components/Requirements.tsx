@@ -77,6 +77,23 @@ export const Requirements = () => {
     }
   };
 
+  const normalizeRequirement = (req: any): Requirement => ({
+    ...req,
+    timeSpent: req.timespent,
+    roughEstimate: req.roughestimate,
+    relatedCustomers: req.relatedcustomers,
+    // fallback to camelCase if already present
+    priority: req.priority,
+    status: req.status,
+    assignee: req.assignee,
+    labels: req.labels,
+    weight: req.weight,
+    score: req.score,
+    criteria: req.criteria,
+    summary: req.summary,
+    key: req.key,
+  });
+
   const fetchRequirements = async () => {
     try {
       const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements');
@@ -85,8 +102,9 @@ export const Requirements = () => {
       if (!result.success) {
         throw new Error(result.message || 'Failed to fetch requirements');
       }
-      
-      setRequirements(result.data || []);
+
+      // Normalize field names
+      setRequirements((result.data || []).map(normalizeRequirement));
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch requirements');

@@ -159,7 +159,8 @@ export const StackRank = () => {
       setEditingRank(prev => ({ ...prev, [key]: '' }));
       setRankError(prev => ({ ...prev, [key]: '' }));
       setError('');
-      setSuccess('Rank updated successfully');
+      setSuccess('1 record saved successfully');
+      setTimeout(() => setSuccess(''), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rank');
       console.error('Error updating rank:', err);
@@ -197,7 +198,8 @@ export const StackRank = () => {
       setRequirements((prev) => prev.map(r => r.key === key ? { ...r, comments: editingComment[key] } : r));
       // Keep comment visible after save
       // Do not clear editingComment
-      setSuccess('Comment saved!');
+      setSuccess('1 record saved successfully');
+      setTimeout(() => setSuccess(''), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save comment');
     } finally {
@@ -356,7 +358,6 @@ export const StackRank = () => {
                     helperText={rankError[requirement.key]}
                     size="small"
                     inputProps={{ min: 0, step: 1, style: { width: '60px' } }}
-                    sx={success && success.includes('Rank updated') ? { borderColor: 'success.main', borderWidth: 2, borderStyle: 'solid' } : {}}
                   />
                   <IconButton
                     size="small"
@@ -366,9 +367,6 @@ export const StackRank = () => {
                   >
                     <Check fontSize="small" />
                   </IconButton>
-                  {success && success.includes('Rank updated') && (
-                    <Check color="success" fontSize="small" sx={{ ml: 0.5 }} />
-                  )}
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -412,9 +410,6 @@ export const StackRank = () => {
                   >
                     <Check fontSize="small" />
                   </IconButton>
-                  {success && success.includes('Comment saved') && (
-                    <Check color="success" fontSize="small" sx={{ ml: 0.5 }} />
-                  )}
                 </TableCell>
                 <TableCell>
                   <Button color="error" size="small" onClick={() => handleDelete(requirement.key)}>Delete</Button>

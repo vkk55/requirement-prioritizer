@@ -150,8 +150,13 @@ export const StackRank = () => {
       setRankError(prev => ({ ...prev, [key]: 'Rank must be a non-negative whole number' }));
       return;
     }
-    // Check for duplicate rank
-    const duplicate = requirements.some(r => r.key !== key && r.rank === rankValue);
+    // If rank is 999, skip duplicate check and renumbering
+    if (rankValue === 999) {
+      await doRankSave(key, value, false);
+      return;
+    }
+    // Check for duplicate rank (exclude 999s)
+    const duplicate = requirements.some(r => r.key !== key && r.rank === rankValue && r.rank !== 999);
     if (duplicate) {
       setConfirmDialog({ open: true, key, newRank: value });
       return;
@@ -171,11 +176,10 @@ export const StackRank = () => {
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to update rank');
       console.log('Rank updated for', key, 'to', rankValue);
-      if (fixRanksAfter) {
-        // Call backend to fix ranks
+      if (fixRanksAfter && rankValue !== 999) {
+        // Call backend to fix ranks, but skip if rank is 999
         await fetch('https://requirement-prioritizer.onrender.com/api/requirements/fix-ranks', { method: 'POST' });
-        window.location.reload(); // Force full page reload
-        return;
+        // No full page reload
       }
       setSortBy('rank');
       setSortOrder('asc');
@@ -309,29 +313,6 @@ export const StackRank = () => {
             size="small"
             sx={{ minWidth: 200 }}
           />
-          <TextField
-            label="Status"
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            size="small"
-            select
-            SelectProps={{ native: true }}
-            sx={{ minWidth: 120 }}
-          >
-            <option value="">All</option>
-            {[...new Set(requirements.map(r => r.status).filter(Boolean))].map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </TextField>
-          <Tooltip title="Fix duplicate ranks by renumbering them sequentially">
-            <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              onClick={handleFixRanks}
-            >
-              Fix Numbering
-            </Button>
-          </Tooltip>
           <Tooltip title="Export requirements with scores and ranks to Excel">
             <Button
               variant="contained"
@@ -363,7 +344,12 @@ export const StackRank = () => {
             <TableRow>
               <TableCell onClick={() => handleSort('rank')} style={{ cursor: 'pointer' }}>Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
               <TableCell>Requirement</TableCell>
-              <TableCell align="right" onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
+              <TableCell align="right" onClick={() => handleSort('score')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1 }}>
+                Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
+                  <IconButton size="small"><Info fontSize="small" /></IconButton>
+                </Tooltip>
+              </TableCell>
               <TableCell>Comments</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>

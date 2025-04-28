@@ -22,7 +22,7 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material';
-import { Info, Refresh, FileDownload } from '@mui/icons-material';
+import { Info, Refresh, FileDownload, Check } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 
 interface Requirement {
@@ -350,19 +350,25 @@ export const StackRank = () => {
                     type="number"
                     value={editingRank[requirement.key] !== undefined ? editingRank[requirement.key] : requirement.rank}
                     onChange={e => handleRankInputChange(requirement.key, e.target.value)}
+                    onBlur={() => handleRankSave(requirement.key)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleRankSave(requirement.key); }}
                     error={!!rankError[requirement.key]}
                     helperText={rankError[requirement.key]}
                     size="small"
                     inputProps={{ min: 0, step: 1, style: { width: '60px' } }}
+                    sx={success && success.includes('Rank updated') ? { borderColor: 'success.main', borderWidth: 2, borderStyle: 'solid' } : {}}
                   />
-                  <Button
+                  <IconButton
                     size="small"
-                    variant="outlined"
+                    color="primary"
                     sx={{ ml: 1, mt: 1 }}
                     onClick={() => handleRankSave(requirement.key)}
                   >
-                    Save
-                  </Button>
+                    <Check fontSize="small" />
+                  </IconButton>
+                  {success && success.includes('Rank updated') && (
+                    <Check color="success" fontSize="small" sx={{ ml: 0.5 }} />
+                  )}
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -389,21 +395,26 @@ export const StackRank = () => {
                   <TextField
                     value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
                     onChange={(e) => handleCommentChange(requirement.key, e.target.value)}
+                    onBlur={() => handleCommentSave(requirement.key)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCommentSave(requirement.key); } }}
                     size="small"
                     multiline
                     minRows={1}
                     maxRows={4}
                     sx={{ width: 180 }}
                   />
-                  <Button
+                  <IconButton
                     size="small"
-                    variant="outlined"
+                    color="primary"
                     sx={{ ml: 1, mt: 1 }}
                     disabled={savingComment === requirement.key}
                     onClick={() => handleCommentSave(requirement.key)}
                   >
-                    Save
-                  </Button>
+                    <Check fontSize="small" />
+                  </IconButton>
+                  {success && success.includes('Comment saved') && (
+                    <Check color="success" fontSize="small" sx={{ ml: 0.5 }} />
+                  )}
                 </TableCell>
                 <TableCell>
                   <Button color="error" size="small" onClick={() => handleDelete(requirement.key)}>Delete</Button>

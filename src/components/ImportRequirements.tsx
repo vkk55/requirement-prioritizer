@@ -356,7 +356,7 @@ const ImportRequirements: React.FC = () => {
                         {Object.keys({
                           key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
                         }).map(field => (
-                          <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                          <TableCell key={field}>{item.newValues ? item.newValues[field] ?? '' : item[field] ?? ''}</TableCell>
                         ))}
                       </TableRow>
                     ))}
@@ -456,7 +456,7 @@ const ImportRequirements: React.FC = () => {
                                 {Object.keys({
                                   key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
                                 }).map(field => (
-                                  <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                                  <TableCell key={field}>{item.newValues ? item.newValues[field] ?? '' : item[field] ?? ''}</TableCell>
                                 ))}
                               </TableRow>
                             ))}

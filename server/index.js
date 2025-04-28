@@ -322,23 +322,25 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
       // Check if requirement exists in DB
       const existingReq = await pool.query('SELECT * FROM requirements WHERE key = $1', [row.key]);
       const operation = existingReq.rows.length > 0 ? 'update' : 'insert';
+      const newValues = {
+        summary: row.summary || '',
+        priority: row.priority || '',
+        status: row.status || '',
+        assignee: row.assignee || '',
+        timeSpent: row.timeSpent || '',
+        labels: row.labels || '',
+        roughEstimate: row.roughEstimate || '',
+        relatedCustomers: row.relatedCustomers || '',
+        prioritization: row.prioritization || 0,
+        weight: row.weight || 0
+      };
       const previewItem = {
         key: row.key,
-        summary: row.summary || '',
         operation,
         currentValues: operation === 'update' ? existingReq.rows[0] : null,
-        newValues: {
-          summary: row.summary || '',
-          priority: row.priority || '',
-          status: row.status || '',
-          assignee: row.assignee || '',
-          timeSpent: row.timeSpent || '',
-          labels: row.labels || '',
-          roughEstimate: row.roughEstimate || '',
-          relatedCustomers: row.relatedCustomers || '',
-          prioritization: row.prioritization || 0,
-          weight: row.weight || 0
-        }
+        newValues,
+        // Spread all fields at the top level
+        ...newValues
       };
       if (operation === 'update') {
         preview.toBeUpdated.push(previewItem);

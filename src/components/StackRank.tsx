@@ -344,11 +344,17 @@ export const StackRank = () => {
             <TableRow>
               <TableCell onClick={() => handleSort('rank')} style={{ cursor: 'pointer' }}>Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
               <TableCell>Requirement</TableCell>
-              <TableCell align="right" onClick={() => handleSort('score')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1 }}>
-                Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-                <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
-                  <IconButton size="small"><Info fontSize="small" /></IconButton>
-                </Tooltip>
+              <TableCell align="right" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ cursor: 'pointer' }} onClick={() => handleSort('score')}>
+                    Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                  </span>
+                  <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
+                    <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
+                      <Info fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </span>
               </TableCell>
               <TableCell>Comments</TableCell>
               <TableCell>Actions</TableCell>

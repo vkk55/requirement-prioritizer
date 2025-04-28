@@ -35,6 +35,7 @@ interface Requirement {
   labels?: string;
   roughEstimate?: string;
   relatedCustomers?: string;
+  weight?: number;
 }
 
 interface Criterion {
@@ -179,7 +180,16 @@ export const Requirements = () => {
                   Weight: {criterion.weight}
                 </TableCell>
               ))}
-              <TableCell>Score</TableCell>
+              <TableCell style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  Score
+                  <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
+                    <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
+                      <Info fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </span>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -214,7 +224,31 @@ export const Requirements = () => {
                     />
                   </TableCell>
                 ))}
-                <TableCell>{requirement.score || 0}</TableCell>
+                <TableCell align="right">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {requirement.score ?? 0}
+                    <Tooltip
+                      title={(() => {
+                        const mathParts = criteria.map(criterion => {
+                          const score = requirement.criteria?.[criterion.id] ?? 0;
+                          return `${score}×${criterion.weight}`;
+                        });
+                        const numerator = mathParts.join(' + ');
+                        const denominator = criteria.map(c => c.weight).join('+');
+                        const weightedScore = requirement.score ?? 0;
+                        return `(${numerator}) / (${denominator}) = ${weightedScore}`;
+                      })()}
+                      placement="top"
+                      arrow
+                    >
+                      <span>
+                        <IconButton size="small" tabIndex={0} aria-label="Show scoring math">
+                          <Info fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -254,6 +288,9 @@ export const Requirements = () => {
               </ListItem>
               <ListItem>
                 <ListItemText primary="Related Customers" secondary={selectedRequirement.relatedCustomers || 'None'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Weight" secondary={selectedRequirement.weight ?? 'Not set'} />
               </ListItem>
             </List>
           )}

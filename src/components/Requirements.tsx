@@ -100,15 +100,16 @@ export const Requirements = () => {
         [criteriaId]: newScore
       };
 
-      // Calculate weighted score
+      // Calculate weighted score (fix: ensure weights are numbers)
       let totalWeightedScore = 0;
       let totalWeight = 0;
 
       criteria.forEach(criterion => {
         const score = updatedCriteria[criterion.id];
-        if (score !== undefined) {
-          totalWeightedScore += score * criterion.weight;
-          totalWeight += criterion.weight;
+        const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+        if (score !== undefined && weight) {
+          totalWeightedScore += score * weight;
+          totalWeight += weight;
         }
       });
 
@@ -126,7 +127,6 @@ export const Requirements = () => {
       });
 
       const result = await response.json();
-      
       if (!result.success) {
         throw new Error(result.message || 'Failed to update score');
       }

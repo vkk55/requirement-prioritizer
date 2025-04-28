@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, AppBar, Toolbar, Typography, Tabs, Tab, Container, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { Settings } from './components/Settings';
 import ImportRequirements from './components/ImportRequirements';
@@ -31,7 +31,17 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function App() {
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(() => {
+    const stored = localStorage.getItem('lastTabIndex');
+    const parsed = stored !== null ? parseInt(stored, 10) : 0;
+    console.log('Tab persistence: loaded from localStorage', stored, 'parsed as', parsed);
+    return isNaN(parsed) ? 0 : parsed;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lastTabIndex', String(tabValue));
+    console.log('Tab persistence: set localStorage to', tabValue);
+  }, [tabValue]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

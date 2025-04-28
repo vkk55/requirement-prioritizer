@@ -155,7 +155,8 @@ export const StackRank = () => {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to update rank');
-      setRequirements(prev => prev.map(r => r.key === key ? { ...r, rank: rankValue } : r));
+      console.log('Rank updated for', key, 'to', rankValue);
+      await fetchRequirements();
       setEditingRank(prev => ({ ...prev, [key]: '' }));
       setRankError(prev => ({ ...prev, [key]: '' }));
       setError('');

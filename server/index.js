@@ -679,6 +679,17 @@ app.post('/api/requirements/:key/comments', async (req, res) => {
   }
 });
 
+// Delete requirement
+app.delete('/api/requirements/:key', async (req, res) => {
+  const { key } = req.params;
+  try {
+    await pool.query('DELETE FROM requirements WHERE key = $1', [key]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete requirement', message: error.message });
+  }
+});
+
 // Serve React app for any unknown routes in production
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {

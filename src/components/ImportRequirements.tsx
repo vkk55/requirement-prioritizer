@@ -23,7 +23,11 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress
+  CircularProgress,
+  Card,
+  Stack,
+  Divider,
+  LinearProgress
 } from '@mui/material';
 import { UploadFile, Add, Update } from '@mui/icons-material';
 import FieldMapping from './FieldMapping';
@@ -198,181 +202,225 @@ const ImportRequirements: React.FC = () => {
 
   return (
     <Container maxWidth="md">
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Import Requirements
-        </Typography>
-
-        <Box sx={{ my: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Upload Excel File
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            Please upload an Excel file (.xlsx or .xls) containing your requirements.
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 3 }}>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<UploadFile />}
-          >
-            Choose File
-            <input
-              type="file"
-              hidden
-              accept=".xlsx,.xls"
-              onChange={handleFileChange}
-            />
-          </Button>
-          {file && (
-            <Typography variant="body2" color="text.secondary">
-              Selected file: {file.name}
+      <Card elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 6, borderRadius: 4 }}>
+        <Stack spacing={4}>
+          <Box>
+            <Typography variant="h4" fontWeight={800} gutterBottom>
+              Import Requirements
             </Typography>
-          )}
-        </Box>
-
-        {availableColumns.length > 0 && (
-          <FieldMapping
-            availableColumns={availableColumns}
-            selectedColumns={selectedColumns}
-            onMappingChange={handleMappingChange}
-            requiredFields={requiredFields}
-          />
-        )}
-
-        <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handlePreview}
-            disabled={!file || !selectedColumns.key || isLoading}
-          >
-            {isLoading ? 'Processing...' : 'Preview and Import Requirements'}
-          </Button>
-        </Box>
-
-        {errorMessage && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {errorMessage}
-          </Alert>
-        )}
-
-        <Dialog
-          open={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-          maxWidth="lg"
-          fullWidth
-        >
-          <DialogTitle>Preview Changes</DialogTitle>
-          <DialogContent>
-            {previewData && (
-              <Box>
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                  Summary
+            <Divider sx={{ mb: 3 }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" fontWeight={700} gutterBottom>
+              Upload Excel File
+            </Typography>
+            <Typography variant="body2" color="text.secondary" paragraph>
+              Please upload an Excel file (.xlsx or .xls) containing your requirements.
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" mb={3}>
+              <Button
+                variant="contained"
+                component="label"
+                startIcon={<UploadFile />}
+                sx={{ fontWeight: 700, borderRadius: 2 }}
+              >
+                Choose File
+                <input
+                  type="file"
+                  hidden
+                  accept=".xlsx,.xls"
+                  onChange={handleFileChange}
+                />
+              </Button>
+              {file && (
+                <Typography variant="body2" color="text.secondary">
+                  Selected file: {file.name}
                 </Typography>
-                <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-                  <Chip
-                    icon={<Add />}
-                    label={`${previewData.toBeInserted.length} to be inserted`}
-                    color="success"
-                  />
-                  <Chip
-                    icon={<Update />}
-                    label={`${previewData.toBeUpdated.length} to be updated`}
-                    color="primary"
-                  />
-                  {previewData.errors.length > 0 && (
+              )}
+            </Stack>
+            {availableColumns.length > 0 && (
+              <FieldMapping
+                availableColumns={availableColumns}
+                selectedColumns={selectedColumns}
+                onMappingChange={handleMappingChange}
+                requiredFields={requiredFields}
+              />
+            )}
+            <Stack direction="row" spacing={2} mt={3}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handlePreview}
+                disabled={!file || !selectedColumns.key || isLoading}
+                sx={{ fontWeight: 700, borderRadius: 2, px: 3 }}
+              >
+                {isLoading ? 'Processing...' : 'Preview and Import Requirements'}
+              </Button>
+            </Stack>
+            {isLoading && <LinearProgress sx={{ mt: 2 }} />}
+            {errorMessage && (
+              <Alert severity="error" sx={{ mt: 2 }}>{errorMessage}</Alert>
+            )}
+          </Box>
+          {previewData && (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" fontWeight={700} gutterBottom>
+                Requirements Preview
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      {Object.keys({
+                        key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                      }).map(field => (
+                        <TableCell key={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {previewData.toBeInserted.map((item, idx) => (
+                      <TableRow key={item.key + '-insert'} sx={{ backgroundColor: '#e8f5e9' }} hover>
+                        {Object.keys({
+                          key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                        }).map(field => (
+                          <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                    {previewData.toBeUpdated.map((item, idx) => (
+                      <TableRow key={item.key + '-update'} sx={{ backgroundColor: '#fffde7' }} hover>
+                        {Object.keys({
+                          key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                        }).map(field => (
+                          <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+          <Dialog
+            open={previewOpen}
+            onClose={() => setPreviewOpen(false)}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3, p: 2 } }}
+          >
+            <DialogTitle sx={{ fontWeight: 700, fontSize: 24 }}>Preview Changes</DialogTitle>
+            <DialogContent>
+              {previewData && (
+                <Box>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Summary
+                  </Typography>
+                  <Stack direction="row" spacing={2} mb={3}>
                     <Chip
-                      label={`${previewData.errors.length} errors`}
-                      color="error"
+                      icon={<Add />}
+                      label={`${previewData.toBeInserted.length} to be inserted`}
+                      color="success"
+                      sx={{ fontWeight: 700 }}
                     />
+                    <Chip
+                      icon={<Update />}
+                      label={`${previewData.toBeUpdated.length} to be updated`}
+                      color="primary"
+                      sx={{ fontWeight: 700 }}
+                    />
+                    {previewData.errors.length > 0 && (
+                      <Chip
+                        label={`${previewData.errors.length} errors`}
+                        color="error"
+                        sx={{ fontWeight: 700 }}
+                      />
+                    )}
+                  </Stack>
+                  {previewData.errors.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="h6" gutterBottom color="error">
+                        Errors
+                      </Typography>
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Row</TableCell>
+                              <TableCell>Error</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {previewData.errors.map((error, index) => (
+                              <TableRow key={index} hover>
+                                <TableCell>{error.row}</TableCell>
+                                <TableCell>{error.message}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  )}
+                  {(previewData.toBeInserted.length > 0 || previewData.toBeUpdated.length > 0) && (
+                    <Box sx={{ mt: 4 }}>
+                      <Typography variant="h6" fontWeight={700} gutterBottom>
+                        Requirements Preview
+                      </Typography>
+                      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              {Object.keys({
+                                key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                              }).map(field => (
+                                <TableCell key={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</TableCell>
+                              ))}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {previewData.toBeInserted.map((item, idx) => (
+                              <TableRow key={item.key + '-insert'} sx={{ backgroundColor: '#e8f5e9' }} hover>
+                                {Object.keys({
+                                  key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                                }).map(field => (
+                                  <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                                ))}
+                              </TableRow>
+                            ))}
+                            {previewData.toBeUpdated.map((item, idx) => (
+                              <TableRow key={item.key + '-update'} sx={{ backgroundColor: '#fffde7' }} hover>
+                                {Object.keys({
+                                  key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                                }).map(field => (
+                                  <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                                ))}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
                   )}
                 </Box>
-
-                {previewData.errors.length > 0 && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom color="error">
-                      Errors
-                    </Typography>
-                    <TableContainer>
-                      <Table>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Row</TableCell>
-                            <TableCell>Error</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {previewData.errors.map((error, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{error.row}</TableCell>
-                              <TableCell>{error.message}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
-
-                {(previewData.toBeInserted.length > 0 || previewData.toBeUpdated.length > 0) && (
-                  <Box sx={{ mt: 4 }}>
-                    <Typography variant="h6" gutterBottom>
-                      Requirements Preview
-                    </Typography>
-                    <TableContainer component={Paper}>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            {Object.keys({
-                              key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                            }).map(field => (
-                              <TableCell key={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</TableCell>
-                            ))}
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {previewData.toBeInserted.map((item, idx) => (
-                            <TableRow key={item.key + '-insert'} sx={{ backgroundColor: '#e8f5e9' }}>
-                              {Object.keys({
-                                key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                              }).map(field => (
-                                <TableCell key={field}>{item[field] ?? ''}</TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                          {previewData.toBeUpdated.map((item, idx) => (
-                            <TableRow key={item.key + '-update'} sx={{ backgroundColor: '#fffde7' }}>
-                              {Object.keys({
-                                key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                              }).map(field => (
-                                <TableCell key={field}>{item[field] ?? ''}</TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setPreviewOpen(false)}>Close</Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleImport}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Processing...' : 'Import Requirements'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Paper>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setPreviewOpen(false)} sx={{ fontWeight: 700, borderRadius: 2 }}>Close</Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleImport}
+                disabled={isLoading}
+                sx={{ fontWeight: 700, borderRadius: 2 }}
+              >
+                {isLoading ? 'Processing...' : 'Import Requirements'}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Stack>
+      </Card>
     </Container>
   );
 };

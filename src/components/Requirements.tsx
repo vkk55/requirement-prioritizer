@@ -20,6 +20,9 @@ import {
   ListItem,
   ListItemText,
   Tooltip,
+  Card,
+  Stack,
+  Divider,
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 
@@ -157,96 +160,77 @@ export const Requirements = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
+    <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      <Typography variant="h4" fontWeight={800} gutterBottom>
         Score Requirements
       </Typography>
-      
       {error && (
-        <Typography color="error" sx={{ mb: 2 }}>
-          {error}
-        </Typography>
+        <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
       )}
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Requirement</TableCell>
-              {criteria.map(criterion => (
-                <TableCell key={criterion.id}>
-                  {criterion.name}
-                  <br />
-                  Weight: {criterion.weight}
-                </TableCell>
-              ))}
-              <TableCell style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  Score
-                  <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
-                    <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
-                      <Info fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </span>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {requirements.map(requirement => (
-              <TableRow key={requirement.key}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {requirement.key}
+      <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <TableContainer>
+          <Table size="medium">
+            <TableHead>
+              <TableRow>
+                <TableCell>Requirement</TableCell>
+                {criteria.map(criterion => (
+                  <TableCell key={criterion.id}>
+                    <Stack spacing={0.5} alignItems="center">
+                      <span>{criterion.name}</span>
+                      <Typography variant="caption" color="text.secondary">
+                        Weight: {criterion.weight}
                       </Typography>
-                      {requirement.summary}
-                    </Box>
-                    <Tooltip title="View Details">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleOpenDetails(requirement)}
-                      >
+                    </Stack>
+                  </TableCell>
+                ))}
+                <TableCell style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    Score
+                    <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
+                      <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
                         <Info fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                  </Box>
+                  </span>
                 </TableCell>
-                {criteria.map(criterion => (
-                  <TableCell key={criterion.id}>
-                    <Rating
-                      value={requirement.criteria?.[criterion.id] || 0}
-                      max={criterion.scale_max}
-                      onChange={(_, newValue) =>
-                        handleScoreChange(requirement.key, criterion.id, newValue || 0)
-                      }
-                    />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {requirements.map(requirement => (
+                <TableRow key={requirement.key} hover>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {requirement.key}
+                        </Typography>
+                        {requirement.summary}
+                      </Box>
+                      <Tooltip title="View Details">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenDetails(requirement)}
+                          sx={{ ml: 1 }}
+                        >
+                          <Info fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
-                ))}
-                <TableCell align="right">
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {(() => {
-                      let totalWeightedScore = 0;
-                      let totalWeight = 0;
-                      criteria.forEach(criterion => {
-                        const score = requirement.criteria?.[criterion.id] ?? 0;
-                        const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
-                        if (weight) {
-                          totalWeightedScore += score * weight;
-                          totalWeight += weight;
+                  {criteria.map(criterion => (
+                    <TableCell key={criterion.id}>
+                      <Rating
+                        value={requirement.criteria?.[criterion.id] || 0}
+                        max={criterion.scale_max}
+                        onChange={(_, newValue) =>
+                          handleScoreChange(requirement.key, criterion.id, newValue || 0)
                         }
-                      });
-                      return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
-                    })()}
-                    <Tooltip
-                      title={(() => {
-                        const mathParts = criteria.map(criterion => {
-                          const score = requirement.criteria?.[criterion.id] ?? 0;
-                          return `${score}×${criterion.weight}`;
-                        });
-                        const numerator = mathParts.join(' + ');
-                        const denominator = criteria.map(c => c.weight).join('+');
+                      />
+                    </TableCell>
+                  ))}
+                  <TableCell align="right">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {(() => {
                         let totalWeightedScore = 0;
                         let totalWeight = 0;
                         criteria.forEach(criterion => {
@@ -257,30 +241,54 @@ export const Requirements = () => {
                             totalWeight += weight;
                           }
                         });
-                        const weightedScore = totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
-                        return `(${numerator}) / (${denominator}) = ${weightedScore}`;
+                        return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
                       })()}
-                      placement="top"
-                      arrow
-                    >
-                      <span>
-                        <IconButton size="small" tabIndex={0} aria-label="Show scoring math">
-                          <Info fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Dialog open={detailsOpen} onClose={handleCloseDetails} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Requirement Details
-        </DialogTitle>
+                      <Tooltip
+                        title={(() => {
+                          const mathParts = criteria.map(criterion => {
+                            const score = requirement.criteria?.[criterion.id] ?? 0;
+                            return `${score}×${criterion.weight}`;
+                          });
+                          const numerator = mathParts.join(' + ');
+                          const denominator = criteria.map(c => c.weight).join('+');
+                          let totalWeightedScore = 0;
+                          let totalWeight = 0;
+                          criteria.forEach(criterion => {
+                            const score = requirement.criteria?.[criterion.id] ?? 0;
+                            const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+                            if (weight) {
+                              totalWeightedScore += score * weight;
+                              totalWeight += weight;
+                            }
+                          });
+                          const weightedScore = totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
+                          return `(${numerator}) / (${denominator}) = ${weightedScore}`;
+                        })()}
+                        placement="top"
+                        arrow
+                      >
+                        <span>
+                          <IconButton size="small" tabIndex={0} aria-label="Show scoring math">
+                            <Info fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Card>
+      <Dialog
+        open={detailsOpen}
+        onClose={handleCloseDetails}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 2 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 24 }}>Requirement Details</DialogTitle>
         <DialogContent>
           {selectedRequirement && (
             <List>
@@ -318,9 +326,9 @@ export const Requirements = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDetails}>Close</Button>
+          <Button onClick={handleCloseDetails} sx={{ fontWeight: 700, borderRadius: 2 }}>Close</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Stack>
   );
 };

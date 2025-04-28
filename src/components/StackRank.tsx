@@ -21,6 +21,9 @@ import {
   List,
   ListItem,
   ListItemText,
+  Card,
+  Stack,
+  Divider,
 } from '@mui/material';
 import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
@@ -307,12 +310,12 @@ export const StackRank = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">
-          Stack Rank Requirements
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+    <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      <Typography variant="h4" fontWeight={800} gutterBottom>
+        Stack Rank Requirements
+      </Typography>
+      <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between" mb={2}>
           <TextField
             label="Search"
             value={search}
@@ -326,128 +329,123 @@ export const StackRank = () => {
               color="success"
               startIcon={<FileDownload />}
               onClick={handleExportToExcel}
+              sx={{ fontWeight: 700, borderRadius: 2 }}
             >
               Export to Excel
             </Button>
           </Tooltip>
-        </Box>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell onClick={() => handleSort('rank')} style={{ cursor: 'pointer' }}>Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
-              <TableCell>Requirement</TableCell>
-              <TableCell align="right" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ cursor: 'pointer' }} onClick={() => handleSort('score')}>
-                    Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-                  </span>
-                  <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
-                    <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
-                      <Info fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </span>
-              </TableCell>
-              <TableCell>Comments</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedRequirements.map((requirement) => (
-              <TableRow key={requirement.key}>
-                <TableCell>
-                  <TextField
-                    type="number"
-                    value={editingRank[requirement.key] !== undefined ? editingRank[requirement.key] : requirement.rank}
-                    onChange={e => handleRankInputChange(requirement.key, e.target.value)}
-                    onBlur={() => handleRankSave(requirement.key)}
-                    onKeyDown={e => { if (e.key === 'Enter') handleRankSave(requirement.key); }}
-                    error={!!rankError[requirement.key]}
-                    helperText={rankError[requirement.key]}
-                    size="small"
-                    inputProps={{ min: 0, step: 1, style: { width: '60px' } }}
-                  />
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    sx={{ ml: 1, mt: 1 }}
-                    onClick={() => handleRankSave(requirement.key)}
-                  >
-                    <Check fontSize="small" />
-                  </IconButton>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {requirement.key}
-                      </Typography>
-                      {requirement.summary}
-                    </Box>
-                    <Tooltip title="View Details">
-                      <IconButton
-                        size="small"
-                        onClick={() => setSelectedRequirement(requirement)}
-                      >
+        </Stack>
+        <Divider sx={{ mb: 2 }} />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>
+        )}
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell onClick={() => handleSort('rank')} style={{ cursor: 'pointer' }}>Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
+                <TableCell>Requirement</TableCell>
+                <TableCell align="right" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ cursor: 'pointer' }} onClick={() => handleSort('score')}>
+                      Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                    </span>
+                    <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
+                      <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
                         <Info fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                  </Box>
+                  </span>
                 </TableCell>
-                <TableCell align="right">
-                  {requirement.score?.toFixed(2) || 0}
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
-                    onChange={(e) => handleCommentChange(requirement.key, e.target.value)}
-                    onBlur={() => handleCommentSave(requirement.key)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCommentSave(requirement.key); } }}
-                    size="small"
-                    multiline
-                    minRows={1}
-                    maxRows={4}
-                    sx={{ width: 180 }}
-                  />
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    sx={{ ml: 1, mt: 1 }}
-                    disabled={savingComment === requirement.key}
-                    onClick={() => handleCommentSave(requirement.key)}
-                  >
-                    <Check fontSize="small" />
-                  </IconButton>
-                </TableCell>
-                <TableCell>
-                  <IconButton color="error" size="small" onClick={() => handleDelete(requirement.key)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+                <TableCell>Comments</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
+            </TableHead>
+            <TableBody>
+              {sortedRequirements.map((requirement) => (
+                <TableRow key={requirement.key} hover>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      value={editingRank[requirement.key] !== undefined ? editingRank[requirement.key] : requirement.rank}
+                      onChange={e => handleRankInputChange(requirement.key, e.target.value)}
+                      onBlur={() => handleRankSave(requirement.key)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleRankSave(requirement.key); }}
+                      error={!!rankError[requirement.key]}
+                      helperText={rankError[requirement.key]}
+                      size="small"
+                      inputProps={{ min: 0, step: 1, style: { width: '60px' } }}
+                      sx={success && success.includes(requirement.key) ? { border: '2px solid #4caf50', borderRadius: 1 } : {}}
+                    />
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      sx={{ ml: 1, mt: 1 }}
+                      onClick={() => handleRankSave(requirement.key)}
+                    >
+                      <Check fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {requirement.key}
+                        </Typography>
+                        {requirement.summary}
+                      </Box>
+                      <Tooltip title="View Details">
+                        <IconButton
+                          size="small"
+                          onClick={() => setSelectedRequirement(requirement)}
+                        >
+                          <Info fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                  <TableCell align="right">
+                    {requirement.score?.toFixed(2) || 0}
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
+                      onChange={(e) => handleCommentChange(requirement.key, e.target.value)}
+                      onBlur={() => handleCommentSave(requirement.key)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCommentSave(requirement.key); } }}
+                      size="small"
+                      multiline
+                      minRows={1}
+                      maxRows={4}
+                      sx={{ width: 180, ...(success && success.includes('saved') && savingComment === requirement.key ? { border: '2px solid #4caf50', borderRadius: 1 } : {}) }}
+                    />
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      sx={{ ml: 1, mt: 1 }}
+                      disabled={savingComment === requirement.key}
+                      onClick={() => handleCommentSave(requirement.key)}
+                    >
+                      <Check fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton color="error" size="small" onClick={() => handleDelete(requirement.key)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Card>
       {selectedRequirement && (
-        <Dialog open={!!selectedRequirement} onClose={() => setSelectedRequirement(null)} maxWidth="sm" fullWidth>
-          <DialogTitle>
+        <Dialog open={!!selectedRequirement} onClose={() => setSelectedRequirement(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, p: 2 } }}>
+          <DialogTitle sx={{ fontWeight: 700, fontSize: 24 }}>
             Requirement Details
           </DialogTitle>
           <DialogContent>
@@ -499,27 +497,26 @@ export const StackRank = () => {
             </List>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setSelectedRequirement(null)}>Close</Button>
+            <Button onClick={() => setSelectedRequirement(null)} sx={{ fontWeight: 700, borderRadius: 2 }}>Close</Button>
           </DialogActions>
         </Dialog>
       )}
-
       {/* Confirmation Dialog for duplicate rank */}
       {confirmDialog && (
-        <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(null)}>
-          <DialogTitle>Duplicate Rank</DialogTitle>
+        <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(null)} PaperProps={{ sx: { borderRadius: 3, p: 2 } }}>
+          <DialogTitle sx={{ fontWeight: 700, fontSize: 20 }}>Duplicate Rank</DialogTitle>
           <DialogContent>
             This rank already exists. Is it ok that the rest of the lower requirements will be renumbered to lower numbers?
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setConfirmDialog(null)}>Cancel</Button>
+            <Button onClick={() => setConfirmDialog(null)} sx={{ fontWeight: 700, borderRadius: 2 }}>Cancel</Button>
             <Button onClick={async () => {
               await doRankSave(confirmDialog.key, confirmDialog.newRank, true);
               setConfirmDialog(null);
-            }} color="primary" variant="contained">OK</Button>
+            }} color="primary" variant="contained" sx={{ fontWeight: 700, borderRadius: 2 }}>OK</Button>
           </DialogActions>
         </Dialog>
       )}
-    </Box>
+    </Stack>
   );
 }; 

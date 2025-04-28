@@ -432,42 +432,66 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
     // For each row, insert or update in PostgreSQL
     for (const row of data) {
       if (!row.key) continue;
+      
+      // Clean and prepare the data
+      const cleanedData = {
+        summary: row.summary || '',
+        priority: row.priority || '',
+        status: row.status || '',
+        assignee: row.assignee || '',
+        timeSpent: row.timeSpent || '',  // Ensure timeSpent is included
+        labels: row.labels || '',
+        roughEstimate: row.roughEstimate || '',  // Ensure roughEstimate is included
+        relatedCustomers: row.relatedCustomers ? String(row.relatedCustomers).trim() : '',  // Clean relatedCustomers
+        prioritization: parseIntOrNull(row.prioritization),
+        weight: parseIntOrNull(row.weight)
+      };
+
       const existing = await pool.query('SELECT * FROM requirements WHERE key = $1', [row.key]);
+      
       if (existing.rows.length > 0) {
-        // Update
+        // Update with all fields explicitly mentioned
         await pool.query(
-          `UPDATE requirements SET summary=$1, priority=$2, status=$3, assignee=$4, timeSpent=$5, labels=$6, roughEstimate=$7, relatedCustomers=$8, prioritization=$9, weight=$10 WHERE key=$11`,
+          `UPDATE requirements 
+           SET summary=$1, priority=$2, status=$3, assignee=$4, 
+               timeSpent=$5, labels=$6, roughEstimate=$7, 
+               relatedCustomers=$8, prioritization=$9, weight=$10 
+           WHERE key=$11`,
           [
-            row.summary,
-            row.priority,
-            row.status,
-            row.assignee,
-            row.timeSpent,
-            row.labels,
-            row.roughEstimate,
-            row.relatedCustomers,
-            parseIntOrNull(row.prioritization),
-            parseIntOrNull(row.weight),
+            cleanedData.summary,
+            cleanedData.priority,
+            cleanedData.status,
+            cleanedData.assignee,
+            cleanedData.timeSpent,
+            cleanedData.labels,
+            cleanedData.roughEstimate,
+            cleanedData.relatedCustomers,
+            cleanedData.prioritization,
+            cleanedData.weight,
             row.key
           ]
         );
       } else {
-        // Insert
+        // Insert with all fields explicitly mentioned
         await pool.query(
-          `INSERT INTO requirements (key, summary, priority, status, assignee, timeSpent, labels, roughEstimate, relatedCustomers, prioritization, weight)
+          `INSERT INTO requirements (
+             key, summary, priority, status, assignee, 
+             timeSpent, labels, roughEstimate, 
+             relatedCustomers, prioritization, weight
+           )
            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
           [
             row.key,
-            row.summary,
-            row.priority,
-            row.status,
-            row.assignee,
-            row.timeSpent,
-            row.labels,
-            row.roughEstimate,
-            row.relatedCustomers,
-            parseIntOrNull(row.prioritization),
-            parseIntOrNull(row.weight)
+            cleanedData.summary,
+            cleanedData.priority,
+            cleanedData.status,
+            cleanedData.assignee,
+            cleanedData.timeSpent,
+            cleanedData.labels,
+            cleanedData.roughEstimate,
+            cleanedData.relatedCustomers,
+            cleanedData.prioritization,
+            cleanedData.weight
           ]
         );
       }

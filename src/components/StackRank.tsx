@@ -63,6 +63,8 @@ export const StackRank = () => {
   const [savingComment, setSavingComment] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [editingRank, setEditingRank] = useState<{ [key: string]: string }>({});
+  const [rankError, setRankError] = useState<{ [key: string]: string }>({});
 
   // Persist last active tab
   useEffect(() => {
@@ -128,13 +130,24 @@ export const StackRank = () => {
     }
   };
 
-  const handleRankChange = async (key: string, newRank: string) => {
+  const handleRankInputChange = (key: string, value: string) => {
+    // Allow empty string for editing
+    setEditingRank(prev => ({ ...prev, [key]: value }));
+    setRankError(prev => ({ ...prev, [key]: '' }));
+  };
+
+  const handleRankSave = async (key: string) => {
+    const value = editingRank[key];
+    if (value === undefined || value === null || value === '') {
+      setRankError(prev => ({ ...prev, [key]: 'Rank is required' }));
+      return;
+    }
+    const rankValue = parseInt(value);
+    if (isNaN(rankValue) || rankValue < 0 || !Number.isInteger(rankValue)) {
+      setRankError(prev => ({ ...prev, [key]: 'Rank must be a non-negative whole number' }));
+      return;
+    }
     try {
-      const rankValue = parseInt(newRank);
-      if (isNaN(rankValue) || rankValue < 0 || !Number.isInteger(rankValue)) {
-        setError('Rank must be a non-negative whole number');
-        return;
-      }
       const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/rank`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,8 +155,9 @@ export const StackRank = () => {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to update rank');
-      // Update UI immediately
       setRequirements(prev => prev.map(r => r.key === key ? { ...r, rank: rankValue } : r));
+      setEditingRank(prev => ({ ...prev, [key]: '' }));
+      setRankError(prev => ({ ...prev, [key]: '' }));
       setError('');
       setSuccess('Rank updated successfully');
     } catch (err) {
@@ -334,14 +348,21 @@ export const StackRank = () => {
                 <TableCell>
                   <TextField
                     type="number"
-                    value={requirement.rank}
-                    onChange={(e) => handleRankChange(requirement.key, e.target.value)}
-                    inputProps={{
-                      min: 0,
-                      step: 1,
-                      style: { width: '60px' }
-                    }}
+                    value={editingRank[requirement.key] !== undefined ? editingRank[requirement.key] : requirement.rank}
+                    onChange={e => handleRankInputChange(requirement.key, e.target.value)}
+                    error={!!rankError[requirement.key]}
+                    helperText={rankError[requirement.key]}
+                    size="small"
+                    inputProps={{ min: 0, step: 1, style: { width: '60px' } }}
                   />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ ml: 1, mt: 1 }}
+                    onClick={() => handleRankSave(requirement.key)}
+                  >
+                    Save
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

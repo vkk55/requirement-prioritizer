@@ -49,7 +49,7 @@ interface Criterion {
 }
 
 // Add comments to Requirement interface
-type RequirementWithComments = Requirement & { comments?: string };
+type RequirementWithComments = Requirement & { comments?: string; weight?: number };
 
 export const StackRank = () => {
   const [requirements, setRequirements] = useState<RequirementWithComments[]>([]);
@@ -57,10 +57,17 @@ export const StackRank = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [selectedRequirement, setSelectedRequirement] = useState<RequirementWithComments | null>(null);
-  const [sortBy, setSortBy] = useState<'score' | 'rank'>('score');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<'score' | 'rank'>('rank');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
   const [savingComment, setSavingComment] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+
+  // Persist last active tab
+  useEffect(() => {
+    localStorage.setItem('lastTab', 'rank');
+  }, []);
 
   useEffect(() => {
     fetchRequirements();
@@ -94,8 +101,17 @@ export const StackRank = () => {
     }
   };
 
-  // Sorting logic
-  const sortedRequirements = [...requirements].sort((a, b) => {
+  // Search and filter logic
+  const filteredRequirements = requirements.filter(r => {
+    const matchesSearch =
+      r.key.toLowerCase().includes(search.toLowerCase()) ||
+      (r.summary && r.summary.toLowerCase().includes(search.toLowerCase()));
+    const matchesStatus = filterStatus ? r.status === filterStatus : true;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Sorting logic (do not auto-sort after rank/score update)
+  const sortedRequirements = [...filteredRequirements].sort((a, b) => {
     if (sortBy === 'score') {
       return sortOrder === 'desc' ? b.score - a.score : a.score - b.score;
     } else {
@@ -126,13 +142,27 @@ export const StackRank = () => {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to update rank');
-      // Do not auto-sort after rank update
-      fetchRequirements();
+      // Update UI immediately
+      setRequirements(prev => prev.map(r => r.key === key ? { ...r, rank: rankValue } : r));
       setError('');
       setSuccess('Rank updated successfully');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rank');
       console.error('Error updating rank:', err);
+    }
+  };
+
+  const handleDelete = async (key: string) => {
+    try {
+      const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to delete requirement');
+      setRequirements(prev => prev.filter(r => r.key !== key));
+      setSuccess('Requirement deleted successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete requirement');
     }
   };
 
@@ -151,11 +181,8 @@ export const StackRank = () => {
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to save comment');
       setRequirements((prev) => prev.map(r => r.key === key ? { ...r, comments: editingComment[key] } : r));
-      setEditingComment((prev) => {
-        const updated = { ...prev };
-        updated[key] = '';
-        return updated;
-      });
+      // Keep comment visible after save
+      // Do not clear editingComment
       setSuccess('Comment saved!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save comment');
@@ -235,6 +262,27 @@ export const StackRank = () => {
           Stack Rank Requirements
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            label="Search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            size="small"
+            sx={{ minWidth: 200 }}
+          />
+          <TextField
+            label="Status"
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            size="small"
+            select
+            SelectProps={{ native: true }}
+            sx={{ minWidth: 120 }}
+          >
+            <option value="">All</option>
+            {[...new Set(requirements.map(r => r.status).filter(Boolean))].map(status => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </TextField>
           <Tooltip title="Fix duplicate ranks by renumbering them sequentially">
             <Button
               variant="contained"
@@ -277,6 +325,7 @@ export const StackRank = () => {
               <TableCell>Requirement</TableCell>
               <TableCell align="right" onClick={() => handleSort('score')} style={{ cursor: 'pointer' }}>Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
               <TableCell>Comments</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -335,6 +384,9 @@ export const StackRank = () => {
                     Save
                   </Button>
                 </TableCell>
+                <TableCell>
+                  <Button color="error" size="small" onClick={() => handleDelete(requirement.key)}>Delete</Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -381,7 +433,9 @@ export const StackRank = () => {
               <ListItem>
                 <ListItemText primary="Related Customers" secondary={selectedRequirement.relatedCustomers || 'None'} />
               </ListItem>
-              {/* Show weights for each criterion */}
+              <ListItem>
+                <ListItemText primary="Weight" secondary={selectedRequirement.weight ?? 'Not set'} />
+              </ListItem>
               {criteria.length > 0 && (
                 <ListItem>
                   <ListItemText

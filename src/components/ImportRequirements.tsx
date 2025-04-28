@@ -255,6 +255,13 @@ const ImportRequirements: React.FC = () => {
       : String(b[sortBy]).localeCompare(String(a[sortBy]));
   });
 
+  useEffect(() => {
+    if (previewData) {
+      // eslint-disable-next-line no-console
+      console.log('DEBUG previewData:', previewData);
+    }
+  }, [previewData]);
+
   return (
     <Container maxWidth="md">
       <Card elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 6, borderRadius: 4 }}>

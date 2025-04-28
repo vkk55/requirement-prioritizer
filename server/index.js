@@ -247,7 +247,7 @@ app.post('/api/requirements/columns', upload.single('file'), (req, res) => {
 });
 
 // Preview Excel import
-app.post('/api/requirements/preview', upload.single('file'), (req, res) => {
+app.post('/api/requirements/preview', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -267,9 +267,7 @@ app.post('/api/requirements/preview', upload.single('file'), (req, res) => {
         message: 'The field mapping data is not in the correct format'
       });
     }
-    
-    console.log('Received mapping:', mapping);
-    
+
     if (!mapping.key) {
       return res.status(400).json({
         error: 'Invalid mapping',
@@ -281,18 +279,12 @@ app.post('/api/requirements/preview', upload.single('file'), (req, res) => {
     const workbook = XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    
-    // Get the range of the worksheet
     const range = XLSX.utils.decode_range(worksheet['!ref']);
-    
-    // Get headers from the first row
     const headers = [];
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const cell = worksheet[XLSX.utils.encode_cell({r: 0, c: C})];
       headers[C] = cell ? cell.v : undefined;
     }
-
-    console.log('Found headers:', headers);
 
     // Convert to array of objects using the mapping
     const data = [];
@@ -310,7 +302,7 @@ app.post('/api/requirements/preview', upload.single('file'), (req, res) => {
       }
     }
 
-    // Analyze each row
+    // Analyze each row using PostgreSQL
     const preview = {
       total: data.length,
       toBeUpdated: [],
@@ -318,21 +310,23 @@ app.post('/api/requirements/preview', upload.single('file'), (req, res) => {
       errors: []
     };
 
-    data.forEach((row, index) => {
+    for (let index = 0; index < data.length; index++) {
+      const row = data[index];
       if (!row.key) {
         preview.errors.push({
           row: index + 2,
           message: 'Missing Key field'
         });
-        return;
+        continue;
       }
-
-      const operation = requirements.has(row.key) ? 'update' : 'insert';
+      // Check if requirement exists in DB
+      const existingReq = await pool.query('SELECT * FROM requirements WHERE key = $1', [row.key]);
+      const operation = existingReq.rows.length > 0 ? 'update' : 'insert';
       const previewItem = {
         key: row.key,
         summary: row.summary || '',
         operation,
-        currentValues: operation === 'update' ? requirements.get(row.key) : null,
+        currentValues: operation === 'update' ? existingReq.rows[0] : null,
         newValues: {
           summary: row.summary || '',
           priority: row.priority || '',
@@ -346,13 +340,12 @@ app.post('/api/requirements/preview', upload.single('file'), (req, res) => {
           weight: row.weight || 0
         }
       };
-
       if (operation === 'update') {
         preview.toBeUpdated.push(previewItem);
       } else {
         preview.toBeInserted.push(previewItem);
       }
-    });
+    }
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
@@ -366,15 +359,11 @@ app.post('/api/requirements/preview', upload.single('file'), (req, res) => {
         errors: preview.errors
       }
     });
-
   } catch (error) {
     console.error('Preview error:', error);
-    
-    // Clean up uploaded file if it exists
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-
     res.status(500).json({
       error: 'Preview failed',
       message: error.message

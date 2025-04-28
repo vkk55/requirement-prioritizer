@@ -244,19 +244,12 @@ const ImportRequirements: React.FC = () => {
 
         <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
           <Button
-            variant="outlined"
+            variant="contained"
+            color="primary"
             onClick={handlePreview}
             disabled={!file || !selectedColumns.key || isLoading}
           >
-            Preview Changes
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleImport}
-            disabled={!file || !fieldMapping.key || isLoading}
-          >
-            {isLoading ? 'Processing...' : 'Import Requirements'}
+            {isLoading ? 'Processing...' : 'Preview and Import Requirements'}
           </Button>
         </Box>
 
@@ -325,27 +318,44 @@ const ImportRequirements: React.FC = () => {
                 )}
 
                 {(previewData.toBeInserted.length > 0 || previewData.toBeUpdated.length > 0) && (
-                  <TableContainer>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Key</TableCell>
-                          <TableCell>Summary</TableCell>
-                          <TableCell>Operation</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {[...previewData.toBeInserted, ...previewData.toBeUpdated]
-                          .map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{item.key}</TableCell>
-                              <TableCell>{item.summary}</TableCell>
-                              <TableCell>{item.operation}</TableCell>
+                  <Box sx={{ mt: 4 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Requirements Preview
+                    </Typography>
+                    <TableContainer component={Paper}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            {Object.keys({
+                              key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                            }).map(field => (
+                              <TableCell key={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</TableCell>
+                            ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {previewData.toBeInserted.map((item, idx) => (
+                            <TableRow key={item.key + '-insert'} sx={{ backgroundColor: '#e8f5e9' }}>
+                              {Object.keys({
+                                key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                              }).map(field => (
+                                <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                              ))}
                             </TableRow>
                           ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                          {previewData.toBeUpdated.map((item, idx) => (
+                            <TableRow key={item.key + '-update'} sx={{ backgroundColor: '#fffde7' }}>
+                              {Object.keys({
+                                key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
+                              }).map(field => (
+                                <TableCell key={field}>{item[field] ?? ''}</TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
                 )}
               </Box>
             )}

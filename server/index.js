@@ -417,6 +417,11 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
           row[field] = worksheet[cell] ? worksheet[cell].v : '';
         }
       }
+      // Clean up relatedCustomers: trim and ensure string
+      if (row.relatedCustomers !== undefined && row.relatedCustomers !== null) {
+        row.relatedCustomers = String(row.relatedCustomers).trim();
+        console.log('Importing relatedCustomers:', row.relatedCustomers);
+      }
       if (Object.keys(row).length > 0) {
         data.push(row);
       }

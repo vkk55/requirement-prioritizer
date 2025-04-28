@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import {
   Box,
@@ -27,7 +27,8 @@ import {
   Card,
   Stack,
   Divider,
-  LinearProgress
+  LinearProgress,
+  TextField
 } from '@mui/material';
 import { UploadFile, Add, Update } from '@mui/icons-material';
 import FieldMapping from './FieldMapping';
@@ -70,6 +71,12 @@ const ImportRequirements: React.FC = () => {
   const [availableColumns, setAvailableColumns] = useState<string[]>([]);
   const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({});
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [requirements, setRequirements] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('key');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [reqLoading, setReqLoading] = useState(false);
+  const [reqError, setReqError] = useState('');
 
   const requiredFields = ['key'];
 
@@ -199,6 +206,54 @@ const ImportRequirements: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRequirements();
+  }, []);
+
+  const fetchRequirements = async () => {
+    setReqLoading(true);
+    setReqError('');
+    try {
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements');
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to fetch requirements');
+      setRequirements(result.data || []);
+    } catch (err) {
+      setReqError(err instanceof Error ? err.message : 'Failed to fetch requirements');
+    } finally {
+      setReqLoading(false);
+    }
+  };
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const filteredRequirements = requirements.filter(r => {
+    return (
+      r.key?.toLowerCase().includes(search.toLowerCase()) ||
+      r.summary?.toLowerCase().includes(search.toLowerCase()) ||
+      r.priority?.toLowerCase().includes(search.toLowerCase()) ||
+      r.status?.toLowerCase().includes(search.toLowerCase()) ||
+      r.assignee?.toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
+  const sortedRequirements = [...filteredRequirements].sort((a, b) => {
+    if (a[sortBy] === undefined || b[sortBy] === undefined) return 0;
+    if (typeof a[sortBy] === 'number' && typeof b[sortBy] === 'number') {
+      return sortOrder === 'asc' ? a[sortBy] - b[sortBy] : b[sortBy] - a[sortBy];
+    }
+    return sortOrder === 'asc'
+      ? String(a[sortBy]).localeCompare(String(b[sortBy]))
+      : String(b[sortBy]).localeCompare(String(a[sortBy]));
+  });
 
   return (
     <Container maxWidth="md">
@@ -419,6 +474,61 @@ const ImportRequirements: React.FC = () => {
               </Button>
             </DialogActions>
           </Dialog>
+          {/* Requirements Table Section */}
+          <Divider sx={{ my: 6 }} />
+          <Box>
+            <Typography variant="h5" fontWeight={800} gutterBottom>
+              All Requirements
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" mb={2}>
+              <TextField
+                label="Search requirements"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                size="small"
+                sx={{ minWidth: 220 }}
+              />
+            </Stack>
+            {reqError && <Alert severity="error" sx={{ mb: 2 }}>{reqError}</Alert>}
+            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    {['key','summary','priority','status','assignee','timeSpent','labels','roughEstimate','relatedCustomers','prioritization','weight','score','rank'].map(field => (
+                      <TableCell key={field} sortDirection={sortBy === field ? sortOrder : false}>
+                        <Button onClick={() => handleSort(field)} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                          {field.charAt(0).toUpperCase() + field.slice(1)}
+                        </Button>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {reqLoading ? (
+                    <TableRow><TableCell colSpan={13}><LinearProgress /></TableCell></TableRow>
+                  ) : (
+                    sortedRequirements.map((r, idx) => (
+                      <TableRow key={r.key || idx} hover>
+                        <TableCell>{r.key}</TableCell>
+                        <TableCell>{r.summary}</TableCell>
+                        <TableCell>{r.priority}</TableCell>
+                        <TableCell>{r.status}</TableCell>
+                        <TableCell>{r.assignee}</TableCell>
+                        <TableCell>{r.timeSpent}</TableCell>
+                        <TableCell>{r.labels}</TableCell>
+                        <TableCell>{r.roughEstimate}</TableCell>
+                        <TableCell>{r.relatedCustomers}</TableCell>
+                        <TableCell>{r.prioritization}</TableCell>
+                        <TableCell>{r.weight}</TableCell>
+                        <TableCell>{r.score}</TableCell>
+                        <TableCell>{r.rank}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
         </Stack>
       </Card>
     </Container>

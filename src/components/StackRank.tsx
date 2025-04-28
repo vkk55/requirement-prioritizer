@@ -177,18 +177,25 @@ export const StackRank = () => {
       if (!result.success) throw new Error(result.message || 'Failed to update rank');
       console.log('Rank updated for', key, 'to', rankValue);
       if (fixRanksAfter && rankValue !== 999) {
-        // Call backend to fix ranks, but skip if rank is 999
         await fetch('https://requirement-prioritizer.onrender.com/api/requirements/fix-ranks', { method: 'POST' });
-        // No full page reload
       }
-      setSortBy('rank');
-      setSortOrder('asc');
-      await fetchRequirements();
-      setEditingRank(prev => ({ ...prev, [key]: '' }));
+      setRequirements(prev =>
+        prev.map(r =>
+          r.key === key ? { ...r, rank: rankValue } : r
+        )
+      );
+      setEditingRank(prev => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
       setRankError(prev => ({ ...prev, [key]: '' }));
       setError('');
       setSuccess(`'${key}' rank was updated from ${oldRank} to ${rankValue}`);
       setTimeout(() => setSuccess(''), 2500);
+      setSortBy('rank');
+      setSortOrder('asc');
+      await fetchRequirements();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rank');
       console.error('Error updating rank:', err);

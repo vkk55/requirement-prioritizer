@@ -371,6 +371,11 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
   }
 });
 
+function parseIntOrNull(value) {
+  if (value === undefined || value === null || value === '') return null;
+  return parseInt(value, 10);
+}
+
 // Import requirements from Excel
 app.post('/api/requirements/import', upload.single('file'), async (req, res) => {
   try {
@@ -397,8 +402,8 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
     const range = XLSX.utils.decode_range(worksheet['!ref']);
     const headers = [];
     for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cell = worksheet[XLSX.utils.encode_cell({r: 0, c: C})];
-      headers[C] = cell ? cell.v : undefined;
+      const cell = XLSX.utils.encode_cell({r: 0, c: C});
+      headers[C] = worksheet[cell] ? worksheet[cell].v : undefined;
     }
 
     // Convert to array of objects using the mapping
@@ -408,8 +413,8 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
       for (const [field, excelColumn] of Object.entries(mapping)) {
         const C = headers.findIndex(h => h === excelColumn);
         if (C !== -1) {
-          const cell = worksheet[XLSX.utils.encode_cell({r: R, c: C})];
-          row[field] = cell ? cell.v : '';
+          const cell = XLSX.utils.encode_cell({r: R, c: C});
+          row[field] = worksheet[cell] ? worksheet[cell].v : '';
         }
       }
       if (Object.keys(row).length > 0) {
@@ -425,14 +430,38 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
         // Update
         await pool.query(
           `UPDATE requirements SET summary=$1, priority=$2, status=$3, assignee=$4, timeSpent=$5, labels=$6, roughEstimate=$7, relatedCustomers=$8, prioritization=$9, weight=$10 WHERE key=$11`,
-          [row.summary, row.priority, row.status, row.assignee, row.timeSpent, row.labels, row.roughEstimate, row.relatedCustomers, row.prioritization, row.weight, row.key]
+          [
+            row.summary,
+            row.priority,
+            row.status,
+            row.assignee,
+            row.timeSpent,
+            row.labels,
+            row.roughEstimate,
+            row.relatedCustomers,
+            parseIntOrNull(row.prioritization),
+            parseIntOrNull(row.weight),
+            row.key
+          ]
         );
       } else {
         // Insert
         await pool.query(
           `INSERT INTO requirements (key, summary, priority, status, assignee, timeSpent, labels, roughEstimate, relatedCustomers, prioritization, weight)
            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-          [row.key, row.summary, row.priority, row.status, row.assignee, row.timeSpent, row.labels, row.roughEstimate, row.relatedCustomers, row.prioritization, row.weight]
+          [
+            row.key,
+            row.summary,
+            row.priority,
+            row.status,
+            row.assignee,
+            row.timeSpent,
+            row.labels,
+            row.roughEstimate,
+            row.relatedCustomers,
+            parseIntOrNull(row.prioritization),
+            parseIntOrNull(row.weight)
+          ]
         );
       }
     }

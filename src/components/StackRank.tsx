@@ -195,7 +195,7 @@ export const StackRank = () => {
       setTimeout(() => setSuccess(''), 2500);
       setSortBy('rank');
       setSortOrder('asc');
-      await fetchRequirements();
+      setTimeout(fetchRequirements, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rank');
       console.error('Error updating rank:', err);

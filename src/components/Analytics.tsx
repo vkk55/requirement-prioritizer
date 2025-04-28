@@ -481,35 +481,45 @@ const Analytics: React.FC = () => {
       </Typography>
       <Divider sx={{ mb: 2 }} />
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Criteria
           </Typography>
-          <Pie data={criteriaData} options={pieChartOptions} />
+          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
+            <Pie data={criteriaData} options={pieChartOptions} />
+          </Box>
         </Card>
-        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Customer
           </Typography>
-          <Pie data={customerData} options={pieChartOptions} />
+          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
+            <Pie data={customerData} options={pieChartOptions} />
+          </Box>
         </Card>
-        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Status
           </Typography>
-          <Pie data={statusData} options={pieChartOptions} />
+          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
+            <Pie data={statusData} options={pieChartOptions} />
+          </Box>
         </Card>
-        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Label
           </Typography>
-          <Pie data={labelData} options={pieChartOptions} />
+          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
+            <Pie data={labelData} options={pieChartOptions} />
+          </Box>
         </Card>
-        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Score Range
           </Typography>
-          <Pie data={scoreRangeData} options={pieChartOptions} />
+          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
+            <Pie data={scoreRangeData} options={pieChartOptions} />
+          </Box>
         </Card>
       </Box>
     </Stack>

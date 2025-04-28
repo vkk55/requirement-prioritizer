@@ -483,29 +483,38 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
 });
 
 // Update requirement score
-app.post('/api/requirements/:key/score', (req, res) => {
+app.post('/api/requirements/:key/score', async (req, res) => {
   const { key } = req.params;
   const { score, criteria } = req.body;
 
-  if (!requirements.has(key)) {
-    return res.status(404).json({
-      error: 'Not found',
-      message: `Requirement with key ${key} not found`
+  try {
+    // Check if requirement exists
+    const existing = await pool.query('SELECT * FROM requirements WHERE key = $1', [key]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: `Requirement with key ${key} not found`
+      });
+    }
+
+    // Update score and criteria (as JSON)
+    await pool.query(
+      `UPDATE requirements SET score = $1, criteria = $2, lastScored = NOW() WHERE key = $3`,
+      [score, criteria, key]
+    );
+
+    // Return updated requirement
+    const updated = await pool.query('SELECT * FROM requirements WHERE key = $1', [key]);
+    res.json({
+      success: true,
+      data: updated.rows[0]
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to update score',
+      message: error.message
     });
   }
-
-  const requirement = requirements.get(key);
-  requirement.score = score;
-  requirement.criteria = criteria;
-  requirement.lastScored = new Date().toISOString();
-  requirements.set(key, requirement);
-
-  saveData();
-
-  res.json({
-    success: true,
-    data: requirement
-  });
 });
 
 // Get all criteria
@@ -626,11 +635,12 @@ app.post('/api/requirements/:key/rank', async (req, res) => {
 });
 
 // Fix ranks (make them sequential)
-app.post('/api/requirements/fix-ranks', (req, res) => {
+app.post('/api/requirements/fix-ranks', async (req, res) => {
   try {
     // Get all requirements and sort them by current rank and score
-    const reqs = Array.from(requirements.values())
-      .map(req => ({ ...req, rank: req.rank || 0 })) // Ensure rank is initialized
+    const result = await pool.query('SELECT * FROM requirements');
+    const reqs = result.rows
+      .map(req => ({ ...req, rank: req.rank || 0 }))
       .sort((a, b) => {
         if (a.rank === b.rank) {
           return b.score - a.score; // Higher score comes first when ranks are equal
@@ -639,10 +649,10 @@ app.post('/api/requirements/fix-ranks', (req, res) => {
       });
 
     // Reassign ranks sequentially starting from 0
-    reqs.forEach((req, index) => {
-      req.rank = index;
-      requirements.set(req.key, req);
-    });
+    for (let i = 0; i < reqs.length; i++) {
+      await pool.query('UPDATE requirements SET rank = $1 WHERE key = $2', [i, reqs[i].key]);
+      reqs[i].rank = i;
+    }
 
     res.json({
       success: true,

@@ -57,14 +57,15 @@ export const StackRank = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [selectedRequirement, setSelectedRequirement] = useState<RequirementWithComments | null>(null);
-  const [sortBy, setSortBy] = useState<'score' | 'rank'>('rank');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'score' | 'rank'>('score');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
   const [savingComment, setSavingComment] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [editingRank, setEditingRank] = useState<{ [key: string]: string }>({});
   const [rankError, setRankError] = useState<{ [key: string]: string }>({});
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean, key: string, newRank: string } | null>(null);
 
   // Persist last active tab
   useEffect(() => {
@@ -74,6 +75,8 @@ export const StackRank = () => {
   useEffect(() => {
     fetchRequirements();
     fetchCriteria();
+    setSortBy('score');
+    setSortOrder('desc');
   }, []);
 
   const fetchCriteria = async () => {
@@ -147,7 +150,19 @@ export const StackRank = () => {
       setRankError(prev => ({ ...prev, [key]: 'Rank must be a non-negative whole number' }));
       return;
     }
+    // Check for duplicate rank
+    const duplicate = requirements.some(r => r.key !== key && r.rank === rankValue);
+    if (duplicate) {
+      setConfirmDialog({ open: true, key, newRank: value });
+      return;
+    }
+    await doRankSave(key, value);
+  };
+
+  const doRankSave = async (key: string, value: string) => {
     try {
+      const rankValue = parseInt(value);
+      const oldRank = requirements.find(r => r.key === key)?.rank;
       const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/rank`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -160,8 +175,8 @@ export const StackRank = () => {
       setEditingRank(prev => ({ ...prev, [key]: '' }));
       setRankError(prev => ({ ...prev, [key]: '' }));
       setError('');
-      setSuccess('1 record saved successfully');
-      setTimeout(() => setSuccess(''), 1500);
+      setSuccess(`'${key}' rank was updated from ${oldRank} to ${rankValue}`);
+      setTimeout(() => setSuccess(''), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rank');
       console.error('Error updating rank:', err);
@@ -476,6 +491,23 @@ export const StackRank = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setSelectedRequirement(null)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Confirmation Dialog for duplicate rank */}
+      {confirmDialog && (
+        <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(null)}>
+          <DialogTitle>Duplicate Rank</DialogTitle>
+          <DialogContent>
+            This rank already exists. Is it ok that the rest of the lower requirements will be renumbered to lower numbers?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmDialog(null)}>Cancel</Button>
+            <Button onClick={async () => {
+              await doRankSave(confirmDialog.key, confirmDialog.newRank);
+              setConfirmDialog(null);
+            }} color="primary" variant="contained">OK</Button>
           </DialogActions>
         </Dialog>
       )}

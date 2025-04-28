@@ -5,6 +5,9 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  Card,
+  Stack,
+  Divider,
 } from '@mui/material';
 import {
   Chart as ChartJS,
@@ -381,35 +384,32 @@ const Analytics: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 400 }}>
+    <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      <Typography variant="h4" fontWeight={800} gutterBottom>
         Analytics
       </Typography>
-
+      <Divider sx={{ mb: 2 }} />
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
-        <ChartContainer>
+        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
           <Bar data={distributionData} options={distributionOptions} />
-        </ChartContainer>
-
-        <ChartContainer>
+        </Card>
+        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
           <Scatter data={scatterData} options={correlationOptions} />
-        </ChartContainer>
-
-        <ChartContainer>
+        </Card>
+        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Criteria
           </Typography>
           <Pie data={criteriaData} options={pieChartOptions} />
-        </ChartContainer>
-
-        <ChartContainer>
+        </Card>
+        <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Customer
           </Typography>
           <Pie data={customerData} options={pieChartOptions} />
-        </ChartContainer>
+        </Card>
       </Box>
-    </Box>
+    </Stack>
   );
 };
 

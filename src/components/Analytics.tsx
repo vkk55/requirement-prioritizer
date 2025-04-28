@@ -480,7 +480,7 @@ const Analytics: React.FC = () => {
         Analytics
       </Typography>
       <Divider sx={{ mb: 2 }} />
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr' }, gap: 4 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
         <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Criteria

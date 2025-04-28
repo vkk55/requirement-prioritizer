@@ -648,10 +648,13 @@ app.post('/api/requirements/fix-ranks', async (req, res) => {
         return a.rank - b.rank;
       });
 
-    // Reassign ranks sequentially starting from 0
+    // Only renumber requirements whose rank is not 999
+    let newRank = 0;
     for (let i = 0; i < reqs.length; i++) {
-      await pool.query('UPDATE requirements SET rank = $1 WHERE key = $2', [i, reqs[i].key]);
-      reqs[i].rank = i;
+      if (reqs[i].rank === 999) continue; // skip
+      await pool.query('UPDATE requirements SET rank = $1 WHERE key = $2', [newRank, reqs[i].key]);
+      reqs[i].rank = newRank;
+      newRank++;
     }
 
     res.json({

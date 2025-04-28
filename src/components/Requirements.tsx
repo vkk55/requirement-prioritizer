@@ -201,9 +201,6 @@ export const Requirements = () => {
                     </Stack>
                   </TableCell>
                 ))}
-                <TableCell>Time Spent</TableCell>
-                <TableCell>Rough Estimate</TableCell>
-                <TableCell>Related Customers</TableCell>
                 <TableCell style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     Score
@@ -249,9 +246,6 @@ export const Requirements = () => {
                       />
                     </TableCell>
                   ))}
-                  <TableCell>{requirement.timeSpent || ''}</TableCell>
-                  <TableCell>{requirement.roughEstimate || ''}</TableCell>
-                  <TableCell>{requirement.relatedCustomers || ''}</TableCell>
                   <TableCell align="right">
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       {(() => {

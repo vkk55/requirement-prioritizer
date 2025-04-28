@@ -211,14 +211,21 @@ const ImportRequirements: React.FC = () => {
     fetchRequirements();
   }, []);
 
+  const normalizeRequirement = (r: any) => ({
+    ...r,
+    timeSpent: r.timeSpent || r.timespent || '',
+    roughEstimate: r.roughEstimate || r.roughestimate || '',
+    relatedCustomers: r.relatedCustomers || r.relatedcustomers || '',
+  });
+
   const fetchRequirements = async () => {
     setReqLoading(true);
-    setReqError('');
     try {
       const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements');
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to fetch requirements');
-      setRequirements(result.data || []);
+      setRequirements((result.data || []).map(normalizeRequirement));
+      setReqError('');
     } catch (err) {
       setReqError(err instanceof Error ? err.message : 'Failed to fetch requirements');
     } finally {

@@ -12,7 +12,12 @@ import {
   TableHead,
   TableRow,
   Alert,
+  Card,
+  Stack,
+  Divider,
+  IconButton,
 } from '@mui/material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 
 interface Criterion {
   id: string;
@@ -140,28 +145,22 @@ export const Settings = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
+    <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 800, mx: 'auto' }}>
+      <Typography variant="h4" fontWeight={800} gutterBottom>
         Criteria Settings
       </Typography>
-
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       )}
-
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
+        <Alert severity="success">{success}</Alert>
       )}
-
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Typography variant="h6" fontWeight={700} gutterBottom>
           Add New Criteria
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Divider sx={{ mb: 2 }} />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" mb={2}>
           <TextField
             label="Criteria Name"
             value={newCriteria.name}
@@ -186,41 +185,43 @@ export const Settings = () => {
             value={newCriteria.scale_max}
             onChange={(e) => setNewCriteria({ ...newCriteria, scale_max: parseInt(e.target.value) })}
           />
-          <Button variant="contained" onClick={handleAddCriteria}>
+          <Button variant="contained" color="primary" sx={{ fontWeight: 700, borderRadius: 2, px: 3 }} onClick={handleAddCriteria}>
             Add Criteria
           </Button>
-        </Box>
-      </Paper>
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Weight</TableCell>
-              <TableCell>Scale Range</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {criteria.map((criterion) => (
-              <TableRow key={criterion.id}>
-                <TableCell>{criterion.name}</TableCell>
-                <TableCell>{criterion.weight}</TableCell>
-                <TableCell>{criterion.scale_min} - {criterion.scale_max}</TableCell>
-                <TableCell>
-                  <Button
-                    color="error"
-                    onClick={() => handleDeleteCriteria(criterion.id)}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
+        </Stack>
+      </Card>
+      <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <Typography variant="h6" fontWeight={700} gutterBottom>
+          Existing Criteria
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        <TableContainer>
+          <Table size="medium">
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Weight</TableCell>
+                <TableCell>Scale Range</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+            </TableHead>
+            <TableBody>
+              {criteria.map((criterion) => (
+                <TableRow key={criterion.id} hover>
+                  <TableCell>{criterion.name}</TableCell>
+                  <TableCell>{criterion.weight}</TableCell>
+                  <TableCell>{criterion.scale_min} - {criterion.scale_max}</TableCell>
+                  <TableCell>
+                    <IconButton color="error" onClick={() => handleDeleteCriteria(criterion.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Card>
+    </Stack>
   );
 };

@@ -637,30 +637,35 @@ app.post('/api/requirements/:key/rank', async (req, res) => {
 // Fix ranks (make them sequential)
 app.post('/api/requirements/fix-ranks', async (req, res) => {
   try {
-    // Get all requirements and sort them by current rank and score
+    // Get all requirements
     const result = await pool.query('SELECT * FROM requirements');
-    const reqs = result.rows
-      .map(req => ({ ...req, rank: req.rank || 0 }))
-      .sort((a, b) => {
-        if (a.rank === b.rank) {
-          return b.score - a.score; // Higher score comes first when ranks are equal
-        }
-        return a.rank - b.rank;
-      });
+    const reqs = result.rows.map(req => ({ ...req, rank: req.rank || 0 }));
 
-    // Only renumber requirements whose rank is not 999
+    // Separate requirements with rank 999 and others
+    const normalReqs = reqs.filter(r => r.rank !== 999);
+    const specialReqs = reqs.filter(r => r.rank === 999);
+
+    // Sort only the normal requirements
+    normalReqs.sort((a, b) => {
+      if (a.rank === b.rank) {
+        return b.score - a.score;
+      }
+      return a.rank - b.rank;
+    });
+
+    // Renumber only the normal requirements
     let newRank = 0;
-    for (let i = 0; i < reqs.length; i++) {
-      if (reqs[i].rank === 999) continue; // skip
-      await pool.query('UPDATE requirements SET rank = $1 WHERE key = $2', [newRank, reqs[i].key]);
-      reqs[i].rank = newRank;
+    for (let i = 0; i < normalReqs.length; i++) {
+      await pool.query('UPDATE requirements SET rank = $1 WHERE key = $2', [newRank, normalReqs[i].key]);
+      normalReqs[i].rank = newRank;
       newRank++;
     }
+    // specialReqs are left untouched
 
     res.json({
       success: true,
       message: 'Ranks have been fixed successfully',
-      data: reqs
+      data: [...normalReqs, ...specialReqs]
     });
   } catch (error) {
     res.status(500).json({

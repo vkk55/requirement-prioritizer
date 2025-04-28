@@ -22,7 +22,7 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material';
-import { Info, Refresh, FileDownload, Check } from '@mui/icons-material';
+import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 
 interface Requirement {
@@ -174,6 +174,8 @@ export const StackRank = () => {
       if (fixRanksAfter) {
         // Call backend to fix ranks
         await fetch('https://requirement-prioritizer.onrender.com/api/requirements/fix-ranks', { method: 'POST' });
+        window.location.reload(); // Force full page reload
+        return;
       }
       setSortBy('rank');
       setSortOrder('asc');
@@ -434,7 +436,9 @@ export const StackRank = () => {
                   </IconButton>
                 </TableCell>
                 <TableCell>
-                  <Button color="error" size="small" onClick={() => handleDelete(requirement.key)}>Delete</Button>
+                  <IconButton color="error" size="small" onClick={() => handleDelete(requirement.key)}>
+                    <DeleteIcon />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}

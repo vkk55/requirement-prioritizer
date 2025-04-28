@@ -226,7 +226,19 @@ export const Requirements = () => {
                 ))}
                 <TableCell align="right">
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {requirement.score ?? 0}
+                    {(() => {
+                      let totalWeightedScore = 0;
+                      let totalWeight = 0;
+                      criteria.forEach(criterion => {
+                        const score = requirement.criteria?.[criterion.id] ?? 0;
+                        const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+                        if (weight) {
+                          totalWeightedScore += score * weight;
+                          totalWeight += weight;
+                        }
+                      });
+                      return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
+                    })()}
                     <Tooltip
                       title={(() => {
                         const mathParts = criteria.map(criterion => {
@@ -235,7 +247,17 @@ export const Requirements = () => {
                         });
                         const numerator = mathParts.join(' + ');
                         const denominator = criteria.map(c => c.weight).join('+');
-                        const weightedScore = requirement.score ?? 0;
+                        let totalWeightedScore = 0;
+                        let totalWeight = 0;
+                        criteria.forEach(criterion => {
+                          const score = requirement.criteria?.[criterion.id] ?? 0;
+                          const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+                          if (weight) {
+                            totalWeightedScore += score * weight;
+                            totalWeight += weight;
+                          }
+                        });
+                        const weightedScore = totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
                         return `(${numerator}) / (${denominator}) = ${weightedScore}`;
                       })()}
                       placement="top"

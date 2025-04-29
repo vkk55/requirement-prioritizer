@@ -17,7 +17,7 @@ import {
   Divider,
   IconButton,
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Save as SaveIcon } from '@mui/icons-material';
 
 interface Criterion {
   id: string;
@@ -185,6 +185,43 @@ export const Settings = () => {
     }
   };
 
+  // Save all weights in one batch
+  const handleSaveAllWeights = async () => {
+    if (weightSum > 100) {
+      setError('Sum of all weights cannot exceed 100');
+      return;
+    }
+    const updates = Object.entries(editingWeights)
+      .filter(([id, value]) => {
+        const crit = criteria.find(c => c.id === id);
+        return crit && crit.weight !== value;
+      });
+    if (updates.length === 0) {
+      setSuccess('No changes to save');
+      return;
+    }
+    try {
+      for (const [id, value] of updates) {
+        const criterion = criteria.find(c => c.id === id);
+        if (!criterion) continue;
+        const updated = { ...criterion, weight: value };
+        const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updated),
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message || 'Failed to update weight');
+      }
+      setCriteria(prev => prev.map(c => editingWeights[c.id] !== undefined ? { ...c, weight: editingWeights[c.id] } : c));
+      setEditingWeights({});
+      setSuccess('All weights saved successfully');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save weights');
+    }
+  };
+
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 800, mx: 'auto' }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>
@@ -232,9 +269,21 @@ export const Settings = () => {
         </Stack>
       </Card>
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-        <Typography variant="h6" fontWeight={700} gutterBottom>
-          Existing Criteria
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" fontWeight={700} gutterBottom>
+            Existing Criteria
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SaveIcon />}
+            onClick={handleSaveAllWeights}
+            sx={{ fontWeight: 700, borderRadius: 2 }}
+            disabled={Object.keys(editingWeights).length === 0}
+          >
+            Save
+          </Button>
+        </Box>
         <Divider sx={{ mb: 2 }} />
         <TableContainer>
           <Table size="medium">

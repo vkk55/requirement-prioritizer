@@ -50,6 +50,7 @@ interface Requirement {
   relatedCustomers?: string;
   status?: string;
   labels?: string[];
+  priority?: string;
 }
 
 interface ScoreRange {
@@ -469,6 +470,67 @@ const Analytics: React.FC = () => {
     };
   }, [requirements]);
 
+  // --- Requirements by Priority Bar Chart ---
+  const priorityData = useMemo(() => {
+    if (!Array.isArray(requirements) || requirements.length === 0) {
+      return {
+        labels: [],
+        datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
+      };
+    }
+    const priorityCount: Record<string, number> = {};
+    requirements.forEach(req => {
+      const priority = req.priority || 'Unknown';
+      priorityCount[priority] = (priorityCount[priority] || 0) + 1;
+    });
+    const labels = Object.keys(priorityCount);
+    const data = labels.map(label => priorityCount[label]);
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+        ],
+        borderWidth: 1,
+      }]
+    };
+  }, [requirements]);
+
+  // --- Bar chart options for horizontal bar ---
+  const horizontalBarOptions = {
+    indexAxis: 'y' as const,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+    },
+    scales: {
+      x: { beginAtZero: true },
+      y: { beginAtZero: true },
+    },
+  };
+
+  // --- Bar chart options for vertical bar ---
+  const verticalBarOptions = {
+    indexAxis: 'x' as const,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+    },
+    scales: {
+      x: { beginAtZero: true },
+      y: { beginAtZero: true },
+    },
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -500,28 +562,32 @@ const Analytics: React.FC = () => {
             <Pie data={criteriaData} options={pieChartOptions} />
           </Box>
         </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Customer
           </Typography>
-          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
-            <Pie data={customerData} options={pieChartOptions} />
+          <Box sx={{ height: 260 }}>
+            <Bar data={customerData} options={horizontalBarOptions} />
           </Box>
         </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Status
           </Typography>
-          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
-            <Pie data={statusData} options={pieChartOptions} />
+          <Box sx={{ height: 260 }}>
+            {Object.keys(statusData.labels).length > 5 ? (
+              <Bar data={statusData} options={verticalBarOptions} />
+            ) : (
+              <Pie data={statusData} options={pieChartOptions} />
+            )}
           </Box>
         </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Label
           </Typography>
-          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
-            <Pie data={labelData} options={pieChartOptions} />
+          <Box sx={{ height: 260 }}>
+            <Bar data={labelData} options={horizontalBarOptions} />
           </Box>
         </Card>
         <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
@@ -530,6 +596,14 @@ const Analytics: React.FC = () => {
           </Typography>
           <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
             <Pie data={scoreRangeData} options={pieChartOptions} />
+          </Box>
+        </Card>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+          <Typography variant="h6" gutterBottom align="center">
+            Requirements by Priority
+          </Typography>
+          <Box sx={{ height: 260 }}>
+            <Bar data={priorityData} options={verticalBarOptions} />
           </Box>
         </Card>
       </Box>

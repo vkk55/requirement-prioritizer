@@ -37,6 +37,7 @@ export const Settings = () => {
     scale_min: 1,
     scale_max: 5,
   });
+  const [editingWeights, setEditingWeights] = useState<{ [id: string]: number }>({});
 
   useEffect(() => {
     initializeCriteria();
@@ -144,6 +145,46 @@ export const Settings = () => {
     }
   };
 
+  // Helper to get sum of weights
+  const weightSum = criteria.reduce((sum, c) => sum + (editingWeights[c.id] !== undefined ? editingWeights[c.id] : c.weight), 0);
+
+  // Handle weight change
+  const handleWeightChange = (id: string, value: number) => {
+    setEditingWeights(prev => ({ ...prev, [id]: value }));
+    setError('');
+  };
+
+  // Save weight to backend
+  const handleWeightBlur = async (id: string) => {
+    const newWeight = editingWeights[id];
+    if (isNaN(newWeight) || newWeight < 0) {
+      setError('Weight must be a non-negative number');
+      return;
+    }
+    const newSum = criteria.reduce((sum, c) => sum + (c.id === id ? newWeight : (editingWeights[c.id] !== undefined ? editingWeights[c.id] : c.weight)), 0);
+    if (newSum > 100) {
+      setError('Sum of all weights cannot exceed 100');
+      return;
+    }
+    try {
+      const criterion = criteria.find(c => c.id === id);
+      if (!criterion) return;
+      const updated = { ...criterion, weight: newWeight };
+      const response = await fetch('https://requirement-prioritizer.onrender.com/api/criteria', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to update weight');
+      setCriteria(prev => prev.map(c => c.id === id ? { ...c, weight: newWeight } : c));
+      setSuccess('Weight updated successfully');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update weight');
+    }
+  };
+
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 800, mx: 'auto' }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>
@@ -209,7 +250,17 @@ export const Settings = () => {
               {criteria.map((criterion) => (
                 <TableRow key={criterion.id} hover>
                   <TableCell>{criterion.name}</TableCell>
-                  <TableCell>{criterion.weight}</TableCell>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      size="small"
+                      value={editingWeights[criterion.id] !== undefined ? editingWeights[criterion.id] : criterion.weight}
+                      onChange={e => handleWeightChange(criterion.id, parseInt(e.target.value) || 0)}
+                      onBlur={() => handleWeightBlur(criterion.id)}
+                      inputProps={{ min: 0, max: 100, style: { width: 60 } }}
+                      error={weightSum > 100}
+                    />
+                  </TableCell>
                   <TableCell>{criterion.scale_min} - {criterion.scale_max}</TableCell>
                   <TableCell>
                     <IconButton color="error" onClick={() => handleDeleteCriteria(criterion.id)}>
@@ -218,6 +269,12 @@ export const Settings = () => {
                   </TableCell>
                 </TableRow>
               ))}
+              {/* Sum row */}
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: weightSum > 100 ? 'error.main' : 'inherit' }}>{weightSum}</TableCell>
+                <TableCell colSpan={2} />
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>

@@ -120,7 +120,7 @@ const Analytics: React.FC = () => {
   const normalizedRequirements = useMemo(() => {
     return requirements.map(req => ({
       ...req,
-      relatedCustomers: typeof req.relatedCustomers === 'string' ? req.relatedCustomers : '',
+      relatedCustomers: req.relatedCustomers || (req as any)['relatedcustomers'] || '',
     }));
   }, [requirements]);
 

@@ -190,18 +190,11 @@ export const Requirements = () => {
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell>Requirement</TableCell>
+                <TableCell rowSpan={2} sx={{ verticalAlign: 'bottom' }}>Requirement</TableCell>
                 {criteria.map(criterion => (
-                  <TableCell key={criterion.id}>
-                    <Stack spacing={0.5} alignItems="center">
-                      <span>{criterion.name}</span>
-                      <Typography variant="caption" color="text.secondary">
-                        Weight: {criterion.weight}
-                      </Typography>
-                    </Stack>
-                  </TableCell>
+                  <TableCell key={criterion.id} align="center">{criterion.name}</TableCell>
                 ))}
-                <TableCell style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <TableCell rowSpan={2} sx={{ verticalAlign: 'bottom', display: 'flex', alignItems: 'center', gap: 1 }}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     Score
                     <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
@@ -211,6 +204,15 @@ export const Requirements = () => {
                     </Tooltip>
                   </span>
                 </TableCell>
+              </TableRow>
+              <TableRow>
+                {criteria.map(criterion => (
+                  <TableCell key={criterion.id} align="center">
+                    <Typography variant="caption" color="text.secondary">
+                      Weight: {criterion.weight}
+                    </Typography>
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>

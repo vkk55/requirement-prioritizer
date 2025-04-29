@@ -116,6 +116,14 @@ const Analytics: React.FC = () => {
     }
   };
 
+  // Defensive normalization: ensure every requirement has a relatedCustomers string
+  const normalizedRequirements = useMemo(() => {
+    return requirements.map(req => ({
+      ...req,
+      relatedCustomers: typeof req.relatedCustomers === 'string' ? req.relatedCustomers : '',
+    }));
+  }, [requirements]);
+
   const distributionData = useMemo(() => {
     if (!Array.isArray(requirements) || requirements.length === 0) {
       return {
@@ -202,7 +210,7 @@ const Analytics: React.FC = () => {
   }, [requirements]);
 
   const customerData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(normalizedRequirements) || normalizedRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{
@@ -213,7 +221,7 @@ const Analytics: React.FC = () => {
       };
     }
     const customerCount: Record<string, number> = {};
-    requirements.forEach(req => {
+    normalizedRequirements.forEach(req => {
       // Try both customers (array) and relatedCustomers (string)
       let customers: string[] = [];
       if (Array.isArray(req.customers)) {
@@ -229,6 +237,9 @@ const Analytics: React.FC = () => {
     });
     const labels = Object.keys(customerCount);
     const data = labels.map(label => customerCount[label]);
+    if (labels.length === 0) {
+      console.warn('No customer data found in requirements. Check field mapping and import.');
+    }
     return {
       labels,
       datasets: [{
@@ -243,7 +254,7 @@ const Analytics: React.FC = () => {
         borderWidth: 1,
       }]
     };
-  }, [requirements]);
+  }, [normalizedRequirements]);
 
   const statusData = useMemo(() => {
     if (!Array.isArray(requirements) || requirements.length === 0) {

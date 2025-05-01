@@ -419,114 +419,71 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
           row[field] = worksheet[cell] ? worksheet[cell].v : '';
         }
       }
-      console.log('Raw Excel row data:', { row });
       if (Object.keys(row).length > 0) {
         data.push(row);
       }
     }
 
+    // --- Dynamic Schema Extension ---
+    // 1. Get current columns from requirements table
+    const colRes = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'requirements'`);
+    const currentColumns = colRes.rows.map(r => r.column_name);
+    // 2. Find new fields in mapping not in currentColumns
+    const newFields = Object.keys(mapping).filter(f => !currentColumns.includes(f) && f !== 'operation');
+    // 3. For each new field, ALTER TABLE to add as TEXT
+    for (const field of newFields) {
+      try {
+        await pool.query(`ALTER TABLE requirements ADD COLUMN IF NOT EXISTS "${field}" TEXT`);
+        console.log(`[DynamicSchema] Added new column: ${field}`);
+      } catch (err) {
+        // Ignore if already exists or log error
+        console.error(`[DynamicSchema] Error adding column ${field}:`, err.message);
+      }
+    }
+    // 4. Refresh columns after possible alter
+    const colRes2 = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name = 'requirements'`);
+    const allColumns = colRes2.rows.map(r => r.column_name);
+
     // For each row, insert or update in PostgreSQL
     for (const row of data) {
       if (!row.key) continue;
-      
-      console.log('Processing row with key:', row.key);
-      console.log('Original row data:', {
-        timeSpent: row.timeSpent,
-        roughEstimate: row.roughEstimate,
-        relatedCustomers: row.relatedCustomers
-      });
-      
-      // Clean and prepare the data
-      const cleanedData = {
-        summary: row.summary || '',
-        priority: row.priority || '',
-        status: row.status || '',
-        assignee: row.assignee || '',
-        timeSpent: row.timeSpent || '',
-        labels: row.labels || '',
-        roughEstimate: row.roughEstimate || '',
-        relatedCustomers: row.relatedCustomers ? String(row.relatedCustomers).trim() : '',
-        prioritization: parseIntOrNull(row.prioritization),
-        weight: parseIntOrNull(row.weight)
-      };
-
-      console.log('Cleaned data:', {
-        timeSpent: cleanedData.timeSpent,
-        roughEstimate: cleanedData.roughEstimate,
-        relatedCustomers: cleanedData.relatedCustomers
-      });
-
+      // Clean and prepare the data (use all fields)
+      const cleanedData = {};
+      for (const col of allColumns) {
+        if (row[col] !== undefined) {
+          cleanedData[col] = row[col];
+        }
+      }
+      // Always set key
+      cleanedData.key = row.key;
+      // Check if exists
       const existing = await pool.query('SELECT * FROM requirements WHERE key = $1', [row.key]);
-      
       if (existing.rows.length > 0) {
-        console.log(`Updating existing requirement: ${row.key}`);
-        // Update with all fields explicitly mentioned
-        try {
-          await pool.query(
-            `UPDATE requirements 
-             SET summary=$1, priority=$2, status=$3, assignee=$4, 
-                 timeSpent=$5, labels=$6, roughEstimate=$7, 
-                 relatedCustomers=$8, prioritization=$9, weight=$10 
-             WHERE key=$11
-             RETURNING timeSpent, roughEstimate, relatedCustomers`,
-            [
-              cleanedData.summary,
-              cleanedData.priority,
-              cleanedData.status,
-              cleanedData.assignee,
-              cleanedData.timeSpent,
-              cleanedData.labels,
-              cleanedData.roughEstimate,
-              cleanedData.relatedCustomers,
-              cleanedData.prioritization,
-              cleanedData.weight,
-              row.key
-            ]
-          ).then(result => {
-            console.log('Updated values in database:', result.rows[0]);
-          });
-        } catch (error) {
-          console.error('Error updating requirement:', error);
-          throw error;
-        }
+        // Update: build SET clause dynamically
+        const setCols = Object.keys(cleanedData).filter(c => c !== 'key');
+        const setClause = setCols.map((c, i) => `"${c}"=$${i+1}`).join(', ');
+        const values = setCols.map(c => cleanedData[c]);
+        values.push(row.key); // for WHERE
+        await pool.query(
+          `UPDATE requirements SET ${setClause} WHERE key=$${setCols.length+1}`,
+          values
+        );
       } else {
-        console.log(`Inserting new requirement: ${row.key}`);
-        try {
-          await pool.query(
-            `INSERT INTO requirements (
-               key, summary, priority, status, assignee, 
-               timeSpent, labels, roughEstimate, 
-               relatedCustomers, prioritization, weight
-             )
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-             RETURNING timeSpent, roughEstimate, relatedCustomers`,
-            [
-              row.key,
-              cleanedData.summary,
-              cleanedData.priority,
-              cleanedData.status,
-              cleanedData.assignee,
-              cleanedData.timeSpent,
-              cleanedData.labels,
-              cleanedData.roughEstimate,
-              cleanedData.relatedCustomers,
-              cleanedData.prioritization,
-              cleanedData.weight
-            ]
-          ).then(result => {
-            console.log('Inserted values in database:', result.rows[0]);
-          });
-        } catch (error) {
-          console.error('Error inserting requirement:', error);
-          throw error;
-        }
+        // Insert: build columns and values dynamically
+        const insertCols = Object.keys(cleanedData);
+        const insertVals = insertCols.map((c, i) => `$${i+1}`).join(', ');
+        const values = insertCols.map(c => cleanedData[c]);
+        await pool.query(
+          `INSERT INTO requirements (${insertCols.map(c => '"'+c+'"').join(',')}) VALUES (${insertVals})`,
+          values
+        );
       }
     }
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
 
-    res.json({ success: true, message: 'Requirements imported successfully' });
+    res.json({ success: true, message: 'Requirements imported successfully', newFields });
   } catch (error) {
     console.error('Import error:', error);
     if (req.file && fs.existsSync(req.file.path)) {

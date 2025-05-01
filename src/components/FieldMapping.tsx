@@ -7,6 +7,7 @@ import {
   Grid,
   Typography,
   Paper,
+  Stack,
 } from '@mui/material';
 
 interface FieldMappingProps {
@@ -81,46 +82,85 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
   }, [availableColumns, fields, onMappingChange, selectedColumns]);
 
   return (
-    <Paper elevation={2} sx={{ p: 3, mt: 2 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper elevation={2} sx={{ p: 3, mt: 2, background: '#f8fafc' }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
         Map Excel Columns to Fields
       </Typography>
-      <Grid container spacing={2}>
-        {fields.map(({ key, label }) => (
-          <Grid
-            key={key}
-            sx={{
-              gridColumn: {
-                xs: 'span 12',
-                sm: 'span 6',
-                md: 'span 4',
-              },
-            }}
-          >
-            <FormControl
-              fullWidth
-              required={requiredFields.includes(key)}
-              error={requiredFields.includes(key) && !selectedColumns[key]}
-            >
-              <InputLabel id={`${key}-label`}>{label}</InputLabel>
-              <Select
-                labelId={`${key}-label`}
-                value={selectedColumns[key] || ''}
-                label={label}
-                onChange={(e) => onMappingChange(key, e.target.value)}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {availableColumns.map((column) => (
-                  <MenuItem key={column} value={column}>
-                    {column}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        ))}
+      <Grid container spacing={3}>
+        {/* Group 1: Core Fields */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontWeight: 600 }}>
+            Core Fields
+          </Typography>
+          <Stack spacing={2}>
+            {["key", "summary", "priority", "status", "assignee"].map((key) => {
+              const field = fields.find(f => f.key === key)!;
+              return (
+                <FormControl
+                  key={key}
+                  fullWidth
+                  required={requiredFields.includes(key)}
+                  error={requiredFields.includes(key) && !selectedColumns[key]}
+                  size="small"
+                >
+                  <InputLabel id={`${key}-label`}>{field.label}</InputLabel>
+                  <Select
+                    labelId={`${key}-label`}
+                    value={selectedColumns[key] || ''}
+                    label={field.label}
+                    onChange={(e) => onMappingChange(key, e.target.value)}
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    {availableColumns.map((column) => (
+                      <MenuItem key={column} value={column}>
+                        {column}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              );
+            })}
+          </Stack>
+        </Grid>
+        {/* Group 2: Additional Fields */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontWeight: 600 }}>
+            Additional Fields
+          </Typography>
+          <Stack spacing={2}>
+            {["timeSpent", "labels", "roughEstimate", "relatedCustomers", "prioritization", "weight"].map((key) => {
+              const field = fields.find(f => f.key === key)!;
+              return (
+                <FormControl
+                  key={key}
+                  fullWidth
+                  required={requiredFields.includes(key)}
+                  error={requiredFields.includes(key) && !selectedColumns[key]}
+                  size="small"
+                >
+                  <InputLabel id={`${key}-label`}>{field.label}</InputLabel>
+                  <Select
+                    labelId={`${key}-label`}
+                    value={selectedColumns[key] || ''}
+                    label={field.label}
+                    onChange={(e) => onMappingChange(key, e.target.value)}
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    {availableColumns.map((column) => (
+                      <MenuItem key={column} value={column}>
+                        {column}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              );
+            })}
+          </Stack>
+        </Grid>
       </Grid>
     </Paper>
   );

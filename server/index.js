@@ -297,7 +297,10 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
       const row = {};
       for (const [field, excelColumn] of Object.entries(mapping)) {
-        const C = headers.findIndex(h => h === excelColumn);
+        // Case-insensitive, trimmed header match
+        const C = headers.findIndex(
+          h => h && h.toString().trim().toLowerCase() === excelColumn.toString().trim().toLowerCase()
+        );
         if (C !== -1) {
           const cell = XLSX.utils.encode_cell({r: R, c: C});
           row[field] = worksheet[cell] ? worksheet[cell].v : '';
@@ -312,7 +315,7 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
       console.log('First data row:', data[0]);
     }
 
-    // Analyze each row using PostgreSQL
+    // Build preview with all mapped fields (including new fields)
     const preview = {
       total: data.length,
       toBeUpdated: [],
@@ -332,25 +335,14 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
       // Check if requirement exists in DB
       const existingReq = await pool.query('SELECT * FROM requirements WHERE key = $1', [row.key]);
       const operation = existingReq.rows.length > 0 ? 'update' : 'insert';
-      const newValues = {
-        summary: row.summary || '',
-        priority: row.priority || '',
-        status: row.status || '',
-        assignee: row.assignee || '',
-        timeSpent: row.timeSpent || '',
-        labels: row.labels || '',
-        roughEstimate: row.roughEstimate || '',
-        relatedCustomers: row.relatedCustomers || '',
-        prioritization: row.prioritization || 0,
-        weight: row.weight || 0
-      };
+      // Include all mapped fields in newValues
+      const newValues = { ...row };
       const previewItem = {
         key: row.key,
         operation,
         currentValues: operation === 'update' ? existingReq.rows[0] : null,
         newValues,
-        // Spread all fields at the top level
-        ...newValues
+        ...newValues // Spread all fields at the top level for preview table
       };
       if (operation === 'update') {
         preview.toBeUpdated.push(previewItem);

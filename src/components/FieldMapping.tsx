@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FormControl,
   InputLabel,
@@ -38,20 +38,29 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
   onMappingChange,
   requiredFields,
 }) => {
-  // Auto-map fields when availableColumns changes
+  const [dbColumns, setDbColumns] = useState<string[]>([]);
+
   useEffect(() => {
-    const autoMapping: Record<string, string> = {};
-    availableColumns.forEach(col => {
-      const match = knownFields.find(f => f.key.toLowerCase() === col.trim().toLowerCase());
-      if (match && !selectedColumns[col.toLowerCase()]) {
-        autoMapping[col.toLowerCase()] = match.key;
-      }
-    });
-    Object.entries(autoMapping).forEach(([col, key]) => {
-      onMappingChange(col, key);
-    });
-    // eslint-disable-next-line
-  }, [availableColumns]);
+    // Fetch columns from backend
+    fetch('https://requirement-prioritizer.onrender.com/api/requirements/columns', {
+      method: 'POST',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.columns)) {
+          setDbColumns(data.columns.map((c: string) => c.trim()));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Merge known fields and db columns for dropdown
+  const allFieldOptions = Array.from(
+    new Set([
+      ...knownFields.map(f => f.key),
+      ...dbColumns.filter(c => !knownFields.some(f => f.key === c)),
+    ])
+  );
 
   return (
     <Paper elevation={2} sx={{ p: 3, mt: 2, background: '#f8fafc' }}>
@@ -77,8 +86,8 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
                   <MenuItem value="">
                     <em>None</em>
                   </MenuItem>
-                  {knownFields.map(f => (
-                    <MenuItem key={f.key} value={f.key}>{f.label}</MenuItem>
+                  {allFieldOptions.map((key) => (
+                    <MenuItem key={key} value={key}>{knownFields.find(f => f.key === key)?.label || key}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -86,7 +95,7 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
               <TextField
                 size="small"
                 label="Or enter new field name"
-                value={selectedColumns[excelCol.toLowerCase()] && !knownFields.some(f => f.key === selectedColumns[excelCol.toLowerCase()]) ? selectedColumns[excelCol.toLowerCase()] : ''}
+                value={selectedColumns[excelCol.toLowerCase()] && !allFieldOptions.includes(selectedColumns[excelCol.toLowerCase()]) ? selectedColumns[excelCol.toLowerCase()] : ''}
                 onChange={e => onMappingChange(excelCol.toLowerCase(), e.target.value)}
                 placeholder="e.g. Product Manager"
                 sx={{ mt: 1 }}

@@ -276,6 +276,19 @@ const ImportRequirements: React.FC = () => {
 
   console.log('selectedColumns:', selectedColumns);
 
+  // Helper to get all unique fields from preview data
+  const getPreviewFields = (previewData: any): string[] => {
+    if (!previewData) return [];
+    const fields = new Set<string>();
+    previewData.toBeInserted?.forEach((row: any) => Object.keys(row).forEach((f: string) => fields.add(f)));
+    previewData.toBeUpdated?.forEach((row: any) => Object.keys(row).forEach((f: string) => fields.add(f)));
+    // Remove operation, currentValues, newValues for cleaner table
+    fields.delete('operation');
+    fields.delete('currentValues');
+    fields.delete('newValues');
+    return Array.from(fields);
+  };
+
   return (
     <Container maxWidth="md">
       <Card elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 6, borderRadius: 4 }}>
@@ -348,9 +361,7 @@ const ImportRequirements: React.FC = () => {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      {Object.keys({
-                        key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                      }).map(field => (
+                      {getPreviewFields(previewData).map((field: string) => (
                         <TableCell key={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</TableCell>
                       ))}
                     </TableRow>
@@ -358,18 +369,14 @@ const ImportRequirements: React.FC = () => {
                   <TableBody>
                     {previewData.toBeInserted.map((item, idx) => (
                       <TableRow key={item.key + '-insert'} sx={{ backgroundColor: '#e8f5e9' }} hover>
-                        {Object.keys({
-                          key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                        }).map(field => (
+                        {getPreviewFields(previewData).map((field: string) => (
                           <TableCell key={field}>{item[field] ?? ''}</TableCell>
                         ))}
                       </TableRow>
                     ))}
                     {previewData.toBeUpdated.map((item, idx) => (
                       <TableRow key={item.key + '-update'} sx={{ backgroundColor: '#fffde7' }} hover>
-                        {Object.keys({
-                          key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                        }).map(field => (
+                        {getPreviewFields(previewData).map((field: string) => (
                           <TableCell key={field}>{item.newValues ? item.newValues[field] ?? '' : item[field] ?? ''}</TableCell>
                         ))}
                       </TableRow>
@@ -448,9 +455,7 @@ const ImportRequirements: React.FC = () => {
                         <Table size="small">
                           <TableHead>
                             <TableRow>
-                              {Object.keys({
-                                key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                              }).map(field => (
+                              {getPreviewFields(previewData).map((field: string) => (
                                 <TableCell key={field}>{field.charAt(0).toUpperCase() + field.slice(1)}</TableCell>
                               ))}
                             </TableRow>
@@ -458,18 +463,14 @@ const ImportRequirements: React.FC = () => {
                           <TableBody>
                             {previewData.toBeInserted.map((item, idx) => (
                               <TableRow key={item.key + '-insert'} sx={{ backgroundColor: '#e8f5e9' }} hover>
-                                {Object.keys({
-                                  key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                                }).map(field => (
+                                {getPreviewFields(previewData).map((field: string) => (
                                   <TableCell key={field}>{item[field] ?? ''}</TableCell>
                                 ))}
                               </TableRow>
                             ))}
                             {previewData.toBeUpdated.map((item, idx) => (
                               <TableRow key={item.key + '-update'} sx={{ backgroundColor: '#fffde7' }} hover>
-                                {Object.keys({
-                                  key: '', summary: '', priority: '', status: '', assignee: '', timeSpent: '', labels: '', roughEstimate: '', relatedCustomers: '', prioritization: '', weight: '', operation: ''
-                                }).map(field => (
+                                {getPreviewFields(previewData).map((field: string) => (
                                   <TableCell key={field}>{item.newValues ? item.newValues[field] ?? '' : item[field] ?? ''}</TableCell>
                                 ))}
                               </TableRow>

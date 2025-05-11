@@ -7,15 +7,30 @@ import {
   Grid,
   Typography,
   Paper,
+  TextField,
   Stack,
 } from '@mui/material';
 
 interface FieldMappingProps {
   availableColumns: string[];
   selectedColumns: { [key: string]: string };
-  onMappingChange: (field: string, value: string) => void;
+  onMappingChange: (excelCol: string, value: string) => void;
   requiredFields: string[];
 }
+
+const knownFields = [
+  { key: 'key', label: 'Key' },
+  { key: 'summary', label: 'Summary' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'status', label: 'Status' },
+  { key: 'assignee', label: 'Assignee' },
+  { key: 'timeSpent', label: 'Time Spent' },
+  { key: 'labels', label: 'Labels' },
+  { key: 'roughEstimate', label: 'Rough Estimate' },
+  { key: 'relatedCustomers', label: 'Related Customer(s)' },
+  { key: 'prioritization', label: 'Prioritization' },
+  { key: 'weight', label: 'Weight' },
+];
 
 const FieldMapping: React.FC<FieldMappingProps> = ({
   availableColumns,
@@ -23,144 +38,47 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
   onMappingChange,
   requiredFields,
 }) => {
-  const fields = [
-    { key: 'key', label: 'Key' },
-    { key: 'summary', label: 'Summary' },
-    { key: 'priority', label: 'Priority' },
-    { key: 'status', label: 'Status' },
-    { key: 'assignee', label: 'Assignee' },
-    { key: 'timeSpent', label: 'Time Spent' },
-    { key: 'labels', label: 'Labels' },
-    { key: 'roughEstimate', label: 'Rough Estimate' },
-    { key: 'relatedCustomers', label: 'Related Customer(s)' },
-    { key: 'prioritization', label: 'Prioritization' },
-    { key: 'weight', label: 'Weight' },
-  ];
-
-  // Auto-map fields when availableColumns change
-  useEffect(() => {
-    const autoMap = () => {
-      const newMapping: { [key: string]: string } = {};
-      
-      fields.forEach(({ key, label }) => {
-        // Skip if already mapped
-        if (selectedColumns[key]) return;
-
-        // Try different variations of the field name
-        const variations = [
-          key,
-          label,
-          key.toLowerCase(),
-          label.toLowerCase(),
-          key.toUpperCase(),
-          label.toUpperCase(),
-          // Handle special cases
-          key === 'timeSpent' ? 'Time Spent' : '',
-          key === 'roughEstimate' ? 'Rough Estimate' : '',
-          key === 'relatedCustomers' ? 'Related Customer(s)' : '',
-        ].filter(Boolean);
-
-        // Find first matching column
-        const matchedColumn = availableColumns.find(column =>
-          variations.some(v => column.toLowerCase() === v.toLowerCase())
-        );
-
-        if (matchedColumn) {
-          newMapping[key] = matchedColumn;
-        }
-      });
-
-      // Update only if we found any matches
-      if (Object.keys(newMapping).length > 0) {
-        Object.entries(newMapping).forEach(([key, value]) => {
-          onMappingChange(key, value);
-        });
-      }
-    };
-
-    autoMap();
-  }, [availableColumns, fields, onMappingChange, selectedColumns]);
-
   return (
     <Paper elevation={2} sx={{ p: 3, mt: 2, background: '#f8fafc' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
         Map Excel Columns to Fields
       </Typography>
       <Grid container spacing={3}>
-        {/* Group 1: Core Fields */}
-        <Grid item xs={12} md={6}>
-          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontWeight: 600 }}>
-            Core Fields
-          </Typography>
-          <Stack spacing={2}>
-            {["key", "summary", "priority", "status", "assignee"].map((key) => {
-              const field = fields.find(f => f.key === key)!;
-              return (
-                <FormControl
-                  key={key}
-                  fullWidth
-                  required={requiredFields.includes(key)}
-                  error={requiredFields.includes(key) && !selectedColumns[key]}
-                  size="small"
+        {availableColumns.map((excelCol) => (
+          <Grid item xs={12} md={6} key={excelCol}>
+            <Stack spacing={1}>
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                Excel Column: {excelCol}
+              </Typography>
+              <FormControl fullWidth size="small">
+                <InputLabel id={`${excelCol}-label`}>Map to Field</InputLabel>
+                <Select
+                  labelId={`${excelCol}-label`}
+                  value={selectedColumns[excelCol] || ''}
+                  label="Map to Field"
+                  onChange={e => onMappingChange(excelCol, e.target.value)}
+                  renderValue={val => val || 'Select or enter new field'}
                 >
-                  <InputLabel id={`${key}-label`}>{field.label}</InputLabel>
-                  <Select
-                    labelId={`${key}-label`}
-                    value={selectedColumns[key] || ''}
-                    label={field.label}
-                    onChange={(e) => onMappingChange(key, e.target.value)}
-                  >
-                    <MenuItem value="">
-                      <em>None</em>
-                    </MenuItem>
-                    {availableColumns.map((column) => (
-                      <MenuItem key={column} value={column}>
-                        {column}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              );
-            })}
-          </Stack>
-        </Grid>
-        {/* Group 2: Additional Fields */}
-        <Grid item xs={12} md={6}>
-          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontWeight: 600 }}>
-            Additional Fields
-          </Typography>
-          <Stack spacing={2}>
-            {["timeSpent", "labels", "roughEstimate", "relatedCustomers", "prioritization", "weight"].map((key) => {
-              const field = fields.find(f => f.key === key)!;
-              return (
-                <FormControl
-                  key={key}
-                  fullWidth
-                  required={requiredFields.includes(key)}
-                  error={requiredFields.includes(key) && !selectedColumns[key]}
-                  size="small"
-                >
-                  <InputLabel id={`${key}-label`}>{field.label}</InputLabel>
-                  <Select
-                    labelId={`${key}-label`}
-                    value={selectedColumns[key] || ''}
-                    label={field.label}
-                    onChange={(e) => onMappingChange(key, e.target.value)}
-                  >
-                    <MenuItem value="">
-                      <em>None</em>
-                    </MenuItem>
-                    {availableColumns.map((column) => (
-                      <MenuItem key={column} value={column}>
-                        {column}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              );
-            })}
-          </Stack>
-        </Grid>
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {knownFields.map(f => (
+                    <MenuItem key={f.key} value={f.key}>{f.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {/* Allow entering a new field name if not in knownFields */}
+              <TextField
+                size="small"
+                label="Or enter new field name"
+                value={selectedColumns[excelCol] && !knownFields.some(f => f.key === selectedColumns[excelCol]) ? selectedColumns[excelCol] : ''}
+                onChange={e => onMappingChange(excelCol, e.target.value)}
+                placeholder="e.g. Product Manager"
+                sx={{ mt: 1 }}
+              />
+            </Stack>
+          </Grid>
+        ))}
       </Grid>
     </Paper>
   );

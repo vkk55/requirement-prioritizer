@@ -38,6 +38,22 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
   onMappingChange,
   requiredFields,
 }) => {
+  // Auto-map fields when availableColumns changes
+  useEffect(() => {
+    const autoMapping: Record<string, string> = {};
+    availableColumns.forEach(col => {
+      const match = knownFields.find(f => f.key.toLowerCase() === col.trim().toLowerCase());
+      if (match && !selectedColumns[col]) {
+        autoMapping[col] = match.key;
+      }
+    });
+    // Only update if there are new mappings
+    (Object.entries(autoMapping) as [string, string][]).forEach(([col, key]) => {
+      onMappingChange(col, key);
+    });
+    // eslint-disable-next-line
+  }, [availableColumns]);
+
   return (
     <Paper elevation={2} sx={{ p: 3, mt: 2, background: '#f8fafc' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>

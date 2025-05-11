@@ -143,6 +143,7 @@ const ImportRequirements: React.FC = () => {
     setErrorMessage('');
 
     try {
+      console.log('About to fetch preview');
       const formData = new FormData();
       formData.append('file', file);
       formData.append('mapping', JSON.stringify(selectedColumns));
@@ -164,7 +165,8 @@ const ImportRequirements: React.FC = () => {
       setPreviewData(data.preview);
       setPreviewOpen(true);
     } catch (err) {
-      console.error('Preview error:', err);
+      console.error('Fetch preview error:', err);
+      console.error('Fetch preview error (string):', err instanceof Error ? err.message : err);
       setErrorMessage('Error previewing data: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsLoading(false);

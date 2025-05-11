@@ -249,17 +249,21 @@ app.post('/api/requirements/columns', upload.single('file'), (req, res) => {
 // Preview Excel import
 app.post('/api/requirements/preview', upload.single('file'), async (req, res) => {
   try {
+    console.log('--- /api/requirements/preview called ---');
     if (!req.file) {
+      console.error('No file uploaded');
       return res.status(400).json({
         error: 'No file uploaded',
         message: 'Please upload an Excel file'
       });
     }
+    console.log('Received file:', req.file.originalname, 'size:', req.file.size);
 
     // Get field mapping from request
     let mapping = {};
     try {
       mapping = JSON.parse(req.body.mapping || '{}');
+      console.log('Received mapping:', mapping);
     } catch (e) {
       console.error('Error parsing mapping:', e);
       return res.status(400).json({
@@ -269,6 +273,7 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
     }
 
     if (!mapping.key) {
+      console.error('Key field mapping is required');
       return res.status(400).json({
         error: 'Invalid mapping',
         message: 'Key field mapping is required'
@@ -282,9 +287,10 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
     const range = XLSX.utils.decode_range(worksheet['!ref']);
     const headers = [];
     for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cell = worksheet[XLSX.utils.encode_cell({r: 0, c: C})];
-      headers[C] = cell ? cell.v : undefined;
+      const cell = XLSX.utils.encode_cell({r: 0, c: C});
+      headers[C] = cell ? worksheet[cell]?.v : undefined;
     }
+    console.log('Parsed headers:', headers);
 
     // Convert to array of objects using the mapping
     const data = [];
@@ -293,13 +299,17 @@ app.post('/api/requirements/preview', upload.single('file'), async (req, res) =>
       for (const [field, excelColumn] of Object.entries(mapping)) {
         const C = headers.findIndex(h => h === excelColumn);
         if (C !== -1) {
-          const cell = worksheet[XLSX.utils.encode_cell({r: R, c: C})];
-          row[field] = cell ? cell.v : '';
+          const cell = XLSX.utils.encode_cell({r: R, c: C});
+          row[field] = worksheet[cell] ? worksheet[cell].v : '';
         }
       }
       if (Object.keys(row).length > 0) {
         data.push(row);
       }
+    }
+    console.log('Parsed data rows:', data.length);
+    if (data.length > 0) {
+      console.log('First data row:', data[0]);
     }
 
     // Analyze each row using PostgreSQL

@@ -43,12 +43,11 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
     const autoMapping: Record<string, string> = {};
     availableColumns.forEach(col => {
       const match = knownFields.find(f => f.key.toLowerCase() === col.trim().toLowerCase());
-      if (match && !selectedColumns[col]) {
-        autoMapping[col] = match.key;
+      if (match && !selectedColumns[col.toLowerCase()]) {
+        autoMapping[col.toLowerCase()] = match.key;
       }
     });
-    // Only update if there are new mappings
-    (Object.entries(autoMapping) as [string, string][]).forEach(([col, key]) => {
+    Object.entries(autoMapping).forEach(([col, key]) => {
       onMappingChange(col, key);
     });
     // eslint-disable-next-line
@@ -70,9 +69,9 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
                 <InputLabel id={`${excelCol}-label`}>Map to Field</InputLabel>
                 <Select
                   labelId={`${excelCol}-label`}
-                  value={selectedColumns[excelCol] || ''}
+                  value={selectedColumns[excelCol.toLowerCase()] || ''}
                   label="Map to Field"
-                  onChange={e => onMappingChange(excelCol, e.target.value)}
+                  onChange={e => onMappingChange(excelCol.toLowerCase(), e.target.value)}
                   renderValue={val => val || 'Select or enter new field'}
                 >
                   <MenuItem value="">
@@ -87,8 +86,8 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
               <TextField
                 size="small"
                 label="Or enter new field name"
-                value={selectedColumns[excelCol] && !knownFields.some(f => f.key === selectedColumns[excelCol]) ? selectedColumns[excelCol] : ''}
-                onChange={e => onMappingChange(excelCol, e.target.value)}
+                value={selectedColumns[excelCol.toLowerCase()] && !knownFields.some(f => f.key === selectedColumns[excelCol.toLowerCase()]) ? selectedColumns[excelCol.toLowerCase()] : ''}
+                onChange={e => onMappingChange(excelCol.toLowerCase(), e.target.value)}
                 placeholder="e.g. Product Manager"
                 sx={{ mt: 1 }}
               />

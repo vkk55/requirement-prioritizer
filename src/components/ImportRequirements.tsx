@@ -122,7 +122,7 @@ const ImportRequirements: React.FC = () => {
   const handleMappingChange = (field: string, value: string) => {
     setSelectedColumns(prev => ({
       ...prev,
-      [field]: value
+      [field.toLowerCase()]: value
     }));
   };
 

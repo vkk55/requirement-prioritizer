@@ -62,6 +62,23 @@ const FieldMapping: React.FC<FieldMappingProps> = ({
     ])
   );
 
+  useEffect(() => {
+    if (!availableColumns.length || !allFieldOptions.length) return;
+    const autoMapping: Record<string, string> = {};
+    availableColumns.forEach(col => {
+      const match = allFieldOptions.find(
+        opt => opt.toLowerCase().trim() === col.toLowerCase().trim()
+      );
+      if (match) {
+        autoMapping[col.toLowerCase()] = match;
+      }
+    });
+    Object.entries(autoMapping).forEach(([col, key]) => {
+      onMappingChange(col, key);
+    });
+    // eslint-disable-next-line
+  }, [availableColumns, allFieldOptions]);
+
   return (
     <Paper elevation={2} sx={{ p: 3, mt: 2, background: '#f8fafc' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>

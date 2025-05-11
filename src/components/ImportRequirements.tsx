@@ -129,8 +129,11 @@ const ImportRequirements: React.FC = () => {
   const handlePreview = async () => {
     if (!file) return;
 
+    console.log('Preview button clicked', selectedColumns, file);
+
     // Check required fields
     const missingFields = requiredFields.filter(field => !selectedColumns[field]);
+    console.log('handlePreview: missingFields', missingFields);
     if (missingFields.length > 0) {
       setErrorMessage(`Missing required fields: ${missingFields.join(', ')}`);
       return;

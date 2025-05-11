@@ -269,6 +269,8 @@ const ImportRequirements: React.FC = () => {
     }
   }, [previewData]);
 
+  console.log('selectedColumns:', selectedColumns);
+
   return (
     <Container maxWidth="md">
       <Card elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 6, borderRadius: 4 }}>

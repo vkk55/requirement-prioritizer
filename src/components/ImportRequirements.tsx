@@ -540,6 +540,7 @@ const ImportRequirements: React.FC = () => {
                         <TableCell>{r.priority}</TableCell>
                         <TableCell>{r.status}</TableCell>
                         <TableCell>{r.assignee}</TableCell>
+                        <TableCell>{r.productOwner || ''}</TableCell>
                         <TableCell>{r.timeSpent}</TableCell>
                         <TableCell>{r.labels}</TableCell>
                         <TableCell>{r.roughEstimate}</TableCell>

@@ -160,11 +160,11 @@ export const StackRank = () => {
       return;
     }
     // Check for duplicate rank (exclude 999s)
-    const duplicate = requirements.some(r => r.key !== key && r.rank === rankValue && r.rank !== 999);
-    if (duplicate) {
-      setConfirmDialog({ open: true, key, newRank: value });
-      return;
-    }
+    // const duplicate = requirements.some(r => r.key !== key && r.rank === rankValue && r.rank !== 999);
+    // if (duplicate) {
+    //   setConfirmDialog({ open: true, key, newRank: value });
+    //   return;
+    // }
     await doRankSave(key, value, false);
   };
 
@@ -510,6 +510,7 @@ export const StackRank = () => {
         </Dialog>
       )}
       {/* Confirmation Dialog for duplicate rank */}
+      {/*
       {confirmDialog && (
         <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(null)} PaperProps={{ sx: { borderRadius: 3, p: 2 } }}>
           <DialogTitle sx={{ fontWeight: 700, fontSize: 20 }}>Duplicate Rank</DialogTitle>
@@ -525,6 +526,7 @@ export const StackRank = () => {
           </DialogActions>
         </Dialog>
       )}
+      */}
     </Stack>
   );
 }; 

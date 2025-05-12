@@ -196,8 +196,7 @@ export const StackRank = () => {
       setError('');
       setSuccess(`'${key}' rank was updated from ${oldRank} to ${rankValue}`);
       setTimeout(() => setSuccess(''), 2500);
-      setSortBy('rank');
-      setSortOrder('asc');
+      // Do not auto-sort by rank after saving
       setTimeout(fetchRequirements, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update rank');

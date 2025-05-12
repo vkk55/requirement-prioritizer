@@ -63,7 +63,7 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        <AppBar position="static" elevation={2} sx={{ bgcolor: 'white', color: 'primary.main', borderBottom: 1, borderColor: 'divider' }}>
+        <AppBar position="sticky" elevation={2} sx={{ bgcolor: 'white', color: 'primary.main', borderBottom: 1, borderColor: 'divider', top: 0, zIndex: 1201 }}>
           <Toolbar sx={{ minHeight: 72 }}>
             <Box
               component="img"

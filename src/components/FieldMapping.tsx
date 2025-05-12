@@ -30,6 +30,7 @@ const knownFields = [
   { key: 'relatedCustomers', label: 'Related Customer(s)' },
   { key: 'prioritization', label: 'Prioritization' },
   { key: 'weight', label: 'Weight' },
+  { key: 'productOwner', label: 'Product Owner' },
 ];
 
 const FieldMapping: React.FC<FieldMappingProps> = ({

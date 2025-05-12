@@ -76,7 +76,8 @@ function normalizeColumnNames(data) {
     'roughEstimate': ['Rough Estimate', 'roughEstimate', 'ROUGH ESTIMATE'],
     'relatedCustomers': ['Related Customer(s)', 'relatedCustomers', 'RELATED CUSTOMERS'],
     'prioritization': ['Prioritization', 'prioritization', 'PRIORITIZATION'],
-    'weight': ['Weight', 'weight', 'WEIGHT']
+    'weight': ['Weight', 'weight', 'WEIGHT'],
+    'productOwner': ['Product Owner', 'productOwner', 'PRODUCT OWNER']
   };
 
   return data.map(row => {

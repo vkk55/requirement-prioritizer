@@ -179,7 +179,15 @@ app.post('/api/jira/test', async (req, res) => {
 app.get('/api/requirements', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM requirements');
-    res.json({ success: true, data: result.rows });
+    // Map productowner to productOwner for frontend compatibility
+    const data = result.rows.map(row => {
+      if (row.productowner && !row.productOwner) {
+        row.productOwner = row.productowner;
+        delete row.productowner;
+      }
+      return row;
+    });
+    res.json({ success: true, data });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch requirements', message: error.message });
   }

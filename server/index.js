@@ -453,7 +453,12 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
       const cleanedData = {};
       for (const col of allColumns) {
         if (row[col] !== undefined) {
-          cleanedData[col] = row[col];
+          // Convert empty string to null for integer columns
+          if (["prioritization", "weight", "rank"].includes(col)) {
+            cleanedData[col] = parseIntOrNull(row[col]);
+          } else {
+            cleanedData[col] = row[col];
+          }
         }
       }
       // Always set key

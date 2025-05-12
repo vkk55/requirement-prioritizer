@@ -39,6 +39,7 @@ interface Requirement {
   roughEstimate?: string;
   relatedCustomers?: string;
   weight?: number;
+  productOwner?: string;
 }
 
 interface Criterion {
@@ -95,6 +96,7 @@ export const Requirements = () => {
     criteria: req.criteria,
     summary: req.summary,
     key: req.key,
+    productOwner: req.productOwner,
   });
 
   const fetchRequirements = async () => {
@@ -370,6 +372,9 @@ export const Requirements = () => {
               </ListItem>
               <ListItem>
                 <ListItemText primary="Assignee" secondary={selectedRequirement.assignee || 'Not assigned'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Product Owner" secondary={selectedRequirement.productOwner || 'Not set'} />
               </ListItem>
               <ListItem>
                 <ListItemText primary="Time Spent" secondary={selectedRequirement.timeSpent || 'Not set'} />

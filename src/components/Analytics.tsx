@@ -541,7 +541,7 @@ const Analytics: React.FC = () => {
     }
     const ownerCount: Record<string, number> = {};
     requirements.forEach(req => {
-      const owner = (req as any).assignee || 'Unassigned';
+      const owner = (req as any).productOwner || 'Unassigned';
       ownerCount[owner] = (ownerCount[owner] || 0) + 1;
     });
     const labels = Object.keys(ownerCount);

@@ -516,12 +516,16 @@ const ImportRequirements: React.FC = () => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    {['key','summary','priority','status','assignee','timeSpent','labels','roughEstimate','relatedCustomers','prioritization','weight','score','rank'].map(field => (
-                      <TableCell key={field} sortDirection={sortBy === field ? sortOrder : false}>
-                        <Button onClick={() => handleSort(field)} sx={{ fontWeight: 700, textTransform: 'none' }}>
-                          {field.charAt(0).toUpperCase() + field.slice(1)}
-                        </Button>
-                      </TableCell>
+                    {['key','summary','priority','status','assignee','productOwner','timeSpent','labels','roughEstimate','relatedCustomers','prioritization','weight','score','rank'].map(field => (
+                      field === 'score' ? (
+                        <TableCell key={field}><b>Score</b></TableCell>
+                      ) : (
+                        <TableCell key={field} sortDirection={sortBy === field ? sortOrder : false}>
+                          <Button onClick={() => handleSort(field)} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                            {field === 'productOwner' ? 'Product Owner' : field.charAt(0).toUpperCase() + field.slice(1)}
+                          </Button>
+                        </TableCell>
+                      )
                     ))}
                   </TableRow>
                 </TableHead>

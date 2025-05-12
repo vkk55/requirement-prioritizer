@@ -41,6 +41,7 @@ interface Requirement {
   labels?: string;
   roughEstimate?: string;
   relatedCustomers?: string;
+  productOwner?: string;
 }
 
 interface Criterion {
@@ -280,7 +281,8 @@ export const StackRank = () => {
           'Rough Estimate': req.roughEstimate || '',
           'Related Customers': req.relatedCustomers || '',
           'Stack Rank': req.rank,
-          'Overall Score': req.score?.toFixed(2) || '0'
+          'Overall Score': req.score?.toFixed(2) || '0',
+          'Product Owner': req.productOwner || '',
         };
 
         // Add criteria scores
@@ -347,11 +349,9 @@ export const StackRank = () => {
               <TableRow>
                 <TableCell onClick={() => handleSort('rank')} style={{ cursor: 'pointer' }}>Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
                 <TableCell>Requirement</TableCell>
-                <TableCell align="right" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <TableCell align="right">
                   <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ cursor: 'pointer' }} onClick={() => handleSort('score')}>
-                      Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-                    </span>
+                    <b>Score</b>
                     <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
                       <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
                         <Info fontSize="small" />
@@ -490,6 +490,9 @@ export const StackRank = () => {
               </ListItem>
               <ListItem>
                 <ListItemText primary="Weight" secondary={selectedRequirement.weight ?? 'Not set'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Product Owner" secondary={selectedRequirement.productOwner || 'Not set'} />
               </ListItem>
               {criteria.length > 0 && (
                 <ListItem>

@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
+import Popover from '@mui/material/Popover';
 
 interface Requirement {
   key: string;
@@ -70,6 +71,7 @@ export const StackRank = () => {
   const [editingRank, setEditingRank] = useState<{ [key: string]: string }>({});
   const [rankError, setRankError] = useState<{ [key: string]: string }>({});
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean, key: string, newRank: string } | null>(null);
+  const [commentPopover, setCommentPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
 
   // Persist last active tab
   useEffect(() => {
@@ -417,7 +419,12 @@ export const StackRank = () => {
                       value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
                       onChange={(e) => handleCommentChange(requirement.key, e.target.value)}
                       onBlur={() => handleCommentSave(requirement.key)}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCommentSave(requirement.key); } }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleCommentSave(requirement.key);
+                        }
+                      }}
                       size="small"
                       multiline
                       minRows={1}
@@ -425,17 +432,68 @@ export const StackRank = () => {
                       sx={{ width: 180, ...(success && success.includes('saved') && savingComment === requirement.key ? { border: '2px solid #4caf50', borderRadius: 1 } : {}) }}
                       InputProps={{
                         endAdornment: (
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            disabled={savingComment === requirement.key}
-                            onClick={() => handleCommentSave(requirement.key)}
-                          >
-                            <SaveIcon fontSize="small" />
-                          </IconButton>
+                          <>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              disabled={savingComment === requirement.key}
+                              onClick={() => handleCommentSave(requirement.key)}
+                            >
+                              <SaveIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="secondary"
+                              onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}
+                              sx={{ ml: 1 }}
+                            >
+                              <Info fontSize="small" />
+                            </IconButton>
+                          </>
                         )
                       }}
                     />
+                    <Popover
+                      open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
+                      anchorEl={commentPopover.anchorEl}
+                      onClose={() => setCommentPopover({ anchorEl: null, key: null })}
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                      PaperProps={{ sx: { p: 2, minWidth: 320, maxWidth: 480 } }}
+                    >
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Edit Comment</Typography>
+                      <TextField
+                        value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
+                        onChange={e => handleCommentChange(requirement.key, e.target.value)}
+                        onBlur={() => handleCommentSave(requirement.key)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleCommentSave(requirement.key);
+                            setCommentPopover({ anchorEl: null, key: null });
+                          }
+                        }}
+                        multiline
+                        minRows={4}
+                        maxRows={12}
+                        fullWidth
+                        placeholder="Enter comment (Shift+Enter for new line)"
+                        autoFocus
+                      />
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => {
+                            handleCommentSave(requirement.key);
+                            setCommentPopover({ anchorEl: null, key: null });
+                          }}
+                          sx={{ fontWeight: 700, borderRadius: 2 }}
+                        >
+                          Save
+                        </Button>
+                      </Box>
+                    </Popover>
                   </TableCell>
                   <TableCell>
                     <IconButton color="error" size="small" onClick={() => handleDelete(requirement.key)}>

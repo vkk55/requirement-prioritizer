@@ -248,9 +248,10 @@ export const Requirements = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell align="center" sx={{ fontWeight: 400, color: 'text.secondary' }}>
+                {/* Remove the extra left cell for correct alignment */}
+                {/* <TableCell align="center" sx={{ fontWeight: 400, color: 'text.secondary' }}>
                   {/* Empty cell for Weight row 2 */}
-                </TableCell>
+                {/* </TableCell> */}
                 {criteria.map(criterion => (
                   <TableCell key={criterion.id} align="center">
                     <Typography variant="caption" color="text.secondary">

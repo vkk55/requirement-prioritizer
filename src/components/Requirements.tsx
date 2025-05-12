@@ -55,6 +55,9 @@ export const Requirements = () => {
   const [error, setError] = useState<string>('');
   const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'weight'|'key'|'summary'>("weight");
+  const [sortOrder, setSortOrder] = useState<'asc'|'desc'>("desc");
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchRequirements();
@@ -177,11 +180,37 @@ export const Requirements = () => {
     setSelectedRequirement(null);
   };
 
+  // Sorting and filtering logic
+  const filteredRequirements = requirements.filter(r =>
+    r.key.toLowerCase().includes(search.toLowerCase()) ||
+    (r.summary || '').toLowerCase().includes(search.toLowerCase())
+  );
+  const sortedRequirements = [...filteredRequirements].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === 'weight') {
+      cmp = (b.weight || 0) - (a.weight || 0);
+    } else if (sortBy === 'key') {
+      cmp = a.key.localeCompare(b.key);
+    } else if (sortBy === 'summary') {
+      cmp = (a.summary || '').localeCompare(b.summary || '');
+    }
+    return sortOrder === 'asc' ? -cmp : cmp;
+  });
+
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>
         Score Requirements
       </Typography>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <input
+          type="text"
+          placeholder="Search by Key or Requirement..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', minWidth: 260 }}
+        />
+      </Box>
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
       )}
@@ -191,6 +220,17 @@ export const Requirements = () => {
             <TableHead>
               <TableRow>
                 <TableCell rowSpan={2} sx={{ verticalAlign: 'bottom' }}>Requirement</TableCell>
+                <TableCell
+                  rowSpan={2}
+                  sx={{ verticalAlign: 'bottom', cursor: 'pointer', fontWeight: 700 }}
+                  onClick={() => {
+                    if (sortBy === 'weight') setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    else { setSortBy('weight'); setSortOrder('desc'); }
+                  }}
+                  align="center"
+                >
+                  Weight {sortBy === 'weight' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </TableCell>
                 {criteria.map(criterion => (
                   <TableCell key={criterion.id} align="center">{criterion.name}</TableCell>
                 ))}
@@ -206,6 +246,9 @@ export const Requirements = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
+                <TableCell align="center" sx={{ fontWeight: 400, color: 'text.secondary' }}>
+                  {/* Empty cell for Weight row 2 */}
+                </TableCell>
                 {criteria.map(criterion => (
                   <TableCell key={criterion.id} align="center">
                     <Typography variant="caption" color="text.secondary">
@@ -216,7 +259,7 @@ export const Requirements = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {requirements.map(requirement => (
+              {sortedRequirements.map(requirement => (
                 <TableRow key={requirement.key} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -237,6 +280,7 @@ export const Requirements = () => {
                       </Tooltip>
                     </Box>
                   </TableCell>
+                  <TableCell align="center">{requirement.weight ?? ''}</TableCell>
                   {criteria.map(criterion => (
                     <TableCell key={criterion.id}>
                       <Rating

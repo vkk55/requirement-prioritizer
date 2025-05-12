@@ -531,6 +531,37 @@ const Analytics: React.FC = () => {
     },
   };
 
+  // --- Requirements by Product Owner Bar Chart ---
+  const productOwnerData = useMemo(() => {
+    if (!Array.isArray(requirements) || requirements.length === 0) {
+      return {
+        labels: [],
+        datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
+      };
+    }
+    const ownerCount: Record<string, number> = {};
+    requirements.forEach(req => {
+      const owner = (req as any).assignee || 'Unassigned';
+      ownerCount[owner] = (ownerCount[owner] || 0) + 1;
+    });
+    const labels = Object.keys(ownerCount);
+    const data = labels.map(label => ownerCount[label]);
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+        ],
+        borderWidth: 1,
+      }]
+    };
+  }, [requirements]);
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -604,6 +635,15 @@ const Analytics: React.FC = () => {
           </Typography>
           <Box sx={{ height: 260 }}>
             <Bar data={priorityData} options={verticalBarOptions} />
+          </Box>
+        </Card>
+        {/* Product Owner Report */}
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+          <Typography variant="h6" gutterBottom align="center">
+            Requirements by Product Owner
+          </Typography>
+          <Box sx={{ height: 260 }}>
+            <Bar data={productOwnerData} options={horizontalBarOptions} />
           </Box>
         </Card>
       </Box>

@@ -416,7 +416,9 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
       const row = {};
       for (const [field, excelColumn] of Object.entries(mapping)) {
-        const C = headers.findIndex(h => h === excelColumn);
+        const C = headers.findIndex(
+          h => h && h.toString().trim().toLowerCase() === excelColumn.toString().trim().toLowerCase()
+        );
         if (C !== -1) {
           const cell = XLSX.utils.encode_cell({r: R, c: C});
           row[field] = worksheet[cell] ? worksheet[cell].v : '';

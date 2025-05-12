@@ -452,6 +452,13 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
     // For each row, insert or update in PostgreSQL
     for (const row of data) {
       if (!row.key) continue;
+      // Debug log for row data
+      console.log('[IMPORT DEBUG] Row to be saved:', row);
+      // Normalize productowner to productOwner
+      if (row.productowner && !row.productOwner) {
+        row.productOwner = row.productowner;
+        delete row.productowner;
+      }
       // Clean and prepare the data (use all fields)
       const cleanedData = {};
       for (const col of allColumns) {

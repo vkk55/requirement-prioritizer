@@ -38,6 +38,7 @@ export default function PasswordGate({ children }: PasswordGateProps) {
         <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: 1, color: 'primary.main' }}>
           eWizard Requirement Prioritizer
         </Typography>
+        <Button onClick={() => { localStorage.removeItem('pw_ok'); window.location.reload(); }} sx={{ ml: 4, fontWeight: 700 }} color="secondary" variant="outlined">Logout</Button>
       </Stack>
       <Paper elevation={4} sx={{ p: 5, borderRadius: 4, minWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>

@@ -62,8 +62,8 @@ export const StackRank = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [selectedRequirement, setSelectedRequirement] = useState<RequirementWithComments | null>(null);
-  const [sortBy, setSortBy] = useState<'score' | 'rank'>('score');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<'rank' | 'score'>('rank');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
   const [savingComment, setSavingComment] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -81,8 +81,8 @@ export const StackRank = () => {
   useEffect(() => {
     fetchRequirements();
     fetchCriteria();
-    setSortBy('score');
-    setSortOrder('desc');
+    setSortBy('rank');
+    setSortOrder('asc');
   }, []);
 
   const fetchCriteria = async () => {
@@ -123,19 +123,20 @@ export const StackRank = () => {
 
   // Sorting logic (do not auto-sort after rank/score update)
   const sortedRequirements = [...filteredRequirements].sort((a, b) => {
-    if (sortBy === 'score') {
-      return sortOrder === 'desc' ? b.score - a.score : a.score - b.score;
-    } else {
-      return sortOrder === 'desc' ? b.rank - a.rank : a.rank - b.rank;
+    if (sortBy === 'rank') {
+      return sortOrder === 'asc' ? a.rank - b.rank : b.rank - a.rank;
+    } else if (sortBy === 'score') {
+      return sortOrder === 'asc' ? a.score - b.score : b.score - a.score;
     }
+    return 0;
   });
 
-  const handleSort = (field: 'score' | 'rank') => {
+  const handleSort = (field: 'rank' | 'score') => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(field);
-      setSortOrder(field === 'score' ? 'desc' : 'asc');
+      setSortOrder('asc');
     }
   };
 
@@ -349,17 +350,19 @@ export const StackRank = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell onClick={() => handleSort('rank')} style={{ cursor: 'pointer' }}>Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}</TableCell>
+                <TableCell>
+                  <Button onClick={() => handleSort('rank')} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                    Rank
+                  </Button>
+                </TableCell>
                 <TableCell>Requirement</TableCell>
-                <TableCell align="right">
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <b>Score</b>
-                    <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
-                      <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
-                        <Info fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </span>
+                <TableCell>
+                  <Button onClick={() => handleSort('score')} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                    Score
+                  </Button>
+                  <Tooltip title="Weighted score based on criteria">
+                    <Info sx={{ fontSize: 18, ml: 0.5, color: 'text.secondary' }} />
+                  </Tooltip>
                 </TableCell>
                 <TableCell>Comments</TableCell>
                 <TableCell>Actions</TableCell>

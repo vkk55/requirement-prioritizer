@@ -557,6 +557,24 @@ export const StackRank = () => {
               <ListItem>
                 <ListItemText primary="Product Owner" secondary={selectedRequirement.productOwner || 'Not set'} />
               </ListItem>
+              {/* Criteria scores section */}
+              {criteria.length > 0 && (
+                <ListItem alignItems="flex-start">
+                  <ListItemText
+                    primary="Scores by Criteria"
+                    secondary={
+                      <Box component="ul" sx={{ pl: 2, mb: 0 }}>
+                        {criteria.map(c => (
+                          <li key={c.id}>
+                            <strong>{c.name}:</strong> {selectedRequirement.criteria?.[c.id] ?? 'N/A'}
+                          </li>
+                        ))}
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              )}
+              {/* End criteria scores section */}
               {criteria.length > 0 && (
                 <ListItem>
                   <ListItemText

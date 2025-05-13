@@ -357,12 +357,14 @@ export const StackRank = () => {
                 </TableCell>
                 <TableCell>Requirement</TableCell>
                 <TableCell>
-                  <Button onClick={() => handleSort('score')} sx={{ fontWeight: 700, textTransform: 'none' }}>
-                    Score
-                  </Button>
-                  <Tooltip title="Weighted score based on criteria">
-                    <Info sx={{ fontSize: 18, ml: 0.5, color: 'text.secondary' }} />
-                  </Tooltip>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Button onClick={() => handleSort('score')} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                      Score
+                    </Button>
+                    <Tooltip title="Weighted score based on criteria">
+                      <Info sx={{ fontSize: 18, ml: 0.5, color: 'text.secondary' }} />
+                    </Tooltip>
+                  </Box>
                 </TableCell>
                 <TableCell>Comments</TableCell>
                 <TableCell>Actions</TableCell>

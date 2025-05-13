@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, AppBar, Toolbar, Typography, Tabs, Tab, Container, CssBaseline, ThemeProvider, createTheme, Card, Divider, Stack } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Tabs, Tab, Container, CssBaseline, ThemeProvider, createTheme, Card, Divider, Stack, Button } from '@mui/material';
 import { Settings } from './components/Settings';
 import ImportRequirements from './components/ImportRequirements';
 import { Requirements } from './components/Requirements';
@@ -76,6 +76,7 @@ export default function App() {
               <Typography variant="h4" component="div" sx={{ flexGrow: 1, fontWeight: 800, letterSpacing: 1 }}>
                 eWizard Requirement Prioritizer
               </Typography>
+              <Button onClick={() => { localStorage.removeItem('pw_ok'); window.location.reload(); }} sx={{ ml: 4, fontWeight: 700 }} color="secondary" variant="outlined">Logout</Button>
             </Toolbar>
             <Tabs
               value={tabValue}

@@ -53,8 +53,9 @@ interface Criterion {
   scale_max: number;
 }
 
-// Add comments to Requirement interface
-type RequirementWithComments = Requirement & { comments?: string; weight?: number; updatehistory?: string };
+// Update RequirementWithComments type
+type CommentEntry = { text: string; date: string };
+type RequirementWithComments = Requirement & { comments?: CommentEntry[]; weight?: number; updatehistory?: string };
 
 export const StackRank = () => {
   const [requirements, setRequirements] = useState<RequirementWithComments[]>([]);
@@ -105,7 +106,14 @@ export const StackRank = () => {
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to fetch requirements');
       let reqs = result.data || [];
-      reqs = reqs.map((r: any) => ({ ...r, comments: r.comments || '' }));
+      reqs = reqs.map((r: any) => ({
+        ...r,
+        comments: Array.isArray(r.comments)
+          ? r.comments
+          : r.comments
+            ? [{ text: r.comments, date: new Date().toLocaleString() }]
+            : [],
+      }));
       setRequirements(reqs);
       setError('');
     } catch (err) {
@@ -231,18 +239,21 @@ export const StackRank = () => {
   const handleCommentSave = async (key: string) => {
     setSavingComment(key);
     try {
+      const newComment = editingComment[key]?.trim();
+      if (!newComment) return;
+      const now = new Date().toLocaleString();
+      const req = requirements.find(r => r.key === key);
+      const prevComments = req?.comments || [];
+      const updatedComments = [...prevComments, { text: newComment, date: now }];
       const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments: editingComment[key] || '' }),
+        body: JSON.stringify({ comments: JSON.stringify(updatedComments) }),
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.message || 'Failed to save comment');
-      setRequirements((prev) => prev.map(r => r.key === key ? { ...r, comments: editingComment[key] } : r));
-      // Keep comment visible after save
-      // Do not clear editingComment
-      setSuccess('1 record saved successfully');
-      setTimeout(() => setSuccess(''), 1500);
+      setRequirements((prev) => prev.map(r => r.key === key ? { ...r, comments: updatedComments } : r));
+      setEditingComment(prev => ({ ...prev, [key]: '' }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save comment');
     } finally {
@@ -426,7 +437,7 @@ export const StackRank = () => {
                   <TableCell align="right">
                     {requirement.score?.toFixed(2) || 0}
                     <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
-                      <CommentIcon fontSize="small" sx={{ color: (requirement.comments && requirement.comments.trim()) ? 'success.main' : undefined }} />
+                      <CommentIcon fontSize="small" color={(requirement.comments && requirement.comments.length > 0) ? 'success' : 'inherit'} />
                     </IconButton>
                     <Popover
                       open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
@@ -436,67 +447,53 @@ export const StackRank = () => {
                       transformOrigin={{ vertical: 'top', horizontal: 'left' }}
                       PaperProps={{ sx: { p: 2, minWidth: 400, maxWidth: 600 } }}
                     >
-                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Edit Comment</Typography>
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Comments</Typography>
+                      {/* Group comments by date */}
+                      {requirement.comments && requirement.comments.length > 0 && (
+                        <Box sx={{ mb: 2 }}>
+                          {Object.entries(
+                            requirement.comments.reduce((groups: Record<string, CommentEntry[]>, entry) => {
+                              const date = entry.date.split(',')[0];
+                              if (!groups[date]) groups[date] = [];
+                              groups[date].push(entry);
+                              return groups;
+                            }, {} as Record<string, CommentEntry[]>)
+                          ).map(([date, entries]) => (
+                            <Box key={date} sx={{ mb: 1 }}>
+                              <Typography align="center" variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>{date}</Typography>
+                              {entries.map((entry, idx) => (
+                                <Box key={idx} sx={{ fontSize: 11, mb: 0.5, px: 1, py: 0.5, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                                  {entry.text}
+                                </Box>
+                              ))}
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
                       <TextField
-                        value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
+                        value={editingComment[requirement.key] || ''}
                         onChange={e => handleCommentChange(requirement.key, e.target.value)}
-                        onBlur={e => {
-                          const target = e.target as HTMLInputElement;
-                          setCommentCursor({ ...commentCursor, [requirement.key]: target.selectionStart ?? 0 });
-                        }}
-                        onSelect={e => {
-                          const target = e.target as HTMLInputElement;
-                          setCommentCursor({ ...commentCursor, [requirement.key]: target.selectionStart ?? 0 });
-                        }}
-                        inputRef={ref => {
-                          if (ref && commentPopover.key === requirement.key) {
-                            // Only set cursor if editingComment hasn't changed
-                            const cursor = commentCursor[requirement.key];
-                            if (typeof cursor === 'number') {
-                              ref.setSelectionRange(cursor, cursor);
-                            }
+                        multiline
+                        minRows={2}
+                        maxRows={6}
+                        fullWidth
+                        placeholder="Add a comment..."
+                        autoFocus
+                        sx={{ fontSize: 11, mt: 1 }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && e.ctrlKey) {
+                            e.preventDefault();
+                            handleCommentSave(requirement.key);
                           }
                         }}
-                        multiline
-                        minRows={4}
-                        maxRows={12}
-                        fullWidth
-                        placeholder="Enter comment (Shift+Enter for new line)"
-                        autoFocus
-                        sx={{ fontSize: 11 }}
                       />
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                        <Button
-                          variant="outlined"
-                          startIcon={<EventIcon />}
-                          onClick={() => {
-                            const key = requirement.key;
-                            const value = editingComment[key] !== undefined ? editingComment[key] : (requirement.comments || '');
-                            const cursor = commentCursor[key] || value.length;
-                            const now = new Date();
-                            const dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-                            const newValue = value.slice(0, cursor) + dateStr + value.slice(cursor);
-                            setEditingComment(prev => ({ ...prev, [key]: newValue }));
-                            setTimeout(() => {
-                              const input = document.querySelector('textarea');
-                              if (input) {
-                                input.selectionStart = cursor + dateStr.length;
-                                input.selectionEnd = cursor + dateStr.length;
-                                input.focus();
-                              }
-                            }, 0);
-                          }}
-                        >
-                          Insert Date
-                        </Button>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                         <Button
                           variant="contained"
                           color="primary"
-                          onClick={() => {
-                            handleCommentSave(requirement.key);
-                            setCommentPopover({ anchorEl: null, key: null });
-                          }}
+                          onClick={() => handleCommentSave(requirement.key)}
                           sx={{ fontWeight: 700, borderRadius: 2 }}
+                          disabled={savingComment === requirement.key}
                         >
                           Save
                         </Button>

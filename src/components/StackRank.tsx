@@ -25,7 +25,7 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon } from '@mui/icons-material';
+import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import Popover from '@mui/material/Popover';
 
@@ -54,7 +54,7 @@ interface Criterion {
 }
 
 // Add comments to Requirement interface
-type RequirementWithComments = Requirement & { comments?: string; weight?: number };
+type RequirementWithComments = Requirement & { comments?: string; weight?: number; updatehistory?: string };
 
 export const StackRank = () => {
   const [requirements, setRequirements] = useState<RequirementWithComments[]>([]);
@@ -72,6 +72,7 @@ export const StackRank = () => {
   const [rankError, setRankError] = useState<{ [key: string]: string }>({});
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean, key: string, newRank: string } | null>(null);
   const [commentPopover, setCommentPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
+  const [historyDialog, setHistoryDialog] = useState<{ open: boolean, log: string }>({ open: false, log: '' });
 
   // Persist last active tab
   useEffect(() => {
@@ -501,6 +502,14 @@ export const StackRank = () => {
                     </Popover>
                   </TableCell>
                   <TableCell>
+                    <IconButton
+                      color="primary"
+                      size="small"
+                      onClick={() => setHistoryDialog({ open: true, log: requirement.updatehistory || 'No history.' })}
+                      sx={{ mr: 1 }}
+                    >
+                      <HistoryIcon />
+                    </IconButton>
                     <IconButton color="error" size="small" onClick={() => handleDelete(requirement.key)}>
                       <DeleteIcon />
                     </IconButton>
@@ -590,24 +599,17 @@ export const StackRank = () => {
           </DialogActions>
         </Dialog>
       )}
-      {/* Confirmation Dialog for duplicate rank */}
-      {/*
-      {confirmDialog && (
-        <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(null)} PaperProps={{ sx: { borderRadius: 3, p: 2 } }}>
-          <DialogTitle sx={{ fontWeight: 700, fontSize: 20 }}>Duplicate Rank</DialogTitle>
-          <DialogContent>
-            This rank already exists. Is it ok that the rest of the lower requirements will be renumbered to lower numbers?
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConfirmDialog(null)} sx={{ fontWeight: 700, borderRadius: 2 }}>Cancel</Button>
-            <Button onClick={async () => {
-              await doRankSave(confirmDialog.key, confirmDialog.newRank, true);
-              setConfirmDialog(null);
-            }} color="primary" variant="contained" sx={{ fontWeight: 700, borderRadius: 2 }}>OK</Button>
-          </DialogActions>
-        </Dialog>
-      )}
-      */}
+      <Dialog open={historyDialog.open} onClose={() => setHistoryDialog({ open: false, log: '' })} maxWidth="sm" fullWidth>
+        <DialogTitle>Rank Change Log</DialogTitle>
+        <DialogContent>
+          <Box sx={{ whiteSpace: 'pre-line', fontFamily: 'monospace', fontSize: 15 }}>
+            {historyDialog.log}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHistoryDialog({ open: false, log: '' })}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }; 

@@ -670,25 +670,25 @@ app.post('/api/requirements/:key/rank', async (req, res) => {
   const { key } = req.params;
   const { rank } = req.body;
   try {
-    // Fetch current rank and comments
-    const result = await pool.query('SELECT rank, comments FROM requirements WHERE key = $1', [key]);
+    // Fetch current rank and updatehistory
+    const result = await pool.query('SELECT rank, updatehistory FROM requirements WHERE key = $1', [key]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Requirement not found' });
     }
     const oldRank = result.rows[0].rank;
-    const oldComments = result.rows[0].comments || '';
+    const oldHistory = result.rows[0].updatehistory || '';
 
-    // Prepare new comment line
+    // Prepare new log line
     const now = new Date().toLocaleString();
-    const commentLine = `Rank was updated from "${oldRank}" to "${rank}" on "${now}".`;
+    const logLine = `Rank was updated from "${oldRank}" to "${rank}" on "${now}".`;
 
-    // Append to comments (with newline)
-    const newComments = oldComments ? `${oldComments}\n${commentLine}` : commentLine;
+    // Append to updatehistory (with newline)
+    const newHistory = oldHistory ? `${oldHistory}\n${logLine}` : logLine;
 
-    // Update rank and comments
+    // Update rank and updatehistory
     await pool.query(
-      'UPDATE requirements SET rank = $1, comments = $2 WHERE key = $3',
-      [rank, newComments, key]
+      'UPDATE requirements SET rank = $1, updatehistory = $2 WHERE key = $3',
+      [rank, newHistory, key]
     );
 
     res.json({ success: true });

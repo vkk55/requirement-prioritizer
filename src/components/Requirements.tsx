@@ -23,8 +23,10 @@ import {
   Card,
   Stack,
   Divider,
+  TextField,
 } from '@mui/material';
-import { Info } from '@mui/icons-material';
+import { Info, ChatBubbleOutline as CommentIcon, Event as EventIcon } from '@mui/icons-material';
+import Popover from '@mui/material/Popover';
 
 interface Requirement {
   key: string;
@@ -40,6 +42,7 @@ interface Requirement {
   relatedCustomers?: string;
   weight?: number;
   productOwner?: string;
+  comments?: string;
 }
 
 interface Criterion {
@@ -59,6 +62,10 @@ export const Requirements = () => {
   const [sortBy, setSortBy] = useState<'weight'|'key'|'summary'>("weight");
   const [sortOrder, setSortOrder] = useState<'asc'|'desc'>("desc");
   const [search, setSearch] = useState('');
+  const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
+  const [savingComment, setSavingComment] = useState<string | null>(null);
+  const [commentPopover, setCommentPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
+  const [commentCursor, setCommentCursor] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     fetchRequirements();
@@ -97,6 +104,7 @@ export const Requirements = () => {
     summary: req.summary,
     key: req.key,
     productOwner: req.productOwner,
+    comments: req.comments,
   });
 
   const fetchRequirements = async () => {
@@ -182,6 +190,28 @@ export const Requirements = () => {
     setSelectedRequirement(null);
   };
 
+  const handleCommentChange = (key: string, value: string) => {
+    setEditingComment((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleCommentSave = async (key: string) => {
+    setSavingComment(key);
+    try {
+      const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comments: editingComment[key] || '' }),
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to save comment');
+      setRequirements((prev) => prev.map(r => r.key === key ? { ...r, comments: editingComment[key] } : r));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save comment');
+    } finally {
+      setSavingComment(null);
+    }
+  };
+
   // Sorting and filtering logic
   const filteredRequirements = requirements.filter(r =>
     r.key.toLowerCase().includes(search.toLowerCase()) ||
@@ -242,6 +272,11 @@ export const Requirements = () => {
                     <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
                       <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
                         <Info fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Add/View Comment">
+                      <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: null })}>
+                        <CommentIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                   </span>
@@ -310,36 +345,79 @@ export const Requirements = () => {
                         });
                         return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
                       })()}
-                      <Tooltip
-                        title={(() => {
-                          const mathParts = criteria.map(criterion => {
-                            const score = requirement.criteria?.[criterion.id] ?? 0;
-                            return `${score}×${criterion.weight}`;
-                          });
-                          const numerator = mathParts.join(' + ');
-                          const denominator = criteria.map(c => c.weight).join('+');
-                          let totalWeightedScore = 0;
-                          let totalWeight = 0;
-                          criteria.forEach(criterion => {
-                            const score = requirement.criteria?.[criterion.id] ?? 0;
-                            const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
-                            if (weight) {
-                              totalWeightedScore += score * weight;
-                              totalWeight += weight;
-                            }
-                          });
-                          const weightedScore = totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
-                          return `(${numerator}) / (${denominator}) = ${weightedScore}`;
-                        })()}
-                        placement="top"
-                        arrow
+                      <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
+                        <CommentIcon fontSize="small" />
+                      </IconButton>
+                      <Popover
+                        open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
+                        anchorEl={commentPopover.anchorEl}
+                        onClose={() => setCommentPopover({ anchorEl: null, key: null })}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                        PaperProps={{ sx: { p: 2, minWidth: 400, maxWidth: 600 } }}
                       >
-                        <span>
-                          <IconButton size="small" tabIndex={0} aria-label="Show scoring math">
-                            <Info fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Edit Comment</Typography>
+                        <TextField
+                          value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
+                          onChange={e => handleCommentChange(requirement.key, e.target.value)}
+                          onBlur={e => {
+                            const target = e.target as HTMLInputElement;
+                            setCommentCursor({ ...commentCursor, [requirement.key]: target.selectionStart ?? 0 });
+                          }}
+                          onSelect={e => {
+                            const target = e.target as HTMLInputElement;
+                            setCommentCursor({ ...commentCursor, [requirement.key]: target.selectionStart ?? 0 });
+                          }}
+                          inputRef={ref => {
+                            if (ref && commentPopover.key === requirement.key) {
+                              ref.selectionStart = commentCursor[requirement.key] || ref.value.length;
+                              ref.selectionEnd = commentCursor[requirement.key] || ref.value.length;
+                            }
+                          }}
+                          multiline
+                          minRows={4}
+                          maxRows={12}
+                          fullWidth
+                          placeholder="Enter comment (Shift+Enter for new line)"
+                          autoFocus
+                        />
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                          <Button
+                            variant="outlined"
+                            startIcon={<EventIcon />}
+                            onClick={() => {
+                              const key = requirement.key;
+                              const value = editingComment[key] !== undefined ? editingComment[key] : (requirement.comments || '');
+                              const cursor = commentCursor[key] || value.length;
+                              const now = new Date();
+                              const dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+                              const newValue = value.slice(0, cursor) + dateStr + value.slice(cursor);
+                              setEditingComment(prev => ({ ...prev, [key]: newValue }));
+                              setTimeout(() => {
+                                const input = document.querySelector('textarea');
+                                if (input) {
+                                  input.selectionStart = cursor + dateStr.length;
+                                  input.selectionEnd = cursor + dateStr.length;
+                                  input.focus();
+                                }
+                              }, 0);
+                            }}
+                          >
+                            Insert Date
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => {
+                              handleCommentSave(requirement.key);
+                              setCommentPopover({ anchorEl: null, key: null });
+                            }}
+                            sx={{ fontWeight: 700, borderRadius: 2 }}
+                          >
+                            Save
+                          </Button>
+                        </Box>
+                      </Popover>
                     </span>
                   </TableCell>
                 </TableRow>

@@ -460,6 +460,7 @@ export const StackRank = () => {
                         fullWidth
                         placeholder="Enter comment (Shift+Enter for new line)"
                         autoFocus
+                        sx={{ fontSize: 13 }}
                       />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                         <Button
@@ -498,46 +499,6 @@ export const StackRank = () => {
                         </Button>
                       </Box>
                     </Popover>
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
-                      onChange={(e) => handleCommentChange(requirement.key, e.target.value)}
-                      onBlur={() => handleCommentSave(requirement.key)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleCommentSave(requirement.key);
-                        }
-                      }}
-                      size="small"
-                      multiline
-                      minRows={1}
-                      maxRows={4}
-                      sx={{ width: 180, ...(success && success.includes('saved') && savingComment === requirement.key ? { border: '2px solid #4caf50', borderRadius: 1 } : {}) }}
-                      InputProps={{
-                        endAdornment: (
-                          <>
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              disabled={savingComment === requirement.key}
-                              onClick={() => handleCommentSave(requirement.key)}
-                            >
-                              <SaveIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              color="secondary"
-                              onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}
-                              sx={{ ml: 1 }}
-                            >
-                              <Info fontSize="small" />
-                            </IconButton>
-                          </>
-                        )
-                      }}
-                    />
                   </TableCell>
                   <TableCell>
                     <IconButton

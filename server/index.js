@@ -678,6 +678,11 @@ app.post('/api/requirements/:key/rank', async (req, res) => {
     const oldRank = result.rows[0].rank;
     const oldHistory = result.rows[0].updatehistory || '';
 
+    if (oldRank === rank) {
+      // No change, do not log or update
+      return res.json({ success: true, message: 'Rank unchanged, no log entry added.' });
+    }
+
     // Prepare new log line
     const now = new Date().toLocaleString();
     const logLine = `Rank was updated from "${oldRank}" to "${rank}" on "${now}".`;

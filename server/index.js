@@ -465,6 +465,10 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
         row.productOwner = row.productowner;
         delete row.productowner;
       }
+      // Set default rank to 0 if not provided or empty
+      if (row.rank === undefined || row.rank === null || row.rank === '') {
+        row.rank = 0;
+      }
       // Debug log for row data (after normalization)
       console.log('[IMPORT DEBUG] Row to be saved:', row);
       // Clean and prepare the data (use all fields)
@@ -666,7 +670,27 @@ app.post('/api/requirements/:key/rank', async (req, res) => {
   const { key } = req.params;
   const { rank } = req.body;
   try {
-    await pool.query('UPDATE requirements SET rank = $1 WHERE key = $2', [rank, key]);
+    // Fetch current rank and comments
+    const result = await pool.query('SELECT rank, comments FROM requirements WHERE key = $1', [key]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Requirement not found' });
+    }
+    const oldRank = result.rows[0].rank;
+    const oldComments = result.rows[0].comments || '';
+
+    // Prepare new comment line
+    const now = new Date().toLocaleString();
+    const commentLine = `Rank was updated from "${oldRank}" to "${rank}" on "${now}".`;
+
+    // Append to comments (with newline)
+    const newComments = oldComments ? `${oldComments}\n${commentLine}` : commentLine;
+
+    // Update rank and comments
+    await pool.query(
+      'UPDATE requirements SET rank = $1, comments = $2 WHERE key = $3',
+      [rank, newComments, key]
+    );
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update rank', message: error.message });

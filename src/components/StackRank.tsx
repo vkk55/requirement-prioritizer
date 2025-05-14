@@ -25,7 +25,7 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon } from '@mui/icons-material';
+import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon, ChatBubbleOutline as CommentIcon, Event as EventIcon } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import Popover from '@mui/material/Popover';
 
@@ -72,6 +72,7 @@ export const StackRank = () => {
   const [rankError, setRankError] = useState<{ [key: string]: string }>({});
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean, key: string, newRank: string } | null>(null);
   const [commentPopover, setCommentPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
+  const [commentCursor, setCommentCursor] = useState<{ [key: string]: number }>({});
   const [historyDialog, setHistoryDialog] = useState<{ open: boolean, log: string }>({ open: false, log: '' });
 
   // Persist last active tab
@@ -365,6 +366,11 @@ export const StackRank = () => {
                     <Tooltip title="Weighted score based on criteria">
                       <Info sx={{ fontSize: 18, ml: 0.5, color: 'text.secondary' }} />
                     </Tooltip>
+                    <Tooltip title="Add/View Comment">
+                      <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: null })}>
+                        <CommentIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 </TableCell>
                 <TableCell>Comments</TableCell>
@@ -419,6 +425,79 @@ export const StackRank = () => {
                   </TableCell>
                   <TableCell align="right">
                     {requirement.score?.toFixed(2) || 0}
+                    <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
+                      <CommentIcon fontSize="small" />
+                    </IconButton>
+                    <Popover
+                      open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
+                      anchorEl={commentPopover.anchorEl}
+                      onClose={() => setCommentPopover({ anchorEl: null, key: null })}
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                      PaperProps={{ sx: { p: 2, minWidth: 400, maxWidth: 600 } }}
+                    >
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Edit Comment</Typography>
+                      <TextField
+                        value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
+                        onChange={e => handleCommentChange(requirement.key, e.target.value)}
+                        onBlur={e => {
+                          const target = e.target as HTMLInputElement;
+                          setCommentCursor({ ...commentCursor, [requirement.key]: target.selectionStart ?? 0 });
+                        }}
+                        onSelect={e => {
+                          const target = e.target as HTMLInputElement;
+                          setCommentCursor({ ...commentCursor, [requirement.key]: target.selectionStart ?? 0 });
+                        }}
+                        inputRef={ref => {
+                          if (ref && commentPopover.key === requirement.key) {
+                            ref.selectionStart = commentCursor[requirement.key] || ref.value.length;
+                            ref.selectionEnd = commentCursor[requirement.key] || ref.value.length;
+                          }
+                        }}
+                        multiline
+                        minRows={4}
+                        maxRows={12}
+                        fullWidth
+                        placeholder="Enter comment (Shift+Enter for new line)"
+                        autoFocus
+                      />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                        <Button
+                          variant="outlined"
+                          startIcon={<EventIcon />}
+                          onClick={() => {
+                            const key = requirement.key;
+                            const value = editingComment[key] !== undefined ? editingComment[key] : (requirement.comments || '');
+                            const cursor = commentCursor[key] || value.length;
+                            const now = new Date();
+                            const dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+                            const newValue = value.slice(0, cursor) + dateStr + value.slice(cursor);
+                            setEditingComment(prev => ({ ...prev, [key]: newValue }));
+                            setTimeout(() => {
+                              const input = document.querySelector('textarea');
+                              if (input) {
+                                input.selectionStart = cursor + dateStr.length;
+                                input.selectionEnd = cursor + dateStr.length;
+                                input.focus();
+                              }
+                            }, 0);
+                          }}
+                        >
+                          Insert Date
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => {
+                            handleCommentSave(requirement.key);
+                            setCommentPopover({ anchorEl: null, key: null });
+                          }}
+                          sx={{ fontWeight: 700, borderRadius: 2 }}
+                        >
+                          Save
+                        </Button>
+                      </Box>
+                    </Popover>
                   </TableCell>
                   <TableCell>
                     <TextField
@@ -459,47 +538,6 @@ export const StackRank = () => {
                         )
                       }}
                     />
-                    <Popover
-                      open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
-                      anchorEl={commentPopover.anchorEl}
-                      onClose={() => setCommentPopover({ anchorEl: null, key: null })}
-                      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                      PaperProps={{ sx: { p: 2, minWidth: 320, maxWidth: 480 } }}
-                    >
-                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Edit Comment</Typography>
-                      <TextField
-                        value={editingComment[requirement.key] !== undefined ? editingComment[requirement.key] : (requirement.comments || '')}
-                        onChange={e => handleCommentChange(requirement.key, e.target.value)}
-                        onBlur={() => handleCommentSave(requirement.key)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleCommentSave(requirement.key);
-                            setCommentPopover({ anchorEl: null, key: null });
-                          }
-                        }}
-                        multiline
-                        minRows={4}
-                        maxRows={12}
-                        fullWidth
-                        placeholder="Enter comment (Shift+Enter for new line)"
-                        autoFocus
-                      />
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => {
-                            handleCommentSave(requirement.key);
-                            setCommentPopover({ anchorEl: null, key: null });
-                          }}
-                          sx={{ fontWeight: 700, borderRadius: 2 }}
-                        >
-                          Save
-                        </Button>
-                      </Box>
-                    </Popover>
                   </TableCell>
                   <TableCell>
                     <IconButton

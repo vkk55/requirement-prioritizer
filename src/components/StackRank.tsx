@@ -375,11 +375,6 @@ export const StackRank = () => {
                     <Tooltip title="Weighted score based on criteria">
                       <Info sx={{ fontSize: 18, ml: 0.5, color: 'text.secondary' }} />
                     </Tooltip>
-                    <Tooltip title="Add/View Comment">
-                      <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: null })}>
-                        <CommentIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                   </Box>
                 </TableCell>
                 <TableCell>Comments</TableCell>
@@ -434,6 +429,8 @@ export const StackRank = () => {
                   </TableCell>
                   <TableCell align="right">
                     {requirement.score?.toFixed(2) || 0}
+                  </TableCell>
+                  <TableCell>
                     <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
                       <CommentIcon fontSize="small" color={(requirement.comments && requirement.comments.length > 0) ? 'success' : 'inherit'} />
                     </IconButton>

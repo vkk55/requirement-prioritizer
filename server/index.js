@@ -465,6 +465,11 @@ app.post('/api/requirements/import', upload.single('file'), async (req, res) => 
         row.productOwner = row.productowner;
         delete row.productowner;
       }
+      // Ensure productOwner is always mapped to productowner for DB
+      if (row.productOwner && !row.productowner) {
+        row.productowner = row.productOwner;
+        delete row.productOwner;
+      }
       // Set default rank to 0 if not provided or empty
       if (row.rank === undefined || row.rank === null || row.rank === '') {
         row.rank = 0;

@@ -43,7 +43,7 @@ interface Requirement {
   relatedCustomers?: string;
   weight?: number;
   productOwner?: string;
-  comments?: CommentEntry[];
+  comments?: string[];
 }
 
 interface Criterion {
@@ -105,9 +105,9 @@ export const Requirements = () => {
     key: req.key,
     productOwner: req.productOwner,
     comments: Array.isArray(req.comments)
-      ? req.comments
+      ? req.comments.map((c: any) => typeof c === 'string' ? c : (c.text || JSON.stringify(c)))
       : req.comments
-        ? [{ text: req.comments, date: new Date().toLocaleString() }]
+        ? [typeof req.comments === 'string' ? req.comments : JSON.stringify(req.comments)]
         : [],
   });
 
@@ -124,9 +124,9 @@ export const Requirements = () => {
       setRequirements((result.data || []).map((r: any) => ({
         ...normalizeRequirement(r),
         comments: Array.isArray(r.comments)
-          ? r.comments
+          ? r.comments.map((c: any) => typeof c === 'string' ? c : (c.text || JSON.stringify(c)))
           : r.comments
-            ? [{ text: r.comments, date: new Date().toLocaleString() }]
+            ? [typeof r.comments === 'string' ? r.comments : JSON.stringify(r.comments)]
             : [],
       })));
       setError('');
@@ -210,10 +210,9 @@ export const Requirements = () => {
     try {
       const newComment = editingComment[key]?.trim();
       if (!newComment) return;
-      const now = new Date().toLocaleString();
       const req = requirements.find(r => r.key === key);
       const prevComments = req?.comments || [];
-      const updatedComments = [...prevComments, { text: newComment, date: now }];
+      const updatedComments = [...prevComments, newComment];
       const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -377,21 +376,10 @@ export const Requirements = () => {
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>Comments</Typography>
                         {requirement.comments && requirement.comments.length > 0 && (
                           <Box sx={{ mb: 2 }}>
-                            {Object.entries(
-                              (requirement.comments || []).reduce((groups: Record<string, CommentEntry[]>, entry) => {
-                                const date = entry.date.split(',')[0];
-                                if (!groups[date]) groups[date] = [];
-                                groups[date].push(entry);
-                                return groups;
-                              }, {} as Record<string, CommentEntry[]>)
-                            ).map(([date, entries]) => (
-                              <Box key={date} sx={{ mb: 1 }}>
-                                <Typography align="center" variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>{date}</Typography>
-                                {entries.map((entry, idx) => (
-                                  <Box key={idx} sx={{ fontSize: 11, mb: 0.5, px: 1, py: 0.5, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                                    {entry.text}
-                                  </Box>
-                                ))}
+                            <Typography align="center" variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>{new Date().toLocaleDateString()}</Typography>
+                            {requirement.comments.map((comment, idx) => (
+                              <Box key={idx} sx={{ fontSize: 11, mb: 0.5, px: 1, py: 0.5, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                                {comment}
                               </Box>
                             ))}
                           </Box>

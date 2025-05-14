@@ -54,8 +54,7 @@ interface Criterion {
 }
 
 // Update RequirementWithComments type
-type CommentEntry = { text: string; date: string };
-type RequirementWithComments = Requirement & { comments?: CommentEntry[]; weight?: number; updatehistory?: string };
+type RequirementWithComments = Requirement & { comments?: string[]; weight?: number; updatehistory?: string };
 
 export const StackRank = () => {
   const [requirements, setRequirements] = useState<RequirementWithComments[]>([]);
@@ -109,9 +108,9 @@ export const StackRank = () => {
       reqs = reqs.map((r: any) => ({
         ...r,
         comments: Array.isArray(r.comments)
-          ? r.comments
+          ? r.comments.map((c: any) => typeof c === 'string' ? c : (c.text || JSON.stringify(c)))
           : r.comments
-            ? [{ text: r.comments, date: new Date().toLocaleString() }]
+            ? [typeof r.comments === 'string' ? r.comments : JSON.stringify(r.comments)]
             : [],
       }));
       setRequirements(reqs);
@@ -241,10 +240,9 @@ export const StackRank = () => {
     try {
       const newComment = editingComment[key]?.trim();
       if (!newComment) return;
-      const now = new Date().toLocaleString();
       const req = requirements.find(r => r.key === key);
       const prevComments = req?.comments || [];
-      const updatedComments = [...prevComments, { text: newComment, date: now }];
+      const updatedComments = [...prevComments, newComment];
       const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -448,24 +446,13 @@ export const StackRank = () => {
                       PaperProps={{ sx: { p: 2, minWidth: 400, maxWidth: 600 } }}
                     >
                       <Typography variant="subtitle2" sx={{ mb: 1 }}>Comments</Typography>
-                      {/* Group comments by date */}
+                      {/* Group comments by save date (use today as group header for new saves) */}
                       {requirement.comments && requirement.comments.length > 0 && (
                         <Box sx={{ mb: 2 }}>
-                          {Object.entries(
-                            requirement.comments.reduce((groups: Record<string, CommentEntry[]>, entry) => {
-                              const date = entry.date.split(',')[0];
-                              if (!groups[date]) groups[date] = [];
-                              groups[date].push(entry);
-                              return groups;
-                            }, {} as Record<string, CommentEntry[]>)
-                          ).map(([date, entries]) => (
-                            <Box key={date} sx={{ mb: 1 }}>
-                              <Typography align="center" variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>{date}</Typography>
-                              {entries.map((entry, idx) => (
-                                <Box key={idx} sx={{ fontSize: 11, mb: 0.5, px: 1, py: 0.5, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                                  {entry.text}
-                                </Box>
-                              ))}
+                          <Typography align="center" variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>{new Date().toLocaleDateString()}</Typography>
+                          {requirement.comments.map((comment, idx) => (
+                            <Box key={idx} sx={{ fontSize: 11, mb: 0.5, px: 1, py: 0.5, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                              {comment}
                             </Box>
                           ))}
                         </Box>

@@ -346,7 +346,7 @@ export const Requirements = () => {
                         return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
                       })()}
                       <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
-                        <CommentIcon fontSize="small" />
+                        <CommentIcon fontSize="small" sx={{ color: (requirement.comments && requirement.comments.trim()) ? 'success.main' : undefined }} />
                       </IconButton>
                       <Popover
                         open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
@@ -370,8 +370,10 @@ export const Requirements = () => {
                           }}
                           inputRef={ref => {
                             if (ref && commentPopover.key === requirement.key) {
-                              ref.selectionStart = commentCursor[requirement.key] || ref.value.length;
-                              ref.selectionEnd = commentCursor[requirement.key] || ref.value.length;
+                              const cursor = commentCursor[requirement.key];
+                              if (typeof cursor === 'number') {
+                                ref.setSelectionRange(cursor, cursor);
+                              }
                             }
                           }}
                           multiline
@@ -380,6 +382,7 @@ export const Requirements = () => {
                           fullWidth
                           placeholder="Enter comment (Shift+Enter for new line)"
                           autoFocus
+                          sx={{ fontSize: 11 }}
                         />
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                           <Button

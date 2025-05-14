@@ -426,7 +426,7 @@ export const StackRank = () => {
                   <TableCell align="right">
                     {requirement.score?.toFixed(2) || 0}
                     <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
-                      <CommentIcon fontSize="small" />
+                      <CommentIcon fontSize="small" sx={{ color: (requirement.comments && requirement.comments.trim()) ? 'success.main' : undefined }} />
                     </IconButton>
                     <Popover
                       open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
@@ -450,8 +450,11 @@ export const StackRank = () => {
                         }}
                         inputRef={ref => {
                           if (ref && commentPopover.key === requirement.key) {
-                            ref.selectionStart = commentCursor[requirement.key] || ref.value.length;
-                            ref.selectionEnd = commentCursor[requirement.key] || ref.value.length;
+                            // Only set cursor if editingComment hasn't changed
+                            const cursor = commentCursor[requirement.key];
+                            if (typeof cursor === 'number') {
+                              ref.setSelectionRange(cursor, cursor);
+                            }
                           }
                         }}
                         multiline
@@ -460,7 +463,7 @@ export const StackRank = () => {
                         fullWidth
                         placeholder="Enter comment (Shift+Enter for new line)"
                         autoFocus
-                        sx={{ fontSize: 13 }}
+                        sx={{ fontSize: 11 }}
                       />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                         <Button

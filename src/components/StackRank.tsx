@@ -341,18 +341,17 @@ export const StackRank = () => {
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
-      <Box sx={{ height: { xs: 112, sm: 120 } }} />
-      <StatusBar
-        scoredCount={scoredCount}
-        rankedCount={rankedCount}
-        totalCount={totalCount}
-        duplicateRanksCount={duplicateRanks.length}
-        onDuplicateClick={() => setDuplicateDialog(true)}
-      />
-      <Typography variant="h4" fontWeight={800} gutterBottom>
-        Stack Rank Requirements
-      </Typography>
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <StatusBar
+          scoredCount={scoredCount}
+          rankedCount={rankedCount}
+          totalCount={totalCount}
+          duplicateRanksCount={duplicateRanks.length}
+          onDuplicateClick={() => setDuplicateDialog(true)}
+        />
+        <Typography variant="h4" fontWeight={800} gutterBottom>
+          Stack Rank Requirements
+        </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between" mb={2}>
           <TextField
             label="Search"

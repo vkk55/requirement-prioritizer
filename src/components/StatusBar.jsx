@@ -11,16 +11,15 @@ const StatusBar = ({
 }) => (
   <Box
     sx={{
-      position: 'fixed',
-      top: 64, // below app bar
-      left: 0,
-      width: '100vw',
-      zIndex: 1300,
+      position: 'sticky',
+      top: 0,
+      zIndex: 2,
       bgcolor: 'rgba(230, 242, 255, 0.95)', // subtle blue, slightly transparent
-      boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
-      borderRadius: 0,
+      boxShadow: 1,
+      borderRadius: 3,
       px: { xs: 1, sm: 3 },
       py: 1.5,
+      mb: 2,
       display: 'flex',
       gap: 4,
       alignItems: 'center',

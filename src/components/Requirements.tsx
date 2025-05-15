@@ -253,30 +253,29 @@ export const Requirements = () => {
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
-      <Box sx={{ height: { xs: 112, sm: 120 } }} />
-      <StatusBar
-        scoredCount={scoredCount}
-        rankedCount={0}
-        totalCount={totalCount}
-        duplicateRanksCount={0}
-        onDuplicateClick={() => {}}
-      />
-      <Typography variant="h4" fontWeight={800} gutterBottom>
-        Score Requirements
-      </Typography>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-        <input
-          type="text"
-          placeholder="Search by Key or Requirement..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', minWidth: 260 }}
-        />
-      </Box>
-      {error && (
-        <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
-      )}
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <StatusBar
+          scoredCount={scoredCount}
+          rankedCount={0}
+          totalCount={totalCount}
+          duplicateRanksCount={0}
+          onDuplicateClick={() => {}}
+        />
+        <Typography variant="h4" fontWeight={800} gutterBottom>
+          Score Requirements
+        </Typography>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+          <input
+            type="text"
+            placeholder="Search by Key or Requirement..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ padding: 8, borderRadius: 6, border: '1px solid #ccc', minWidth: 260 }}
+          />
+        </Box>
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+        )}
         <TableContainer>
           <Table size="medium">
             <TableHead>

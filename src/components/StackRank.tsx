@@ -28,6 +28,7 @@ import {
 import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon, ChatBubbleOutline as CommentIcon, Event as EventIcon, InfoOutlined } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import Popover from '@mui/material/Popover';
+import StatusBar from './StatusBar';
 
 interface Requirement {
   key: string;
@@ -340,37 +341,13 @@ export const StackRank = () => {
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
-      {/* Sticky Status Bar */}
-      <Box sx={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 1200,
-        bgcolor: 'background.paper',
-        boxShadow: 1,
-        borderRadius: 2,
-        px: 3,
-        py: 1.5,
-        mb: 2,
-        display: 'flex',
-        gap: 4,
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 56,
-      }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          Scored: {scoredCount} / {totalCount}
-        </Typography>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          Ranked: {rankedCount} / {totalCount}
-        </Typography>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => setDuplicateDialog(true)}>
-          Duplicate Ranks: {duplicateRanks.length}
-          <IconButton size="small" sx={{ ml: 0.5 }}>
-            <InfoOutlined fontSize="small" />
-          </IconButton>
-        </Typography>
-      </Box>
-      {/* End Sticky Status Bar */}
+      <StatusBar
+        scoredCount={scoredCount}
+        rankedCount={rankedCount}
+        totalCount={totalCount}
+        duplicateRanksCount={duplicateRanks.length}
+        onDuplicateClick={() => setDuplicateDialog(true)}
+      />
       <Typography variant="h4" fontWeight={800} gutterBottom>
         Stack Rank Requirements
       </Typography>

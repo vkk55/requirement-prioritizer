@@ -325,7 +325,8 @@ export const StackRank = () => {
     }
   };
 
-  // Compute ranked and duplicate metrics
+  // Compute scored, ranked, and duplicate metrics
+  const scoredCount = requirements.filter(r => typeof r.score === 'number' && !isNaN(r.score)).length;
   const rankedCount = requirements.filter(r => r.rank > 0).length;
   const totalCount = requirements.length;
   const rankMap: { [rank: number]: RequirementWithComments[] } = {};
@@ -339,6 +340,37 @@ export const StackRank = () => {
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      {/* Sticky Status Bar */}
+      <Box sx={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1200,
+        bgcolor: 'background.paper',
+        boxShadow: 1,
+        borderRadius: 2,
+        px: 3,
+        py: 1.5,
+        mb: 2,
+        display: 'flex',
+        gap: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 56,
+      }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          Scored: {scoredCount} / {totalCount}
+        </Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          Ranked: {rankedCount} / {totalCount}
+        </Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => setDuplicateDialog(true)}>
+          Duplicate Ranks: {duplicateRanks.length}
+          <IconButton size="small" sx={{ ml: 0.5 }}>
+            <InfoOutlined fontSize="small" />
+          </IconButton>
+        </Typography>
+      </Box>
+      {/* End Sticky Status Bar */}
       <Typography variant="h4" fontWeight={800} gutterBottom>
         Stack Rank Requirements
       </Typography>
@@ -606,18 +638,6 @@ export const StackRank = () => {
           <Button onClick={() => setHistoryDialog({ open: false, log: '' })}>Close</Button>
         </DialogActions>
       </Dialog>
-      {/* Rank tracker and duplicate tracker */}
-      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          Ranked: {rankedCount} / {totalCount}
-        </Typography>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center' }}>
-          Duplicate Ranks: {duplicateRanks.length}
-          <IconButton size="small" sx={{ ml: 0.5 }} onClick={() => setDuplicateDialog(true)}>
-            <InfoOutlined fontSize="small" />
-          </IconButton>
-        </Typography>
-      </Box>
       {/* Duplicate Ranks Dialog */}
       <Dialog open={duplicateDialog} onClose={() => setDuplicateDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Duplicate Ranks</DialogTitle>

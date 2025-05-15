@@ -248,6 +248,12 @@ export const Requirements = () => {
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      {/* Score tracker */}
+      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end' }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          Scored: {requirements.filter(r => r.score && r.score > 0).length} / {requirements.length}
+        </Typography>
+      </Box>
       <Typography variant="h4" fontWeight={800} gutterBottom>
         Score Requirements
       </Typography>

@@ -25,7 +25,7 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon, ChatBubbleOutline as CommentIcon, Event as EventIcon } from '@mui/icons-material';
+import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon, ChatBubbleOutline as CommentIcon, Event as EventIcon, InfoOutlined } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import Popover from '@mui/material/Popover';
 
@@ -74,6 +74,7 @@ export const StackRank = () => {
   const [commentPopover, setCommentPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
   const [commentCursor, setCommentCursor] = useState<{ [key: string]: number }>({});
   const [historyDialog, setHistoryDialog] = useState<{ open: boolean, log: string }>({ open: false, log: '' });
+  const [duplicateDialog, setDuplicateDialog] = useState(false);
 
   // Persist last active tab
   useEffect(() => {
@@ -323,6 +324,18 @@ export const StackRank = () => {
       console.error('Error exporting requirements:', err);
     }
   };
+
+  // Compute ranked and duplicate metrics
+  const rankedCount = requirements.filter(r => r.rank > 0).length;
+  const totalCount = requirements.length;
+  const rankMap: { [rank: number]: RequirementWithComments[] } = {};
+  requirements.forEach(r => {
+    if (r.rank > 0 && r.rank !== 999) {
+      if (!rankMap[r.rank]) rankMap[r.rank] = [];
+      rankMap[r.rank].push(r);
+    }
+  });
+  const duplicateRanks = Object.values(rankMap).filter(arr => arr.length > 1).flat();
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
@@ -591,6 +604,49 @@ export const StackRank = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setHistoryDialog({ open: false, log: '' })}>Close</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Rank tracker and duplicate tracker */}
+      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          Ranked: {rankedCount} / {totalCount}
+        </Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+          Duplicate Ranks: {duplicateRanks.length}
+          <IconButton size="small" sx={{ ml: 0.5 }} onClick={() => setDuplicateDialog(true)}>
+            <InfoOutlined fontSize="small" />
+          </IconButton>
+        </Typography>
+      </Box>
+      {/* Duplicate Ranks Dialog */}
+      <Dialog open={duplicateDialog} onClose={() => setDuplicateDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Duplicate Ranks</DialogTitle>
+        <DialogContent>
+          {duplicateRanks.length === 0 ? (
+            <Typography>No duplicate ranks found.</Typography>
+          ) : (
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Key</TableCell>
+                  <TableCell>Summary</TableCell>
+                  <TableCell>Rank</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.values(rankMap).filter(arr => arr.length > 1).flat().map(r => (
+                  <TableRow key={r.key}>
+                    <TableCell>{r.key}</TableCell>
+                    <TableCell>{r.summary}</TableCell>
+                    <TableCell>{r.rank}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDuplicateDialog(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Stack>

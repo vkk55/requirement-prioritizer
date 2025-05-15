@@ -11,20 +11,23 @@ const StatusBar = ({
 }) => (
   <Box
     sx={{
-      position: 'sticky',
+      position: 'fixed',
       top: 64, // below app bar
-      zIndex: 1200,
-      bgcolor: 'background.paper',
-      boxShadow: 1,
-      borderRadius: 2,
-      px: 3,
+      left: 0,
+      width: '100vw',
+      zIndex: 1300,
+      bgcolor: 'rgba(230, 242, 255, 0.95)', // subtle blue, slightly transparent
+      boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+      borderRadius: 0,
+      px: { xs: 1, sm: 3 },
       py: 1.5,
-      mb: 2,
       display: 'flex',
       gap: 4,
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: 56,
+      borderBottom: '1px solid #e3eaf2',
+      transition: 'background 0.2s',
     }}
   >
     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>

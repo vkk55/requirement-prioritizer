@@ -341,6 +341,7 @@ export const StackRank = () => {
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      <Box sx={{ height: { xs: 112, sm: 120 } }} />
       <StatusBar
         scoredCount={scoredCount}
         rankedCount={rankedCount}

@@ -379,17 +379,17 @@ export const StackRank = () => {
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>
         )}
-        <TableContainer>
+        <TableContainer sx={{ maxHeight: 500, overflow: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>
                   <Button onClick={() => handleSort('rank')} sx={{ fontWeight: 700, textTransform: 'none' }}>
                     Rank
                   </Button>
                 </TableCell>
-                <TableCell>Requirement</TableCell>
-                <TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>Requirement</TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Button onClick={() => handleSort('score')} sx={{ fontWeight: 700, textTransform: 'none' }}>
                       Score
@@ -399,8 +399,8 @@ export const StackRank = () => {
                     </Tooltip>
                   </Box>
                 </TableCell>
-                <TableCell>Comments</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>Comments</TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

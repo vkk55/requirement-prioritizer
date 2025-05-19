@@ -25,7 +25,7 @@ import {
   Divider,
   TextField,
 } from '@mui/material';
-import { Info, ChatBubbleOutline as CommentIcon, Event as EventIcon } from '@mui/icons-material';
+import { Info, ChatBubbleOutline as CommentIcon, ChatBubble, Event as EventIcon } from '@mui/icons-material';
 import Popover from '@mui/material/Popover';
 import StatusBar from './StatusBar';
 
@@ -382,7 +382,9 @@ export const Requirements = () => {
                         return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
                       })()}
                       <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
-                        <CommentIcon fontSize="small" color={(requirement.comments && requirement.comments.length > 0) ? 'success' : 'inherit'} />
+                        {(requirement.comments && requirement.comments.length > 0)
+                          ? <ChatBubble fontSize="small" sx={{ color: 'success.main' }} />
+                          : <CommentIcon fontSize="small" />}
                       </IconButton>
                       <Popover
                         open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}

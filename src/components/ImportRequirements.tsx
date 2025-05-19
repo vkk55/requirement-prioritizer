@@ -61,6 +61,17 @@ interface SelectedColumns {
   assignee: string;
 }
 
+// Utility to format seconds as 'X hr Y min' or 'Y min'
+function formatTimeSpent(seconds) {
+  if (!seconds || isNaN(seconds)) return '';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (hrs > 0) {
+    return `${hrs} hr${hrs > 1 ? 's' : ''} ${mins} min${mins !== 1 ? 's' : ''}`;
+  }
+  return `${mins} min${mins !== 1 ? 's' : ''}`;
+}
+
 const ImportRequirements: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -541,7 +552,7 @@ const ImportRequirements: React.FC = () => {
                         <TableCell>{r.status}</TableCell>
                         <TableCell>{r.assignee}</TableCell>
                         <TableCell>{r.productOwner || ''}</TableCell>
-                        <TableCell>{r.timeSpent}</TableCell>
+                        <TableCell>{formatTimeSpent(r.timeSpent)}</TableCell>
                         <TableCell>{r.labels}</TableCell>
                         <TableCell>{r.roughEstimate}</TableCell>
                         <TableCell>{r.relatedCustomers}</TableCell>

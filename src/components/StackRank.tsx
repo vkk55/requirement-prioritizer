@@ -25,7 +25,7 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
-import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon, ChatBubbleOutline as CommentIcon, Event as EventIcon, InfoOutlined } from '@mui/icons-material';
+import { Info, Refresh, FileDownload, Check, Delete as DeleteIcon, Save as SaveIcon, History as HistoryIcon, ChatBubbleOutline as CommentIcon, ChatBubble, Event as EventIcon, InfoOutlined } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import Popover from '@mui/material/Popover';
 import StatusBar from './StatusBar';
@@ -56,6 +56,17 @@ interface Criterion {
 
 // Update RequirementWithComments type
 type RequirementWithComments = Requirement & { comments?: string[]; weight?: number; updatehistory?: string };
+
+// Utility to format seconds as 'X hr Y min' or 'Y min'
+function formatTimeSpent(seconds) {
+  if (!seconds || isNaN(seconds)) return '';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (hrs > 0) {
+    return `${hrs} hr${hrs > 1 ? 's' : ''} ${mins} min${mins !== 1 ? 's' : ''}`;
+  }
+  return `${mins} min${mins !== 1 ? 's' : ''}`;
+}
 
 export const StackRank = () => {
   const [requirements, setRequirements] = useState<RequirementWithComments[]>([]);
@@ -454,7 +465,9 @@ export const StackRank = () => {
                   </TableCell>
                   <TableCell>
                     <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
-                      <CommentIcon fontSize="small" color={(requirement.comments && requirement.comments.length > 0) ? 'success' : 'inherit'} />
+                      {(requirement.comments && requirement.comments.length > 0)
+                        ? <ChatBubble fontSize="small" sx={{ color: 'success.main' }} />
+                        : <CommentIcon fontSize="small" />}
                     </IconButton>
                     <Popover
                       open={commentPopover.anchorEl !== null && commentPopover.key === requirement.key}
@@ -554,7 +567,7 @@ export const StackRank = () => {
                 <ListItemText primary="Assignee" secondary={selectedRequirement.assignee || 'Not assigned'} />
               </ListItem>
               <ListItem>
-                <ListItemText primary="Time Spent" secondary={selectedRequirement.timeSpent || 'Not set'} />
+                <ListItemText primary="Time Spent" secondary={formatTimeSpent(selectedRequirement.timeSpent)} />
               </ListItem>
               <ListItem>
                 <ListItemText primary="Labels" secondary={selectedRequirement.labels || 'No labels'} />

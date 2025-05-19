@@ -55,6 +55,17 @@ interface Criterion {
   scale_max: number;
 }
 
+// Utility to format seconds as 'X hr Y min' or 'Y min'
+function formatTimeSpent(seconds) {
+  if (!seconds || isNaN(seconds)) return '';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (hrs > 0) {
+    return `${hrs} hr${hrs > 1 ? 's' : ''} ${mins} min${mins !== 1 ? 's' : ''}`;
+  }
+  return `${mins} min${mins !== 1 ? 's' : ''}`;
+}
+
 export const Requirements = () => {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
@@ -459,7 +470,7 @@ export const Requirements = () => {
                 <ListItemText primary="Product Owner" secondary={selectedRequirement.productOwner || 'Not set'} />
               </ListItem>
               <ListItem>
-                <ListItemText primary="Time Spent" secondary={selectedRequirement.timeSpent || 'Not set'} />
+                <ListItemText primary="Time Spent" secondary={formatTimeSpent(selectedRequirement.timeSpent)} />
               </ListItem>
               <ListItem>
                 <ListItemText primary="Labels" secondary={selectedRequirement.labels || 'No labels'} />

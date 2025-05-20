@@ -323,6 +323,8 @@ export const Requirements = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
+                <TableCell sx={{ position: 'sticky', left: 0, top: 48, zIndex: 2, bgcolor: 'background.paper', width: 40 }} />
+                <TableCell sx={{ position: 'sticky', top: 48, zIndex: 2, bgcolor: 'background.paper', minWidth: 80 }} />
                 {criteria.map(criterion => (
                   <TableCell key={criterion.id} align="center" sx={{ position: 'sticky', top: 48, zIndex: 1, bgcolor: 'background.paper' }}>
                     <Typography variant="caption" color="text.secondary">
@@ -330,6 +332,7 @@ export const Requirements = () => {
                     </Typography>
                   </TableCell>
                 ))}
+                <TableCell sx={{ position: 'sticky', top: 48, zIndex: 2, bgcolor: 'background.paper', minWidth: 80 }} />
               </TableRow>
             </TableHead>
             <TableBody>

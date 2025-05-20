@@ -108,11 +108,25 @@ const Plan: React.FC = () => {
       // Get all requirements that have been edited
       const editedRequirements = Object.entries(editing).map(([key, changes]) => {
         const original = requirements.find(r => r.key === key);
-        return {
+        // Map frontend fields to DB columns
+        const mapped: any = {
           ...original,
           ...changes,
           key,
         };
+        if ('inPlan' in mapped) {
+          mapped['InPlan?'] = mapped.inPlan;
+          delete mapped.inPlan;
+        }
+        if ('minorReleaseCandidate' in mapped) {
+          mapped['MinorRelCandidate?'] = mapped.minorReleaseCandidate;
+          delete mapped.minorReleaseCandidate;
+        }
+        if ('teams' in mapped) {
+          mapped['Team(s)'] = mapped.teams;
+          delete mapped.teams;
+        }
+        return mapped;
       });
 
       // Save each edited requirement

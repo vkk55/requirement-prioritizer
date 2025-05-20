@@ -15,6 +15,8 @@ import {
   Tooltip,
   Button,
   Paper,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { ChatBubbleOutline as CommentIcon, ChatBubble } from '@mui/icons-material';
 
@@ -35,6 +37,9 @@ const Plan: React.FC = () => {
   const [editing, setEditing] = useState<{ [key: string]: Partial<Requirement> }>({});
   const [commentPopover, setCommentPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
   const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
 
   useEffect(() => {
     fetchRequirements();
@@ -61,7 +66,7 @@ const Plan: React.FC = () => {
             : [],
       })));
     } catch (err) {
-      // handle error
+      setError(err instanceof Error ? err.message : 'Failed to fetch requirements');
     }
   };
 
@@ -73,22 +78,85 @@ const Plan: React.FC = () => {
     setEditingComment(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleCommentSave = (key: string) => {
-    const newComment = editingComment[key]?.trim();
-    if (!newComment) return;
-    setRequirements(prev => prev.map(r =>
-      r.key === key ? { ...r, comments: [...(r.comments || []), newComment] } : r
-    ));
-    setEditingComment(prev => ({ ...prev, [key]: '' }));
-    setCommentPopover({ anchorEl: null, key: null });
+  const handleCommentSave = async (key: string) => {
+    try {
+      const newComment = editingComment[key]?.trim();
+      if (!newComment) return;
+      const req = requirements.find(r => r.key === key);
+      const prevComments = req?.comments || [];
+      const updatedComments = [...prevComments, newComment];
+      const response = await fetch(`https://requirement-prioritizer.onrender.com/api/requirements/${key}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comments: JSON.stringify(updatedComments) }),
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to save comment');
+      setRequirements(prev => prev.map(r => r.key === key ? { ...r, comments: updatedComments } : r));
+      setEditingComment(prev => ({ ...prev, [key]: '' }));
+      setCommentPopover({ anchorEl: null, key: null });
+      setSuccess('Comment saved successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save comment');
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      // Get all requirements that have been edited
+      const editedRequirements = Object.entries(editing).map(([key, changes]) => {
+        const original = requirements.find(r => r.key === key);
+        return {
+          ...original,
+          ...changes,
+          key,
+        };
+      });
+
+      // Save each edited requirement
+      for (const req of editedRequirements) {
+        const response = await fetch('https://requirement-prioritizer.onrender.com/api/requirements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(req),
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message || 'Failed to save requirement');
+      }
+
+      // Update local state
+      setRequirements(prev => prev.map(r => {
+        const changes = editing[r.key];
+        return changes ? { ...r, ...changes } : r;
+      }));
+      setEditing({});
+      setSuccess('Changes saved successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-        <Typography variant="h4" fontWeight={800} gutterBottom>
-          Plan Requirements
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" fontWeight={800}>
+            Plan Requirements
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            disabled={saving || Object.keys(editing).length === 0}
+            sx={{ fontWeight: 700, borderRadius: 2 }}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </Stack>
         <TableContainer component={Paper} sx={{ maxHeight: 500, overflow: 'auto' }}>
           <Table size="medium">
             <TableHead>
@@ -186,6 +254,16 @@ const Plan: React.FC = () => {
           </Table>
         </TableContainer>
       </Card>
+      <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError('')}>
+        <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
+      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess('')}>
+        <Alert onClose={() => setSuccess('')} severity="success" sx={{ width: '100%' }}>
+          {success}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 };

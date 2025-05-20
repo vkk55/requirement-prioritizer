@@ -32,6 +32,22 @@ interface Requirement {
   comments?: string[];
 }
 
+function cleanComment(comment: any) {
+  try {
+    let cleaned = comment;
+    if (typeof cleaned === 'string') {
+      cleaned = cleaned.replace(/^"+|"+$/g, ''); // Remove leading/trailing quotes
+      cleaned = cleaned.replace(/\\/g, '\\'); // Unescape slashes
+    }
+    const parsed = JSON.parse(cleaned);
+    if (typeof parsed === 'string') return parsed;
+    if (Array.isArray(parsed)) return parsed.join(', ');
+    return cleaned;
+  } catch {
+    return comment;
+  }
+}
+
 const Plan: React.FC = () => {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [editing, setEditing] = useState<{ [key: string]: Partial<Requirement> }>({});
@@ -229,7 +245,7 @@ const Plan: React.FC = () => {
                         {r.comments && r.comments.length > 0 && (
                           <>
                             {r.comments.map((comment, idx) => (
-                              <Typography key={idx} sx={{ fontSize: 12, mb: 0.5 }}>{comment}</Typography>
+                              <Typography key={idx} sx={{ fontSize: 12, mb: 0.5 }}>{cleanComment(comment)}</Typography>
                             ))}
                           </>
                         )}

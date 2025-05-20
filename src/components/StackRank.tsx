@@ -394,6 +394,7 @@ export const StackRank = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell sx={{ position: 'sticky', left: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>#</TableCell>
                 <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>
                   <Button onClick={() => handleSort('rank')} sx={{ fontWeight: 700, textTransform: 'none' }}>
                     Rank
@@ -415,8 +416,9 @@ export const StackRank = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedRequirements.map((requirement) => (
+              {sortedRequirements.map((requirement, index) => (
                 <TableRow key={requirement.key} hover>
+                  <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>{index + 1}</TableCell>
                   <TableCell>
                     <TextField
                       type="number"

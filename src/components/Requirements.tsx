@@ -291,7 +291,7 @@ export const Requirements = () => {
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell rowSpan={2} sx={{ verticalAlign: 'bottom', position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>Requirement</TableCell>
+                <TableCell rowSpan={2} sx={{ position: 'sticky', left: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>#</TableCell>
                 <TableCell
                   rowSpan={2}
                   sx={{ verticalAlign: 'bottom', cursor: 'pointer', fontWeight: 700, position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}
@@ -333,8 +333,9 @@ export const Requirements = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedRequirements.map(requirement => (
+              {sortedRequirements.map((requirement, index) => (
                 <TableRow key={requirement.key} hover>
+                  <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>{index + 1}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Box>

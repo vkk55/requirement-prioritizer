@@ -56,9 +56,9 @@ const Plan: React.FC = () => {
         rank: r.rank,
         score: r.score,
         roughEstimate: r.roughestimate,
-        inPlan: r.inPlan || false,
-        minorReleaseCandidate: r.minorReleaseCandidate || false,
-        teams: r.teams || '',
+        inPlan: r["InPlan?"] ?? false,
+        minorReleaseCandidate: r["MinorRelCandidate?"] ?? false,
+        teams: r["Team(s)"] ?? '',
         comments: Array.isArray(r.comments)
           ? r.comments.map((c: any) => typeof c === 'string' ? c : (c.text || JSON.stringify(c)))
           : r.comments

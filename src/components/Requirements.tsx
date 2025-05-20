@@ -294,7 +294,7 @@ export const Requirements = () => {
                 <TableCell rowSpan={2} sx={{ position: 'sticky', left: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>#</TableCell>
                 <TableCell
                   rowSpan={2}
-                  sx={{ verticalAlign: 'bottom', cursor: 'pointer', fontWeight: 700, position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}
+                  sx={{ verticalAlign: 'bottom', cursor: 'pointer', fontWeight: 700, position: 'sticky', top: 0, zIndex: 2, bgcolor: 'background.paper' }}
                   onClick={() => {
                     if (sortBy === 'weight') setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
                     else { setSortBy('weight'); setSortOrder('desc'); }
@@ -306,7 +306,7 @@ export const Requirements = () => {
                 {criteria.map(criterion => (
                   <TableCell key={criterion.id} align="center" sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>{criterion.name}</TableCell>
                 ))}
-                <TableCell rowSpan={2} sx={{ verticalAlign: 'bottom', display: 'flex', alignItems: 'center', gap: 1, position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>
+                <TableCell rowSpan={2} sx={{ verticalAlign: 'bottom', display: 'flex', alignItems: 'center', gap: 1, position: 'sticky', top: 0, zIndex: 2, bgcolor: 'background.paper' }}>
                   <span style={{ display: 'flex', alignItems: 'center' }}>
                     Score
                     <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">

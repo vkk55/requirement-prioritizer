@@ -56,7 +56,7 @@ interface Criterion {
 }
 
 // Utility to format seconds as 'X hr Y min' or 'Y min'
-function formatTimeSpent(seconds) {
+function formatTimeSpent(seconds: number) {
   if (!seconds || isNaN(seconds)) return '';
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
@@ -321,8 +321,6 @@ export const Requirements = () => {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ position: 'sticky', left: 0, top: 48, zIndex: 2, bgcolor: 'background.paper', width: 40 }} />
-                <TableCell sx={{ position: 'sticky', left: 40, top: 48, zIndex: 2, bgcolor: 'background.paper', minWidth: 80 }} />
                 {criteria.map(criterion => (
                   <TableCell key={criterion.id} align="center" sx={{ position: 'sticky', top: 48, zIndex: 1, bgcolor: 'background.paper' }}>
                     <Typography variant="caption" color="text.secondary">
@@ -455,7 +453,7 @@ export const Requirements = () => {
                 <ListItemText primary="Product Owner" secondary={selectedRequirement.productOwner || 'Not set'} />
               </ListItem>
               <ListItem>
-                <ListItemText primary="Time Spent" secondary={formatTimeSpent(selectedRequirement.timeSpent)} />
+                <ListItemText primary="Time Spent" secondary={formatTimeSpent(Number(selectedRequirement.timeSpent))} />
               </ListItem>
               <ListItem>
                 <ListItemText primary="Labels" secondary={selectedRequirement.labels || 'No labels'} />

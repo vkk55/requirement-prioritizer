@@ -19,7 +19,7 @@ import {
   Alert,
   Box,
 } from '@mui/material';
-import { ChatBubbleOutline as CommentIcon, ChatBubble } from '@mui/icons-material';
+import { ChatBubbleOutline as CommentIcon, ChatBubble, Visibility as VisibilityIcon } from '@mui/icons-material';
 import StatusBar from './StatusBar';
 
 interface Requirement {
@@ -203,7 +203,9 @@ const Plan: React.FC = () => {
           totalCount={requirements.length}
           duplicateRanksCount={0}
           roughEstimateCount={roughEstimateCount}
+          roughEstimateTotal={requirements.length}
           inPlanCount={inPlanCount}
+          inPlanTotal={requirements.length}
           onDuplicateClick={() => {}}
         />
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
@@ -299,14 +301,20 @@ const Plan: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Tooltip title="View full team(s)">
-                      <span
-                        style={{ cursor: 'pointer', textDecoration: 'underline', color: '#1976d2' }}
-                        onClick={e => setTeamPopover({ anchorEl: e.currentTarget, key: r.key })}
-                      >
-                        {(editing[r.key]?.teams ?? r.teams ?? '').slice(0, 20)}{(editing[r.key]?.teams ?? r.teams ?? '').length > 20 ? '...' : ''}
-                      </span>
-                    </Tooltip>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <TextField
+                        value={editing[r.key]?.teams ?? r.teams ?? ''}
+                        onChange={e => handleEdit(r.key, 'teams', e.target.value)}
+                        size="small"
+                        placeholder="Team(s)"
+                        sx={{ flex: 1 }}
+                      />
+                      <Tooltip title="View full team(s)">
+                        <IconButton size="small" onClick={e => setTeamPopover({ anchorEl: e.currentTarget, key: r.key })}>
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                     {teamPopover.anchorEl && teamPopover.key === r.key && (
                       <Paper sx={{ position: 'absolute', zIndex: 10, p: 2, minWidth: 200 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>Team(s)</Typography>

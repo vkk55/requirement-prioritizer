@@ -275,7 +275,9 @@ export const Requirements = () => {
           totalCount={totalCount}
           duplicateRanksCount={0}
           roughEstimateCount={roughEstimateCount}
+          roughEstimateTotal={totalCount}
           inPlanCount={inPlanCount}
+          inPlanTotal={totalCount}
           onDuplicateClick={() => {}}
         />
         <Typography variant="h4" fontWeight={800} gutterBottom>

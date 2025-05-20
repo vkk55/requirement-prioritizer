@@ -44,6 +44,7 @@ interface Requirement {
   roughEstimate?: string;
   relatedCustomers?: string;
   productOwner?: string;
+  inPlan?: boolean;
 }
 
 interface Criterion {
@@ -58,7 +59,7 @@ interface Criterion {
 type RequirementWithComments = Requirement & { comments?: string[]; weight?: number; updatehistory?: string };
 
 // Utility to format seconds as 'X hr Y min' or 'Y min'
-function formatTimeSpent(seconds) {
+function formatTimeSpent(seconds: number) {
   if (!seconds || isNaN(seconds)) return '';
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
@@ -349,6 +350,8 @@ export const StackRank = () => {
     }
   });
   const duplicateRanks = Object.values(rankMap).filter(arr => arr.length > 1).flat();
+  const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
+  const inPlanCount = requirements.filter(r => r.inPlan).length;
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
@@ -358,6 +361,10 @@ export const StackRank = () => {
           rankedCount={rankedCount}
           totalCount={totalCount}
           duplicateRanksCount={duplicateRanks.length}
+          roughEstimateCount={roughEstimateCount}
+          roughEstimateTotal={totalCount}
+          inPlanCount={inPlanCount}
+          inPlanTotal={totalCount}
           onDuplicateClick={() => setDuplicateDialog(true)}
         />
         <Typography variant="h4" fontWeight={800} gutterBottom>
@@ -569,7 +576,7 @@ export const StackRank = () => {
                 <ListItemText primary="Assignee" secondary={selectedRequirement.assignee || 'Not assigned'} />
               </ListItem>
               <ListItem>
-                <ListItemText primary="Time Spent" secondary={formatTimeSpent(selectedRequirement.timeSpent)} />
+                <ListItemText primary="Time Spent" secondary={formatTimeSpent(Number(selectedRequirement.timeSpent))} />
               </ListItem>
               <ListItem>
                 <ListItemText primary="Labels" secondary={selectedRequirement.labels || 'No labels'} />

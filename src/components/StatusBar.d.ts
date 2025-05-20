@@ -6,7 +6,9 @@ export interface StatusBarProps {
   totalCount: number;
   duplicateRanksCount: number;
   roughEstimateCount?: number;
+  roughEstimateTotal?: number;
   inPlanCount?: number;
+  inPlanTotal?: number;
   onDuplicateClick: () => void;
 }
 

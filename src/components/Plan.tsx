@@ -17,8 +17,10 @@ import {
   Paper,
   Snackbar,
   Alert,
+  Box,
 } from '@mui/material';
 import { ChatBubbleOutline as CommentIcon, ChatBubble } from '@mui/icons-material';
+import StatusBar from './StatusBar';
 
 interface Requirement {
   key: string;
@@ -56,6 +58,10 @@ const Plan: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'rank'|'score'|'roughEstimate'|'teams'>('rank');
+  const [sortOrder, setSortOrder] = useState<'asc'|'desc'>('asc');
+  const [teamPopover, setTeamPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
 
   useEffect(() => {
     fetchRequirements();
@@ -170,9 +176,36 @@ const Plan: React.FC = () => {
     }
   };
 
+  // Compute counts for status bar
+  const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
+  const inPlanCount = requirements.filter(r => r.inPlan).length;
+
+  // Filter and sort requirements
+  const filteredRequirements = requirements.filter(r =>
+    r.key.toLowerCase().includes(search.toLowerCase()) ||
+    (r.summary || '').toLowerCase().includes(search.toLowerCase())
+  );
+  const sortedRequirements = [...filteredRequirements].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === 'rank') cmp = (a.rank || 0) - (b.rank || 0);
+    else if (sortBy === 'score') cmp = (a.score || 0) - (b.score || 0);
+    else if (sortBy === 'roughEstimate') cmp = (a.roughEstimate || '').localeCompare(b.roughEstimate || '');
+    else if (sortBy === 'teams') cmp = (a.teams || '').localeCompare(b.teams || '');
+    return sortOrder === 'asc' ? cmp : -cmp;
+  });
+
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+        <StatusBar
+          scoredCount={0}
+          rankedCount={0}
+          totalCount={requirements.length}
+          duplicateRanksCount={0}
+          roughEstimateCount={roughEstimateCount}
+          inPlanCount={inPlanCount}
+          onDuplicateClick={() => {}}
+        />
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h4" fontWeight={800}>
             Plan Requirements
@@ -187,26 +220,67 @@ const Plan: React.FC = () => {
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </Stack>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+          <TextField
+            label="Search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            size="small"
+            sx={{ minWidth: 200 }}
+          />
+        </Box>
         <TableContainer component={Paper} sx={{ maxHeight: 500, overflow: 'auto' }}>
           <Table size="medium">
             <TableHead>
               <TableRow>
                 <TableCell sx={{ position: 'sticky', left: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>#</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Requirement</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Rank</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Score</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Rough Estimate</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  Requirement
+                  <br />
+                  <span style={{ fontWeight: 400, fontSize: 12 }}>(Key + Summary)</span>
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  <Button onClick={() => {
+                    setSortBy('rank');
+                    setSortOrder(sortBy === 'rank' && sortOrder === 'asc' ? 'desc' : 'asc');
+                  }} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                    Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                  </Button>
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  <Button onClick={() => {
+                    setSortBy('score');
+                    setSortOrder(sortBy === 'score' && sortOrder === 'asc' ? 'desc' : 'asc');
+                  }} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                    Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                  </Button>
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  <Button onClick={() => {
+                    setSortBy('roughEstimate');
+                    setSortOrder(sortBy === 'roughEstimate' && sortOrder === 'asc' ? 'desc' : 'asc');
+                  }} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                    Rough Estimate {sortBy === 'roughEstimate' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                  </Button>
+                </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>In Plan?</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Minor Rel Candidate?</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Team(s)</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  <Button onClick={() => {
+                    setSortBy('teams');
+                    setSortOrder(sortBy === 'teams' && sortOrder === 'asc' ? 'desc' : 'asc');
+                  }} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                    Team(s) {sortBy === 'teams' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                  </Button>
+                </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Comments</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {requirements.map((r, idx) => (
+              {sortedRequirements.map((r, idx) => (
                 <TableRow key={r.key} hover>
                   <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>{idx + 1}</TableCell>
-                  <TableCell>{r.summary}</TableCell>
+                  <TableCell>{r.key} - {r.summary}</TableCell>
                   <TableCell>{r.rank}</TableCell>
                   <TableCell>{r.score?.toFixed(2) ?? ''}</TableCell>
                   <TableCell>{r.roughEstimate ?? ''}</TableCell>
@@ -225,12 +299,21 @@ const Plan: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <TextField
-                      value={editing[r.key]?.teams ?? r.teams ?? ''}
-                      onChange={e => handleEdit(r.key, 'teams', e.target.value)}
-                      size="small"
-                      placeholder="Team(s)"
-                    />
+                    <Tooltip title="View full team(s)">
+                      <span
+                        style={{ cursor: 'pointer', textDecoration: 'underline', color: '#1976d2' }}
+                        onClick={e => setTeamPopover({ anchorEl: e.currentTarget, key: r.key })}
+                      >
+                        {(editing[r.key]?.teams ?? r.teams ?? '').slice(0, 20)}{(editing[r.key]?.teams ?? r.teams ?? '').length > 20 ? '...' : ''}
+                      </span>
+                    </Tooltip>
+                    {teamPopover.anchorEl && teamPopover.key === r.key && (
+                      <Paper sx={{ position: 'absolute', zIndex: 10, p: 2, minWidth: 200 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Team(s)</Typography>
+                        <Typography sx={{ fontSize: 13 }}>{editing[r.key]?.teams ?? r.teams ?? ''}</Typography>
+                        <Button onClick={() => setTeamPopover({ anchorEl: null, key: null })} sx={{ mt: 1 }}>Close</Button>
+                      </Paper>
+                    )}
                   </TableCell>
                   <TableCell>
                     <IconButton size="small" onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: r.key })}>

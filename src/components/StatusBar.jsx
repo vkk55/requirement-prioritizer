@@ -7,6 +7,8 @@ const StatusBar = ({
   rankedCount,
   totalCount,
   duplicateRanksCount,
+  roughEstimateCount = 0,
+  inPlanCount = 0,
   onDuplicateClick
 }) => (
   <Box
@@ -34,6 +36,12 @@ const StatusBar = ({
     </Typography>
     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
       Ranked: {rankedCount} / {totalCount}
+    </Typography>
+    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+      Rough Estimate: {roughEstimateCount}
+    </Typography>
+    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+      In Plan: {inPlanCount}
     </Typography>
     <Typography
       variant="subtitle1"

@@ -45,6 +45,7 @@ interface Requirement {
   weight?: number;
   productOwner?: string;
   comments?: string[];
+  inPlan?: boolean;
 }
 
 interface Criterion {
@@ -121,6 +122,7 @@ export const Requirements = () => {
       : req.comments
         ? [typeof req.comments === 'string' ? req.comments : JSON.stringify(req.comments)]
         : [],
+    inPlan: req.inPlan,
   });
 
   const fetchRequirements = async () => {
@@ -261,6 +263,8 @@ export const Requirements = () => {
   // Compute scored count
   const scoredCount = requirements.filter(r => typeof r.score === 'number' && !isNaN(r.score)).length;
   const totalCount = requirements.length;
+  const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
+  const inPlanCount = requirements.filter(r => r.inPlan).length;
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
@@ -270,6 +274,8 @@ export const Requirements = () => {
           rankedCount={0}
           totalCount={totalCount}
           duplicateRanksCount={0}
+          roughEstimateCount={roughEstimateCount}
+          inPlanCount={inPlanCount}
           onDuplicateClick={() => {}}
         />
         <Typography variant="h4" fontWeight={800} gutterBottom>

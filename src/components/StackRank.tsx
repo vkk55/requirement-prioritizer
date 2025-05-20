@@ -340,7 +340,7 @@ export const StackRank = () => {
 
   // Compute scored, ranked, and duplicate metrics
   const scoredCount = requirements.filter(r => typeof r.score === 'number' && !isNaN(r.score)).length;
-  const rankedCount = requirements.filter(r => r.rank > 0).length;
+  const rankedCount = requirements.filter(r => typeof r.rank === 'number' && r.rank > 0).length;
   const totalCount = requirements.length;
   const rankMap: { [rank: number]: RequirementWithComments[] } = {};
   requirements.forEach(r => {

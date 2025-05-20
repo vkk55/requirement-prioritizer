@@ -46,6 +46,7 @@ interface Requirement {
   productOwner?: string;
   comments?: string[];
   inPlan?: boolean;
+  rank?: number;
 }
 
 interface Criterion {
@@ -122,7 +123,8 @@ export const Requirements = () => {
       : req.comments
         ? [typeof req.comments === 'string' ? req.comments : JSON.stringify(req.comments)]
         : [],
-    inPlan: req.inPlan,
+    inPlan: req["InPlan?"] ?? req.inPlan,
+    rank: req["rank"] ?? req.rank,
   });
 
   const fetchRequirements = async () => {
@@ -264,6 +266,7 @@ export const Requirements = () => {
   const scoredCount = requirements.filter(r => typeof r.score === 'number' && !isNaN(r.score)).length;
   const totalCount = requirements.length;
   const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
+  const rankedCount = requirements.filter(r => typeof r.rank === 'number' && r.rank > 0).length;
   const inPlanCount = requirements.filter(r => r.inPlan).length;
 
   return (
@@ -271,7 +274,7 @@ export const Requirements = () => {
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
         <StatusBar
           scoredCount={scoredCount}
-          rankedCount={0}
+          rankedCount={rankedCount}
           totalCount={totalCount}
           duplicateRanksCount={0}
           roughEstimateCount={roughEstimateCount}

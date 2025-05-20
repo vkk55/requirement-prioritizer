@@ -6,6 +6,7 @@ import { Requirements } from './components/Requirements';
 import { StackRank } from './components/StackRank';
 import Analytics from './components/Analytics';
 import PasswordGate from './components/PasswordGate';
+import Plan from './components/Plan';
 
 const theme = createTheme({
   palette: {
@@ -96,6 +97,7 @@ export default function App() {
               <Tab label="Import" />
               <Tab label="Score" />
               <Tab label="Rank" />
+              <Tab label="Plan" />
               <Tab label="Analytics" />
             </Tabs>
           </AppBar>
@@ -114,6 +116,9 @@ export default function App() {
                 <StackRank />
               </TabPanel>
               <TabPanel value={tabValue} index={4}>
+                <Plan />
+              </TabPanel>
+              <TabPanel value={tabValue} index={5}>
                 <Analytics />
               </TabPanel>
             </Card>

@@ -347,7 +347,16 @@ export const Requirements = () => {
               {sortedRequirements.map((requirement, index) => (
                 <TableRow key={requirement.key} hover>
                   <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>{index + 1}</TableCell>
-                  <TableCell>{requirement.key} - {requirement.summary}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <span>{requirement.key} - {requirement.summary}</span>
+                      <Tooltip title="View Details">
+                        <IconButton size="small" onClick={() => { setSelectedRequirement(requirement); setDetailsOpen(true); }}>
+                          <Info fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
                   <TableCell sx={{ position: 'sticky', left: 40, zIndex: 2, bgcolor: 'background.paper' }} align="center">{requirement.weight ?? ''}</TableCell>
                   {criteria.map(criterion => (
                     <TableCell key={criterion.id}>
@@ -454,6 +463,12 @@ export const Requirements = () => {
                 <ListItemText primary="Summary" secondary={selectedRequirement.summary} />
               </ListItem>
               <ListItem>
+                <ListItemText primary="Score" secondary={selectedRequirement.score?.toFixed(2) ?? 0} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Rank" secondary={selectedRequirement.rank ?? 0} />
+              </ListItem>
+              <ListItem>
                 <ListItemText primary="Priority" secondary={selectedRequirement.priority || 'Not set'} />
               </ListItem>
               <ListItem>
@@ -461,9 +476,6 @@ export const Requirements = () => {
               </ListItem>
               <ListItem>
                 <ListItemText primary="Assignee" secondary={selectedRequirement.assignee || 'Not assigned'} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Product Owner" secondary={selectedRequirement.productOwner || 'Not set'} />
               </ListItem>
               <ListItem>
                 <ListItemText primary="Time Spent" secondary={formatTimeSpent(Number(selectedRequirement.timeSpent))} />
@@ -479,6 +491,9 @@ export const Requirements = () => {
               </ListItem>
               <ListItem>
                 <ListItemText primary="Weight" secondary={selectedRequirement.weight ?? 'Not set'} />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Product Owner" secondary={selectedRequirement.productOwner || 'Not set'} />
               </ListItem>
             </List>
           )}

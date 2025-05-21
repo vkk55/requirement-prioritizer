@@ -121,6 +121,8 @@ export const StackRank = () => {
       let reqs = result.data || [];
       reqs = reqs.map((r: any) => ({
         ...r,
+        roughEstimate: r.roughestimate,
+        inPlan: r["InPlan?"] ?? false,
         comments: Array.isArray(r.comments)
           ? r.comments.map((c: any) => typeof c === 'string' ? c : (c.text || JSON.stringify(c)))
           : r.comments

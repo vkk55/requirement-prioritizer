@@ -179,6 +179,7 @@ const Plan: React.FC = () => {
   // Compute counts for status bar
   const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
   const inPlanCount = requirements.filter(r => r.inPlan).length;
+  const rankedCount = requirements.filter(r => typeof r.rank === 'number' && r.rank > 0).length;
 
   // Filter and sort requirements
   const filteredRequirements = requirements.filter(r =>
@@ -199,7 +200,7 @@ const Plan: React.FC = () => {
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
         <StatusBar
           scoredCount={0}
-          rankedCount={0}
+          rankedCount={rankedCount}
           totalCount={requirements.length}
           duplicateRanksCount={0}
           roughEstimateCount={roughEstimateCount}

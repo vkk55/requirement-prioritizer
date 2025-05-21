@@ -147,6 +147,7 @@ export const StackRank = () => {
   // Sorting logic (do not auto-sort after rank/score update)
   const sortedRequirements = [...filteredRequirements].sort((a, b) => {
     if (sortBy === 'rank') {
+      // Ascending: lowest first; Descending: highest first
       return sortOrder === 'asc' ? a.rank - b.rank : b.rank - a.rank;
     } else if (sortBy === 'score') {
       return sortOrder === 'asc' ? a.score - b.score : b.score - a.score;

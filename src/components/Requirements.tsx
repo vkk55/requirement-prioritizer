@@ -303,6 +303,7 @@ export const Requirements = () => {
             <TableHead>
               <TableRow>
                 <TableCell rowSpan={2} sx={{ position: 'sticky', left: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>#</TableCell>
+                <TableCell rowSpan={2} sx={{ fontWeight: 700 }}>Requirement</TableCell>
                 <TableCell rowSpan={2} sx={{ position: 'sticky', left: 40, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700, minWidth: 80, verticalAlign: 'bottom', cursor: 'pointer' }}
                   onClick={() => {
                     if (sortBy === 'weight') setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -346,6 +347,7 @@ export const Requirements = () => {
               {sortedRequirements.map((requirement, index) => (
                 <TableRow key={requirement.key} hover>
                   <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>{index + 1}</TableCell>
+                  <TableCell>{requirement.key} - {requirement.summary}</TableCell>
                   <TableCell sx={{ position: 'sticky', left: 40, zIndex: 2, bgcolor: 'background.paper' }} align="center">{requirement.weight ?? ''}</TableCell>
                   {criteria.map(criterion => (
                     <TableCell key={criterion.id}>

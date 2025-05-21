@@ -266,7 +266,10 @@ export const Requirements = () => {
   const scoredCount = requirements.filter(r => typeof r.score === 'number' && !isNaN(r.score)).length;
   const totalCount = requirements.length;
   const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
-  const rankedCount = requirements.filter(r => typeof r.rank === 'number' && r.rank > 0).length;
+  const rankedCount = requirements.filter(r => {
+    const rankNum = typeof r.rank === 'string' ? parseFloat(r.rank) : r.rank;
+    return typeof rankNum === 'number' && !isNaN(rankNum) && rankNum > 0;
+  }).length;
   const inPlanCount = requirements.filter(r => r.inPlan).length;
 
   return (

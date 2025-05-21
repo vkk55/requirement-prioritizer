@@ -179,7 +179,10 @@ const Plan: React.FC = () => {
   // Compute counts for status bar
   const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
   const inPlanCount = requirements.filter(r => r.inPlan).length;
-  const rankedCount = requirements.filter(r => typeof r.rank === 'number' && r.rank > 0).length;
+  const rankedCount = requirements.filter(r => {
+    const rankNum = typeof r.rank === 'string' ? parseFloat(r.rank) : r.rank;
+    return typeof rankNum === 'number' && !isNaN(rankNum) && rankNum > 0;
+  }).length;
 
   // Filter and sort requirements
   const filteredRequirements = requirements.filter(r =>

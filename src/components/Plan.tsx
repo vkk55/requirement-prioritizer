@@ -18,9 +18,14 @@ import {
   Snackbar,
   Alert,
   Box,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import { ChatBubbleOutline as CommentIcon, ChatBubble, Visibility as VisibilityIcon } from '@mui/icons-material';
+import { ChatBubbleOutline as CommentIcon, ChatBubble, Visibility as VisibilityIcon, Info as InfoIcon } from '@mui/icons-material';
 import StatusBar from './StatusBar';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
 
 interface Requirement {
   key: string;
@@ -32,6 +37,12 @@ interface Requirement {
   minorReleaseCandidate?: boolean;
   teams?: string;
   comments?: string[];
+}
+
+interface Team {
+  id: string;
+  name: string;
+  capacity: number;
 }
 
 function cleanComment(comment: any) {
@@ -62,9 +73,12 @@ const Plan: React.FC = () => {
   const [sortBy, setSortBy] = useState<'rank'|'score'|'roughEstimate'|'teams'>('rank');
   const [sortOrder, setSortOrder] = useState<'asc'|'desc'>('asc');
   const [teamPopover, setTeamPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [teamReportOpen, setTeamReportOpen] = useState(false);
 
   useEffect(() => {
     fetchRequirements();
+    fetchTeams();
   }, []);
 
   const fetchRequirements = async () => {
@@ -90,6 +104,14 @@ const Plan: React.FC = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch requirements');
     }
+  };
+
+  const fetchTeams = async () => {
+    try {
+      const response = await fetch('/api/teams');
+      const result = await response.json();
+      if (result.success) setTeams(result.data || []);
+    } catch {}
   };
 
   const handleEdit = (key: string, field: keyof Requirement, value: any) => {
@@ -272,12 +294,19 @@ const Plan: React.FC = () => {
                 <TableCell sx={{ fontWeight: 700 }}>In Plan?</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Minor Rel Candidate?</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>
-                  <Button onClick={() => {
-                    setSortBy('teams');
-                    setSortOrder(sortBy === 'teams' && sortOrder === 'asc' ? 'desc' : 'asc');
-                  }} sx={{ fontWeight: 700, textTransform: 'none' }}>
-                    Team(s) {sortBy === 'teams' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-                  </Button>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Button onClick={() => {
+                      setSortBy('teams');
+                      setSortOrder(sortBy === 'teams' && sortOrder === 'asc' ? 'desc' : 'asc');
+                    }} sx={{ fontWeight: 700, textTransform: 'none' }}>
+                      Team(s) {sortBy === 'teams' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                    </Button>
+                    <Tooltip title="Show Team Capacity Report">
+                      <IconButton size="small" onClick={() => setTeamReportOpen(true)}>
+                        <InfoIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Comments</TableCell>
               </TableRow>
@@ -306,13 +335,19 @@ const Plan: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <TextField
+                      <Select
                         value={editing[r.key]?.teams ?? r.teams ?? ''}
                         onChange={e => handleEdit(r.key, 'teams', e.target.value)}
                         size="small"
-                        placeholder="Team(s)"
-                        sx={{ flex: 1 }}
-                      />
+                        displayEmpty
+                        sx={{ flex: 1, minWidth: 120 }}
+                        renderValue={selected => selected || 'Select Team'}
+                      >
+                        <MenuItem value=""><em>None</em></MenuItem>
+                        {teams.map(team => (
+                          <MenuItem key={team.id} value={team.name}>{team.name}</MenuItem>
+                        ))}
+                      </Select>
                       <Tooltip title="View full team(s)">
                         <IconButton size="small" onClick={e => setTeamPopover({ anchorEl: e.currentTarget, key: r.key })}>
                           <VisibilityIcon fontSize="small" />
@@ -389,6 +424,36 @@ const Plan: React.FC = () => {
           {success}
         </Alert>
       </Snackbar>
+      <Dialog open={teamReportOpen} onClose={() => setTeamReportOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Team Capacity Report</DialogTitle>
+        <DialogContent>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Team Name</TableCell>
+                <TableCell>Total Capacity (Hrs)</TableCell>
+                <TableCell>Allotted Capacity (Hrs)</TableCell>
+                <TableCell>Remaining Capacity (Hrs)</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {teams.map(team => {
+                const allotted = requirements.filter(r => (editing[r.key]?.inPlan ?? r.inPlan) && (editing[r.key]?.teams ?? r.teams) === team.name)
+                  .reduce((sum, r) => sum + parseFloat((editing[r.key]?.roughEstimate ?? r.roughEstimate ?? '0').toString()), 0);
+                const remaining = (team.capacity || 0) - allotted;
+                return (
+                  <TableRow key={team.id}>
+                    <TableCell>{team.name}</TableCell>
+                    <TableCell>{team.capacity}</TableCell>
+                    <TableCell>{allotted}</TableCell>
+                    <TableCell>{remaining}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
     </Stack>
   );
 };

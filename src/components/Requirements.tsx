@@ -80,10 +80,13 @@ export const Requirements = () => {
   const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
   const [savingComment, setSavingComment] = useState<string | null>(null);
   const [commentPopover, setCommentPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
+  const [squads, setSquads] = useState<{ id: string; name: string; capacity: number }[]>([]);
+  const [capacityString, setCapacityString] = useState('');
 
   useEffect(() => {
     fetchRequirements();
     fetchCriteria();
+    fetchSquads();
   }, []);
 
   const fetchCriteria = async () => {
@@ -272,6 +275,20 @@ export const Requirements = () => {
   }).length;
   const inPlanCount = requirements.filter(r => r.inPlan).length;
 
+  const fetchSquads = async () => {
+    try {
+      const response = await fetch('/api/squads');
+      const result = await response.json();
+      if (result.success) setSquads(result.data || []);
+    } catch {}
+  };
+
+  useEffect(() => {
+    const totalCapacity = squads.reduce((sum, s) => sum + (s.capacity || 0), 0);
+    const totalRoughEstimate = requirements.filter(r => r.inPlan).reduce((sum, r) => sum + (parseFloat(r.roughEstimate || '0') || 0), 0);
+    setCapacityString(`${totalCapacity} / ${totalRoughEstimate}`);
+  }, [squads, requirements]);
+
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
@@ -279,7 +296,7 @@ export const Requirements = () => {
           scoredCount={scoredCount}
           rankedCount={rankedCount}
           totalCount={totalCount}
-          duplicateRanksCount={0}
+          capacityString={capacityString}
           roughEstimateCount={roughEstimateCount}
           roughEstimateTotal={totalCount}
           inPlanCount={inPlanCount}

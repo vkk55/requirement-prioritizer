@@ -75,6 +75,7 @@ const Plan: React.FC = () => {
   const [teamPopover, setTeamPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
   const [squads, setSquads] = useState<Squad[]>([]);
   const [teamReportOpen, setTeamReportOpen] = useState(false);
+  const [capacityString, setCapacityString] = useState('');
 
   useEffect(() => {
     fetchRequirements();
@@ -113,6 +114,12 @@ const Plan: React.FC = () => {
       if (result.success) setSquads(result.data || []);
     } catch {}
   };
+
+  useEffect(() => {
+    const totalCapacity = squads.reduce((sum, s) => sum + (s.capacity || 0), 0);
+    const totalRoughEstimate = requirements.filter(r => r.inPlan).reduce((sum, r) => sum + (parseFloat(r.roughEstimate || '0') || 0), 0);
+    setCapacityString(`${totalCapacity} / ${totalRoughEstimate}`);
+  }, [squads, requirements]);
 
   const handleEdit = (key: string, field: keyof Requirement, value: any) => {
     setEditing(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
@@ -227,7 +234,7 @@ const Plan: React.FC = () => {
           scoredCount={0}
           rankedCount={rankedCount}
           totalCount={requirements.length}
-          duplicateRanksCount={0}
+          capacityString={capacityString}
           roughEstimateCount={roughEstimateCount}
           roughEstimateTotal={requirements.length}
           inPlanCount={inPlanCount}

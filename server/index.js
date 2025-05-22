@@ -849,6 +849,7 @@ pool.query(`
 // Get all teams
 app.get('/api/teams', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
     const result = await pool.query('SELECT * FROM teams');
     res.json({ success: true, data: result.rows });
   } catch (error) {

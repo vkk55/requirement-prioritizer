@@ -8,6 +8,10 @@ import {
   Card,
   Stack,
   Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import {
   Chart as ChartJS,
@@ -89,6 +93,7 @@ const Analytics: React.FC = () => {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'All' | 'InPlan'>('InPlan');
 
   useEffect(() => {
     fetchData();
@@ -117,16 +122,21 @@ const Analytics: React.FC = () => {
     }
   };
 
+  // Filter requirements based on filter state
+  const filteredRequirements = filter === 'InPlan'
+    ? requirements.filter(r => (r as any)["InPlan?"] === true || (r as any).inPlan === true)
+    : requirements;
+
   // Defensive normalization: ensure every requirement has a relatedCustomers string
   const normalizedRequirements = useMemo(() => {
-    return requirements.map(req => ({
+    return filteredRequirements.map(req => ({
       ...req,
       relatedCustomers: req.relatedCustomers || (req as any)['relatedcustomers'] || '',
     }));
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   const distributionData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{
@@ -146,7 +156,7 @@ const Analytics: React.FC = () => {
       count: 0
     }));
 
-    requirements.forEach(req => {
+    filteredRequirements.forEach(req => {
       const scorePercentage = ((req.score ?? 0) * 100);
       const rangeIndex = Math.min(Math.floor(scorePercentage / 10), 9);
       ranges[rangeIndex].count++;
@@ -163,10 +173,10 @@ const Analytics: React.FC = () => {
         barThickness: 20,
       }]
     };
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   const criteriaData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{
@@ -180,7 +190,7 @@ const Analytics: React.FC = () => {
     const criteriaCount: Record<string, number> = {};
     let totalCriteria = 0;
 
-    requirements.forEach(req => {
+    filteredRequirements.forEach(req => {
       if (req.criteria) {
         Object.entries(req.criteria).forEach(([criterion, value]) => {
           if (value > 0) {
@@ -192,7 +202,7 @@ const Analytics: React.FC = () => {
     });
 
     const labels = Object.keys(criteriaCount);
-    const data = labels.map(label => (criteriaCount[label] / requirements.length) * 100);
+    const data = labels.map(label => (criteriaCount[label] / filteredRequirements.length) * 100);
 
     return {
       labels,
@@ -208,7 +218,7 @@ const Analytics: React.FC = () => {
         borderWidth: 1,
       }]
     };
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   const customerData = useMemo(() => {
     if (!Array.isArray(normalizedRequirements) || normalizedRequirements.length === 0) {
@@ -258,14 +268,14 @@ const Analytics: React.FC = () => {
   }, [normalizedRequirements]);
 
   const statusData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
       };
     }
     const statusCount: Record<string, number> = {};
-    requirements.forEach(req => {
+    filteredRequirements.forEach(req => {
       const status = req.status || 'Unknown';
       statusCount[status] = (statusCount[status] || 0) + 1;
     });
@@ -285,17 +295,17 @@ const Analytics: React.FC = () => {
         borderWidth: 1,
       }]
     };
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   const labelData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
       };
     }
     const labelCount: Record<string, number> = {};
-    requirements.forEach(req => {
+    filteredRequirements.forEach(req => {
       let labels: string[] = [];
       if (Array.isArray(req.labels)) {
         labels = req.labels as string[];
@@ -324,7 +334,7 @@ const Analytics: React.FC = () => {
         borderWidth: 1,
       }]
     };
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   const pieChartOptions = useMemo<ChartOptions<'pie'>>(() => ({
     responsive: true,
@@ -431,7 +441,7 @@ const Analytics: React.FC = () => {
   }), []);
 
   const scoreRangeData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
@@ -444,7 +454,7 @@ const Analytics: React.FC = () => {
       { label: '4-5', min: 4, max: 5.0001 }, // include 5 in last bucket
     ];
     const rangeCounts = [0, 0, 0, 0];
-    requirements.forEach(req => {
+    filteredRequirements.forEach(req => {
       const score = typeof req.score === 'number' ? req.score : null;
       if (score !== null) {
         for (let i = 0; i < ranges.length; i++) {
@@ -468,18 +478,18 @@ const Analytics: React.FC = () => {
         borderWidth: 1,
       }]
     };
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   // --- Requirements by Priority Bar Chart ---
   const priorityData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
       };
     }
     const priorityCount: Record<string, number> = {};
-    requirements.forEach(req => {
+    filteredRequirements.forEach(req => {
       const priority = req.priority || 'Unknown';
       priorityCount[priority] = (priorityCount[priority] || 0) + 1;
     });
@@ -499,7 +509,7 @@ const Analytics: React.FC = () => {
         borderWidth: 1,
       }]
     };
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   // --- Bar chart options for horizontal bar ---
   const horizontalBarOptions = {
@@ -533,14 +543,14 @@ const Analytics: React.FC = () => {
 
   // --- Requirements by Product Owner Bar Chart ---
   const productOwnerData = useMemo(() => {
-    if (!Array.isArray(requirements) || requirements.length === 0) {
+    if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
         labels: [],
         datasets: [{ data: [], backgroundColor: [], borderWidth: 1 }]
       };
     }
     const ownerCount: Record<string, number> = {};
-    requirements.forEach(req => {
+    filteredRequirements.forEach(req => {
       const owner = (req as any).productOwner || 'Unassigned';
       ownerCount[owner] = (ownerCount[owner] || 0) + 1;
     });
@@ -560,7 +570,7 @@ const Analytics: React.FC = () => {
         borderWidth: 1,
       }]
     };
-  }, [requirements]);
+  }, [filteredRequirements]);
 
   if (loading) {
     return (
@@ -580,6 +590,20 @@ const Analytics: React.FC = () => {
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <FormControl size="small">
+          <InputLabel id="analytics-filter-label">Filter</InputLabel>
+          <Select
+            labelId="analytics-filter-label"
+            value={filter}
+            label="Filter"
+            onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
+          >
+            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="InPlan">InPlan</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
       <Typography variant="h4" fontWeight={800} gutterBottom>
         Analytics
       </Typography>

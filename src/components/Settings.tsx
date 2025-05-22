@@ -239,12 +239,19 @@ export const Settings = () => {
   // Fetch teams from backend
   const fetchTeams = async () => {
     try {
+      console.log('Fetching teams from /api/teams...');
       const response = await fetch('/api/teams');
+      console.log('Teams fetch response:', response);
       const result = await response.json();
+      console.log('Teams fetch result:', result);
       if (result.success) setTeams(result.data || []);
-      else setError(result.message || 'Failed to fetch teams');
+      else {
+        setError(result.message || 'Failed to fetch teams');
+        console.error('Teams fetch error:', result.message || 'Failed to fetch teams');
+      }
     } catch (err) {
       setError('Failed to fetch teams');
+      console.error('Teams fetch exception:', err);
     }
   };
 

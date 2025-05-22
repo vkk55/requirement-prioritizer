@@ -16,8 +16,11 @@ import {
   Stack,
   Divider,
   IconButton,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { Delete as DeleteIcon, Save as SaveIcon } from '@mui/icons-material';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Criterion {
   id: string;
@@ -25,6 +28,12 @@ interface Criterion {
   weight: number;
   scale_min: number;
   scale_max: number;
+}
+
+interface Team {
+  id: string;
+  name: string;
+  capacity: number;
 }
 
 export const Settings = () => {
@@ -38,9 +47,14 @@ export const Settings = () => {
     scale_max: 5,
   });
   const [editingWeights, setEditingWeights] = useState<{ [id: string]: number }>({});
+  const [tab, setTab] = useState<'criteria' | 'teams'>('criteria');
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [newTeam, setNewTeam] = useState({ name: '', capacity: 0 });
+  const [editingTeam, setEditingTeam] = useState<{ [id: string]: { name: string; capacity: number } }>({});
 
   useEffect(() => {
     initializeCriteria();
+    fetchTeams();
   }, []);
 
   const initializeCriteria = async () => {
@@ -222,112 +236,279 @@ export const Settings = () => {
     }
   };
 
+  // Fetch teams from backend
+  const fetchTeams = async () => {
+    try {
+      const response = await fetch('/api/teams');
+      const result = await response.json();
+      if (result.success) setTeams(result.data || []);
+      else setError(result.message || 'Failed to fetch teams');
+    } catch (err) {
+      setError('Failed to fetch teams');
+    }
+  };
+
+  // Add or update team in backend
+  const saveTeamToBackend = async (team) => {
+    try {
+      const response = await fetch('/api/teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(team),
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to save team');
+    } catch (err) {
+      setError('Failed to save team');
+      throw err;
+    }
+  };
+
+  // Delete team in backend
+  const deleteTeamInBackend = async (id) => {
+    try {
+      const response = await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Failed to delete team');
+    } catch (err) {
+      setError('Failed to delete team');
+      throw err;
+    }
+  };
+
+  // Teams handlers
+  const handleAddTeam = async () => {
+    if (!newTeam.name || newTeam.capacity <= 0) {
+      setError('Team name and capacity are required');
+      return;
+    }
+    const id = uuidv4();
+    const team = { id, name: newTeam.name, capacity: newTeam.capacity };
+    try {
+      await saveTeamToBackend(team);
+      setTeams([...teams, team]);
+      setNewTeam({ name: '', capacity: 0 });
+      setSuccess('Team added successfully');
+      setError('');
+    } catch {}
+  };
+  const handleEditTeam = (id, field, value) => {
+    setEditingTeam(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  };
+  const handleSaveTeam = async (id) => {
+    const edit = editingTeam[id];
+    if (!edit || !edit.name || edit.capacity <= 0) {
+      setError('Team name and capacity are required');
+      return;
+    }
+    const team = { id, name: edit.name, capacity: edit.capacity };
+    try {
+      await saveTeamToBackend(team);
+      setTeams(prev => prev.map(t => t.id === id ? { ...t, ...edit } : t));
+      setEditingTeam(prev => { const p = { ...prev }; delete p[id]; return p; });
+      setSuccess('Team updated successfully');
+      setError('');
+    } catch {}
+  };
+  const handleDeleteTeam = async (id) => {
+    try {
+      await deleteTeamInBackend(id);
+      setTeams(prev => prev.filter(t => t.id !== id));
+      setSuccess('Team deleted successfully');
+      setError('');
+    } catch {}
+  };
+
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 800, mx: 'auto' }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>
-        Criteria Settings
+        Settings
       </Typography>
-      {error && (
-        <Alert severity="error">{error}</Alert>
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+        <Tab label="Criteria" value="criteria" />
+        <Tab label="Teams" value="teams" />
+      </Tabs>
+      {error && <Alert severity="error">{error}</Alert>}
+      {success && <Alert severity="success">{success}</Alert>}
+      {tab === 'criteria' && (
+        <>
+          <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+            <Typography variant="h6" fontWeight={700} gutterBottom>
+              Add New Criteria
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" mb={2}>
+              <TextField
+                label="Criteria Name"
+                value={newCriteria.name}
+                onChange={(e) => setNewCriteria({ ...newCriteria, name: e.target.value })}
+              />
+              <TextField
+                label="Weight"
+                type="number"
+                value={newCriteria.weight}
+                onChange={(e) => setNewCriteria({ ...newCriteria, weight: parseFloat(e.target.value) })}
+                inputProps={{ min: 0, step: 0.1 }}
+              />
+              <TextField
+                label="Scale Min"
+                type="number"
+                value={newCriteria.scale_min}
+                onChange={(e) => setNewCriteria({ ...newCriteria, scale_min: parseInt(e.target.value) })}
+              />
+              <TextField
+                label="Scale Max"
+                type="number"
+                value={newCriteria.scale_max}
+                onChange={(e) => setNewCriteria({ ...newCriteria, scale_max: parseInt(e.target.value) })}
+              />
+              <Button variant="contained" color="primary" sx={{ fontWeight: 700, borderRadius: 2, px: 3 }} onClick={handleAddCriteria}>
+                Add Criteria
+              </Button>
+            </Stack>
+          </Card>
+          <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" fontWeight={700} gutterBottom>
+                Existing Criteria
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<SaveIcon />}
+                onClick={handleSaveAllWeights}
+                sx={{ fontWeight: 700, borderRadius: 2 }}
+                disabled={Object.keys(editingWeights).length === 0}
+              >
+                Save
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            <TableContainer>
+              <Table size="medium">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Weight</TableCell>
+                    <TableCell>Scale Range</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {criteria.map((criterion) => (
+                    <TableRow key={criterion.id} hover>
+                      <TableCell>{criterion.name}</TableCell>
+                      <TableCell>
+                        <TextField
+                          type="number"
+                          size="small"
+                          value={editingWeights[criterion.id] !== undefined ? editingWeights[criterion.id] : criterion.weight}
+                          onChange={e => handleWeightChange(criterion.id, parseInt(e.target.value) || 0)}
+                          onBlur={() => handleWeightBlur(criterion.id)}
+                          inputProps={{ min: 0, max: 100, style: { width: 60 } }}
+                          error={weightSum > 100}
+                        />
+                      </TableCell>
+                      <TableCell>{criterion.scale_min} - {criterion.scale_max}</TableCell>
+                      <TableCell>
+                        <IconButton color="error" onClick={() => handleDeleteCriteria(criterion.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {/* Sum row */}
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: weightSum > 100 ? 'error.main' : 'inherit' }}>{weightSum}</TableCell>
+                    <TableCell colSpan={2} />
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </>
       )}
-      {success && (
-        <Alert severity="success">{success}</Alert>
+      {tab === 'teams' && (
+        <>
+          <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+            <Typography variant="h6" fontWeight={700} gutterBottom>
+              Add New Team
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" mb={2}>
+              <TextField
+                label="Team Name"
+                value={newTeam.name}
+                onChange={e => setNewTeam({ ...newTeam, name: e.target.value })}
+              />
+              <TextField
+                label="Total Capacity (Hrs)"
+                type="number"
+                value={newTeam.capacity}
+                onChange={e => setNewTeam({ ...newTeam, capacity: parseInt(e.target.value) || 0 })}
+                inputProps={{ min: 0, step: 1 }}
+              />
+              <Button variant="contained" color="primary" sx={{ fontWeight: 700, borderRadius: 2, px: 3 }} onClick={handleAddTeam}>
+                Add Team
+              </Button>
+            </Stack>
+          </Card>
+          <Card elevation={2} sx={{ p: 3, borderRadius: 3, mt: 3 }}>
+            <Typography variant="h6" fontWeight={700} gutterBottom>
+              Existing Teams
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <TableContainer>
+              <Table size="medium">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Team</TableCell>
+                    <TableCell>Total Capacity (Hrs)</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {teams.map(team => (
+                    <TableRow key={team.id} hover>
+                      <TableCell>
+                        <TextField
+                          value={editingTeam[team.id]?.name ?? team.name}
+                          onChange={e => handleEditTeam(team.id, 'name', e.target.value)}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          type="number"
+                          value={editingTeam[team.id]?.capacity ?? team.capacity}
+                          onChange={e => handleEditTeam(team.id, 'capacity', parseInt(e.target.value) || 0)}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          sx={{ mr: 1, fontWeight: 700, borderRadius: 2 }}
+                          onClick={() => handleSaveTeam(team.id)}
+                          disabled={!editingTeam[team.id]}
+                        >
+                          Save
+                        </Button>
+                        <IconButton color="error" onClick={() => handleDeleteTeam(team.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </>
       )}
-      <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-        <Typography variant="h6" fontWeight={700} gutterBottom>
-          Add New Criteria
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" mb={2}>
-          <TextField
-            label="Criteria Name"
-            value={newCriteria.name}
-            onChange={(e) => setNewCriteria({ ...newCriteria, name: e.target.value })}
-          />
-          <TextField
-            label="Weight"
-            type="number"
-            value={newCriteria.weight}
-            onChange={(e) => setNewCriteria({ ...newCriteria, weight: parseFloat(e.target.value) })}
-            inputProps={{ min: 0, step: 0.1 }}
-          />
-          <TextField
-            label="Scale Min"
-            type="number"
-            value={newCriteria.scale_min}
-            onChange={(e) => setNewCriteria({ ...newCriteria, scale_min: parseInt(e.target.value) })}
-          />
-          <TextField
-            label="Scale Max"
-            type="number"
-            value={newCriteria.scale_max}
-            onChange={(e) => setNewCriteria({ ...newCriteria, scale_max: parseInt(e.target.value) })}
-          />
-          <Button variant="contained" color="primary" sx={{ fontWeight: 700, borderRadius: 2, px: 3 }} onClick={handleAddCriteria}>
-            Add Criteria
-          </Button>
-        </Stack>
-      </Card>
-      <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" fontWeight={700} gutterBottom>
-            Existing Criteria
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
-            onClick={handleSaveAllWeights}
-            sx={{ fontWeight: 700, borderRadius: 2 }}
-            disabled={Object.keys(editingWeights).length === 0}
-          >
-            Save
-          </Button>
-        </Box>
-        <Divider sx={{ mb: 2 }} />
-        <TableContainer>
-          <Table size="medium">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Weight</TableCell>
-                <TableCell>Scale Range</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {criteria.map((criterion) => (
-                <TableRow key={criterion.id} hover>
-                  <TableCell>{criterion.name}</TableCell>
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      size="small"
-                      value={editingWeights[criterion.id] !== undefined ? editingWeights[criterion.id] : criterion.weight}
-                      onChange={e => handleWeightChange(criterion.id, parseInt(e.target.value) || 0)}
-                      onBlur={() => handleWeightBlur(criterion.id)}
-                      inputProps={{ min: 0, max: 100, style: { width: 60 } }}
-                      error={weightSum > 100}
-                    />
-                  </TableCell>
-                  <TableCell>{criterion.scale_min} - {criterion.scale_max}</TableCell>
-                  <TableCell>
-                    <IconButton color="error" onClick={() => handleDeleteCriteria(criterion.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {/* Sum row */}
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
-                <TableCell sx={{ fontWeight: 700, color: weightSum > 100 ? 'error.main' : 'inherit' }}>{weightSum}</TableCell>
-                <TableCell colSpan={2} />
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
     </Stack>
   );
 };

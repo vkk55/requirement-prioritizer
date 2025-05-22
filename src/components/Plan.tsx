@@ -262,12 +262,12 @@ const Plan: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ position: 'sticky', left: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>#</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>
                   Requirement
                   <br />
                   <span style={{ fontWeight: 400, fontSize: 12 }}>(Key + Summary)</span>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>
                   <Button onClick={() => {
                     setSortBy('rank');
                     setSortOrder(sortBy === 'rank' && sortOrder === 'asc' ? 'desc' : 'asc');
@@ -275,7 +275,7 @@ const Plan: React.FC = () => {
                     Rank {sortBy === 'rank' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </Button>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>
                   <Button onClick={() => {
                     setSortBy('score');
                     setSortOrder(sortBy === 'score' && sortOrder === 'asc' ? 'desc' : 'asc');
@@ -283,7 +283,7 @@ const Plan: React.FC = () => {
                     Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </Button>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>
                   <Button onClick={() => {
                     setSortBy('roughEstimate');
                     setSortOrder(sortBy === 'roughEstimate' && sortOrder === 'asc' ? 'desc' : 'asc');
@@ -291,9 +291,9 @@ const Plan: React.FC = () => {
                     Rough Estimate {sortBy === 'roughEstimate' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                   </Button>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>In Plan?</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Minor Rel Candidate?</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>In Plan?</TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>Minor Rel Candidate?</TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Button onClick={() => {
                       setSortBy('teams');
@@ -308,7 +308,7 @@ const Plan: React.FC = () => {
                     </Tooltip>
                   </Box>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Comments</TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>Comments</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

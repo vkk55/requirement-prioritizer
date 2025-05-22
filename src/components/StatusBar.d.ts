@@ -4,7 +4,7 @@ export interface StatusBarProps {
   scoredCount: number;
   rankedCount: number;
   totalCount: number;
-  duplicateRanksCount: number;
+  capacityString: string;
   roughEstimateCount?: number;
   roughEstimateTotal?: number;
   inPlanCount?: number;

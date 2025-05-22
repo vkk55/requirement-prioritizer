@@ -6,7 +6,7 @@ const StatusBar = ({
   scoredCount,
   rankedCount,
   totalCount,
-  duplicateRanksCount,
+  capacityString,
   roughEstimateCount = 0,
   roughEstimateTotal = 0,
   inPlanCount = 0,
@@ -45,15 +45,8 @@ const StatusBar = ({
     <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
       In Plan: {inPlanCount} / {inPlanTotal || totalCount}
     </Typography>
-    <Typography
-      variant="subtitle1"
-      sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-      onClick={onDuplicateClick}
-    >
-      Duplicate Ranks: {duplicateRanksCount}
-      <IconButton size="small" sx={{ ml: 0.5 }}>
-        <InfoOutlined fontSize="small" />
-      </IconButton>
+    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+      Capacity: {capacityString}
     </Typography>
   </Box>
 );

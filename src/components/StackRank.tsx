@@ -88,6 +88,8 @@ export const StackRank = () => {
   const [commentCursor, setCommentCursor] = useState<{ [key: string]: number }>({});
   const [historyDialog, setHistoryDialog] = useState<{ open: boolean, log: string }>({ open: false, log: '' });
   const [duplicateDialog, setDuplicateDialog] = useState(false);
+  const [squads, setSquads] = useState<{ id: string; name: string; capacity: number }[]>([]);
+  const [capacityString, setCapacityString] = useState('');
 
   // Persist last active tab
   useEffect(() => {
@@ -100,6 +102,16 @@ export const StackRank = () => {
     setSortBy('rank');
     setSortOrder('asc');
   }, []);
+
+  useEffect(() => {
+    fetchSquads();
+  }, []);
+
+  useEffect(() => {
+    const totalCapacity = squads.reduce((sum, s) => sum + (s.capacity || 0), 0);
+    const totalRoughEstimate = requirements.filter(r => r.inPlan).reduce((sum, r) => sum + (parseFloat(r.roughEstimate || '0') || 0), 0);
+    setCapacityString(`${totalCapacity} / ${totalRoughEstimate}`);
+  }, [squads, requirements]);
 
   const fetchCriteria = async () => {
     try {
@@ -135,6 +147,14 @@ export const StackRank = () => {
       setError(err instanceof Error ? err.message : 'Failed to fetch requirements');
       console.error('Error fetching requirements:', err);
     }
+  };
+
+  const fetchSquads = async () => {
+    try {
+      const response = await fetch('/api/squads');
+      const result = await response.json();
+      if (result.success) setSquads(result.data || []);
+    } catch {}
   };
 
   // Search and filter logic
@@ -366,7 +386,7 @@ export const StackRank = () => {
           scoredCount={scoredCount}
           rankedCount={rankedCount}
           totalCount={totalCount}
-          duplicateRanksCount={duplicateRanks.length}
+          capacityString={capacityString}
           roughEstimateCount={roughEstimateCount}
           roughEstimateTotal={totalCount}
           inPlanCount={inPlanCount}

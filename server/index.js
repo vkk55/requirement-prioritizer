@@ -848,6 +848,7 @@ pool.query(`
 
 // Get all squads
 app.get('/api/squads', async (req, res) => {
+  console.log('GET /api/squads called');
   try {
     const result = await pool.query('SELECT * FROM squad');
     res.json({ success: true, data: result.rows });
@@ -882,3 +883,5 @@ app.delete('/api/squads/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete squad', message: error.message });
   }
 });
+
+console.log('Server code loaded, NODE_ENV:', process.env.NODE_ENV);

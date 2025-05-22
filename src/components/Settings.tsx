@@ -30,7 +30,7 @@ interface Criterion {
   scale_max: number;
 }
 
-interface Team {
+interface Squad {
   id: string;
   name: string;
   capacity: number;
@@ -47,14 +47,14 @@ export const Settings = () => {
     scale_max: 5,
   });
   const [editingWeights, setEditingWeights] = useState<{ [id: string]: number }>({});
-  const [tab, setTab] = useState<'criteria' | 'teams'>('criteria');
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [newTeam, setNewTeam] = useState({ name: '', capacity: 0 });
-  const [editingTeam, setEditingTeam] = useState<{ [id: string]: { name: string; capacity: number } }>({});
+  const [tab, setTab] = useState<'criteria' | 'squads'>('criteria');
+  const [squads, setSquads] = useState<Squad[]>([]);
+  const [newSquad, setNewSquad] = useState({ name: '', capacity: 0 });
+  const [editingSquad, setEditingSquad] = useState<{ [id: string]: { name: string; capacity: number } }>({});
 
   useEffect(() => {
     initializeCriteria();
-    fetchTeams();
+    fetchSquads();
   }, []);
 
   const initializeCriteria = async () => {
@@ -236,92 +236,92 @@ export const Settings = () => {
     }
   };
 
-  // Fetch teams from backend
-  const fetchTeams = async () => {
+  // Fetch squads from backend
+  const fetchSquads = async () => {
     try {
-      console.log('Fetching teams from /api/teams...');
-      const response = await fetch('/api/teams');
-      console.log('Teams fetch response:', response);
+      console.log('Fetching squads from /api/squads...');
+      const response = await fetch('/api/squads');
+      console.log('Squads fetch response:', response);
       const result = await response.json();
-      console.log('Teams fetch result:', result);
-      if (result.success) setTeams(result.data || []);
+      console.log('Squads fetch result:', result);
+      if (result.success) setSquads(result.data || []);
       else {
-        setError(result.message || 'Failed to fetch teams');
-        console.error('Teams fetch error:', result.message || 'Failed to fetch teams');
+        setError(result.message || 'Failed to fetch squads');
+        console.error('Squads fetch error:', result.message || 'Failed to fetch squads');
       }
     } catch (err) {
-      setError('Failed to fetch teams');
-      console.error('Teams fetch exception:', err);
+      setError('Failed to fetch squads');
+      console.error('Squads fetch exception:', err);
     }
   };
 
-  // Add or update team in backend
-  const saveTeamToBackend = async (team) => {
+  // Add or update squad in backend
+  const saveSquadToBackend = async (squad: Squad) => {
     try {
-      const response = await fetch('/api/teams', {
+      const response = await fetch('/api/squads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(team),
+        body: JSON.stringify(squad),
       });
       const result = await response.json();
-      if (!result.success) throw new Error(result.message || 'Failed to save team');
+      if (!result.success) throw new Error(result.message || 'Failed to save squad');
     } catch (err) {
-      setError('Failed to save team');
+      setError('Failed to save squad');
       throw err;
     }
   };
 
-  // Delete team in backend
-  const deleteTeamInBackend = async (id) => {
+  // Delete squad in backend
+  const deleteSquadInBackend = async (id: string) => {
     try {
-      const response = await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/squads/${id}`, { method: 'DELETE' });
       const result = await response.json();
-      if (!result.success) throw new Error(result.message || 'Failed to delete team');
+      if (!result.success) throw new Error(result.message || 'Failed to delete squad');
     } catch (err) {
-      setError('Failed to delete team');
+      setError('Failed to delete squad');
       throw err;
     }
   };
 
-  // Teams handlers
-  const handleAddTeam = async () => {
-    if (!newTeam.name || newTeam.capacity <= 0) {
-      setError('Team name and capacity are required');
+  // Squad handlers
+  const handleAddSquad = async () => {
+    if (!newSquad.name || newSquad.capacity <= 0) {
+      setError('Squad name and capacity are required');
       return;
     }
     const id = uuidv4();
-    const team = { id, name: newTeam.name, capacity: newTeam.capacity };
+    const squad = { id, name: newSquad.name, capacity: newSquad.capacity };
     try {
-      await saveTeamToBackend(team);
-      setTeams([...teams, team]);
-      setNewTeam({ name: '', capacity: 0 });
-      setSuccess('Team added successfully');
+      await saveSquadToBackend(squad);
+      setSquads([...squads, squad]);
+      setNewSquad({ name: '', capacity: 0 });
+      setSuccess('Squad added successfully');
       setError('');
     } catch {}
   };
-  const handleEditTeam = (id, field, value) => {
-    setEditingTeam(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  const handleEditSquad = (id: string, field: string, value: any) => {
+    setEditingSquad(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
   };
-  const handleSaveTeam = async (id) => {
-    const edit = editingTeam[id];
+  const handleSaveSquad = async (id: string) => {
+    const edit = editingSquad[id];
     if (!edit || !edit.name || edit.capacity <= 0) {
-      setError('Team name and capacity are required');
+      setError('Squad name and capacity are required');
       return;
     }
-    const team = { id, name: edit.name, capacity: edit.capacity };
+    const squad = { id, name: edit.name, capacity: edit.capacity };
     try {
-      await saveTeamToBackend(team);
-      setTeams(prev => prev.map(t => t.id === id ? { ...t, ...edit } : t));
-      setEditingTeam(prev => { const p = { ...prev }; delete p[id]; return p; });
-      setSuccess('Team updated successfully');
+      await saveSquadToBackend(squad);
+      setSquads(prev => prev.map(t => t.id === id ? { ...t, ...edit } : t));
+      setEditingSquad(prev => { const p = { ...prev }; delete p[id]; return p; });
+      setSuccess('Squad updated successfully');
       setError('');
     } catch {}
   };
-  const handleDeleteTeam = async (id) => {
+  const handleDeleteSquad = async (id: string) => {
     try {
-      await deleteTeamInBackend(id);
-      setTeams(prev => prev.filter(t => t.id !== id));
-      setSuccess('Team deleted successfully');
+      await deleteSquadInBackend(id);
+      setSquads(prev => prev.filter(t => t.id !== id));
+      setSuccess('Squad deleted successfully');
       setError('');
     } catch {}
   };
@@ -333,7 +333,7 @@ export const Settings = () => {
       </Typography>
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
         <Tab label="Criteria" value="criteria" />
-        <Tab label="Teams" value="teams" />
+        <Tab label="Teams" value="squads" />
       </Tabs>
       {error && <Alert severity="error">{error}</Alert>}
       {success && <Alert severity="success">{success}</Alert>}
@@ -436,60 +436,60 @@ export const Settings = () => {
           </Card>
         </>
       )}
-      {tab === 'teams' && (
+      {tab === 'squads' && (
         <>
           <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
             <Typography variant="h6" fontWeight={700} gutterBottom>
-              Add New Team
+              Add New Squad
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" mb={2}>
               <TextField
-                label="Team Name"
-                value={newTeam.name}
-                onChange={e => setNewTeam({ ...newTeam, name: e.target.value })}
+                label="Squad Name"
+                value={newSquad.name}
+                onChange={e => setNewSquad({ ...newSquad, name: e.target.value })}
               />
               <TextField
                 label="Total Capacity (Hrs)"
                 type="number"
-                value={newTeam.capacity}
-                onChange={e => setNewTeam({ ...newTeam, capacity: parseInt(e.target.value) || 0 })}
+                value={newSquad.capacity}
+                onChange={e => setNewSquad({ ...newSquad, capacity: parseInt(e.target.value) || 0 })}
                 inputProps={{ min: 0, step: 1 }}
               />
-              <Button variant="contained" color="primary" sx={{ fontWeight: 700, borderRadius: 2, px: 3 }} onClick={handleAddTeam}>
-                Add Team
+              <Button variant="contained" color="primary" sx={{ fontWeight: 700, borderRadius: 2, px: 3 }} onClick={handleAddSquad}>
+                Add Squad
               </Button>
             </Stack>
           </Card>
           <Card elevation={2} sx={{ p: 3, borderRadius: 3, mt: 3 }}>
             <Typography variant="h6" fontWeight={700} gutterBottom>
-              Existing Teams
+              Existing Squads
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <TableContainer>
               <Table size="medium">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Team</TableCell>
+                    <TableCell>Squad</TableCell>
                     <TableCell>Total Capacity (Hrs)</TableCell>
                     <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {teams.map(team => (
-                    <TableRow key={team.id} hover>
+                  {squads.map(squad => (
+                    <TableRow key={squad.id} hover>
                       <TableCell>
                         <TextField
-                          value={editingTeam[team.id]?.name ?? team.name}
-                          onChange={e => handleEditTeam(team.id, 'name', e.target.value)}
+                          value={editingSquad[squad.id]?.name ?? squad.name}
+                          onChange={e => handleEditSquad(squad.id, 'name', e.target.value)}
                           size="small"
                         />
                       </TableCell>
                       <TableCell>
                         <TextField
                           type="number"
-                          value={editingTeam[team.id]?.capacity ?? team.capacity}
-                          onChange={e => handleEditTeam(team.id, 'capacity', parseInt(e.target.value) || 0)}
+                          value={editingSquad[squad.id]?.capacity ?? squad.capacity}
+                          onChange={e => handleEditSquad(squad.id, 'capacity', parseInt(e.target.value) || 0)}
                           size="small"
                         />
                       </TableCell>
@@ -499,12 +499,12 @@ export const Settings = () => {
                           color="primary"
                           size="small"
                           sx={{ mr: 1, fontWeight: 700, borderRadius: 2 }}
-                          onClick={() => handleSaveTeam(team.id)}
-                          disabled={!editingTeam[team.id]}
+                          onClick={() => handleSaveSquad(squad.id)}
+                          disabled={!editingSquad[squad.id]}
                         >
                           Save
                         </Button>
-                        <IconButton color="error" onClick={() => handleDeleteTeam(team.id)}>
+                        <IconButton color="error" onClick={() => handleDeleteSquad(squad.id)}>
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>

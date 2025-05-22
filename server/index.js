@@ -837,51 +837,48 @@ app.post('/api/requirements', async (req, res) => {
   }
 });
 
-// Create teams table
+// Create squad table
 pool.query(`
-  CREATE TABLE IF NOT EXISTS teams (
+  CREATE TABLE IF NOT EXISTS squad (
     id TEXT PRIMARY KEY,
     name TEXT,
     capacity INTEGER
   )
 `);
 
-// Get all teams
-app.get('/api/teams', async (req, res) => {
+// Get all squads
+app.get('/api/squads', async (req, res) => {
   try {
-    console.log('Fetching teams...');
-    const result = await pool.query('SELECT * FROM teams');
-    console.log('Teams found:', result.rows);
+    const result = await pool.query('SELECT * FROM squad');
     res.json({ success: true, data: result.rows });
   } catch (error) {
-    console.error('Error fetching teams:', error);
-    res.status(500).json({ error: 'Failed to fetch teams', message: error.message });
+    res.status(500).json({ error: 'Failed to fetch squads', message: error.message });
   }
 });
 
-// Add or update a team
-app.post('/api/teams', async (req, res) => {
+// Add or update a squad
+app.post('/api/squads', async (req, res) => {
   const { id, name, capacity } = req.body;
   try {
     await pool.query(
-      `INSERT INTO teams (id, name, capacity)
+      `INSERT INTO squad (id, name, capacity)
        VALUES ($1, $2, $3)
        ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, capacity=EXCLUDED.capacity`,
       [id, name, capacity]
     );
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save team', message: error.message });
+    res.status(500).json({ error: 'Failed to save squad', message: error.message });
   }
 });
 
-// Delete a team
-app.delete('/api/teams/:id', async (req, res) => {
+// Delete a squad
+app.delete('/api/squads/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query('DELETE FROM teams WHERE id = $1', [id]);
+    await pool.query('DELETE FROM squad WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete team', message: error.message });
+    res.status(500).json({ error: 'Failed to delete squad', message: error.message });
   }
 });

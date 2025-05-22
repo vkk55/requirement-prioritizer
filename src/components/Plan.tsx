@@ -35,11 +35,11 @@ interface Requirement {
   roughEstimate?: string;
   inPlan?: boolean;
   minorReleaseCandidate?: boolean;
-  teams?: string;
+  squads?: string;
   comments?: string[];
 }
 
-interface Team {
+interface Squad {
   id: string;
   name: string;
   capacity: number;
@@ -70,15 +70,15 @@ const Plan: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'rank'|'score'|'roughEstimate'|'teams'>('rank');
+  const [sortBy, setSortBy] = useState<'rank'|'score'|'roughEstimate'|'squads'>('rank');
   const [sortOrder, setSortOrder] = useState<'asc'|'desc'>('asc');
   const [teamPopover, setTeamPopover] = useState<{ anchorEl: HTMLElement | null, key: string | null }>({ anchorEl: null, key: null });
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [squads, setSquads] = useState<Squad[]>([]);
   const [teamReportOpen, setTeamReportOpen] = useState(false);
 
   useEffect(() => {
     fetchRequirements();
-    fetchTeams();
+    fetchSquads();
   }, []);
 
   const fetchRequirements = async () => {
@@ -94,7 +94,7 @@ const Plan: React.FC = () => {
         roughEstimate: r.roughestimate,
         inPlan: r["InPlan?"] ?? false,
         minorReleaseCandidate: r["MinorRelCandidate?"] ?? false,
-        teams: r["Team(s)"] ?? '',
+        squads: r["Team(s)"] ?? '',
         comments: Array.isArray(r.comments)
           ? r.comments.map((c: any) => typeof c === 'string' ? c : (c.text || JSON.stringify(c)))
           : r.comments
@@ -106,11 +106,11 @@ const Plan: React.FC = () => {
     }
   };
 
-  const fetchTeams = async () => {
+  const fetchSquads = async () => {
     try {
-      const response = await fetch('/api/teams');
+      const response = await fetch('/api/squads');
       const result = await response.json();
-      if (result.success) setTeams(result.data || []);
+      if (result.success) setSquads(result.data || []);
     } catch {}
   };
 
@@ -166,9 +166,9 @@ const Plan: React.FC = () => {
           mapped['MinorRelCandidate?'] = mapped.minorReleaseCandidate;
           delete mapped.minorReleaseCandidate;
         }
-        if ('teams' in mapped) {
-          mapped['Team(s)'] = mapped.teams;
-          delete mapped.teams;
+        if ('squads' in mapped) {
+          mapped['Team(s)'] = mapped.squads;
+          delete mapped.squads;
         }
         return mapped;
       });
@@ -216,7 +216,7 @@ const Plan: React.FC = () => {
     if (sortBy === 'rank') cmp = (a.rank || 0) - (b.rank || 0);
     else if (sortBy === 'score') cmp = (a.score || 0) - (b.score || 0);
     else if (sortBy === 'roughEstimate') cmp = (a.roughEstimate || '').localeCompare(b.roughEstimate || '');
-    else if (sortBy === 'teams') cmp = (a.teams || '').localeCompare(b.teams || '');
+    else if (sortBy === 'squads') cmp = (a.squads || '').localeCompare(b.squads || '');
     return sortOrder === 'asc' ? cmp : -cmp;
   });
 
@@ -296,10 +296,10 @@ const Plan: React.FC = () => {
                 <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', fontWeight: 700 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Button onClick={() => {
-                      setSortBy('teams');
-                      setSortOrder(sortBy === 'teams' && sortOrder === 'asc' ? 'desc' : 'asc');
+                      setSortBy('squads');
+                      setSortOrder(sortBy === 'squads' && sortOrder === 'asc' ? 'desc' : 'asc');
                     }} sx={{ fontWeight: 700, textTransform: 'none' }}>
-                      Team(s) {sortBy === 'teams' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                      Team(s) {sortBy === 'squads' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                     </Button>
                     <Tooltip title="Show Team Capacity Report">
                       <IconButton size="small" onClick={() => setTeamReportOpen(true)}>
@@ -336,16 +336,16 @@ const Plan: React.FC = () => {
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Select
-                        value={editing[r.key]?.teams ?? r.teams ?? ''}
-                        onChange={e => handleEdit(r.key, 'teams', e.target.value)}
+                        value={editing[r.key]?.squads ?? r.squads ?? ''}
+                        onChange={e => handleEdit(r.key, 'squads', e.target.value)}
                         size="small"
                         displayEmpty
                         sx={{ flex: 1, minWidth: 120 }}
                         renderValue={selected => selected || 'Select Team'}
                       >
                         <MenuItem value=""><em>None</em></MenuItem>
-                        {teams.map(team => (
-                          <MenuItem key={team.id} value={team.name}>{team.name}</MenuItem>
+                        {squads.map(squad => (
+                          <MenuItem key={squad.id} value={squad.name}>{squad.name}</MenuItem>
                         ))}
                       </Select>
                       <Tooltip title="View full team(s)">
@@ -357,7 +357,7 @@ const Plan: React.FC = () => {
                     {teamPopover.anchorEl && teamPopover.key === r.key && (
                       <Paper sx={{ position: 'absolute', zIndex: 10, p: 2, minWidth: 200 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>Team(s)</Typography>
-                        <Typography sx={{ fontSize: 13 }}>{editing[r.key]?.teams ?? r.teams ?? ''}</Typography>
+                        <Typography sx={{ fontSize: 13 }}>{editing[r.key]?.squads ?? r.squads ?? ''}</Typography>
                         <Button onClick={() => setTeamPopover({ anchorEl: null, key: null })} sx={{ mt: 1 }}>Close</Button>
                       </Paper>
                     )}
@@ -437,14 +437,14 @@ const Plan: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {teams.map(team => {
-                const allotted = requirements.filter(r => (editing[r.key]?.inPlan ?? r.inPlan) && (editing[r.key]?.teams ?? r.teams) === team.name)
+              {squads.map(squad => {
+                const allotted = requirements.filter(r => (editing[r.key]?.inPlan ?? r.inPlan) && (editing[r.key]?.squads ?? r.squads) === squad.name)
                   .reduce((sum, r) => sum + parseFloat((editing[r.key]?.roughEstimate ?? r.roughEstimate ?? '0').toString()), 0);
-                const remaining = (team.capacity || 0) - allotted;
+                const remaining = (squad.capacity || 0) - allotted;
                 return (
-                  <TableRow key={team.id}>
-                    <TableCell>{team.name}</TableCell>
-                    <TableCell>{team.capacity}</TableCell>
+                  <TableRow key={squad.id}>
+                    <TableCell>{squad.name}</TableCell>
+                    <TableCell>{squad.capacity}</TableCell>
                     <TableCell>{allotted}</TableCell>
                     <TableCell>{remaining}</TableCell>
                   </TableRow>

@@ -304,11 +304,16 @@ export const Settings = () => {
   };
   const handleSaveSquad = async (id: string) => {
     const edit = editingSquad[id];
-    if (!edit || !edit.name || edit.capacity <= 0) {
+    const original = squads.find(s => s.id === id);
+    const squad = {
+      id,
+      name: edit?.name ?? original?.name ?? '',
+      capacity: edit?.capacity ?? original?.capacity ?? 0
+    };
+    if (!squad.name || squad.capacity <= 0) {
       setError('Squad name and capacity are required');
       return;
     }
-    const squad = { id, name: edit.name, capacity: edit.capacity };
     try {
       await saveSquadToBackend(squad);
       setSquads(prev => prev.map(t => t.id === id ? { ...t, ...edit } : t));

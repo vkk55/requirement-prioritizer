@@ -771,20 +771,6 @@ app.delete('/api/requirements/:key', async (req, res) => {
   }
 });
 
-// Move fallback route to the very end, just before app.listen
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  });
-}
-
-// Start server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
 // Create requirements table
 pool.query(`
   CREATE TABLE IF NOT EXISTS requirements (
@@ -882,6 +868,20 @@ app.delete('/api/squads/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete squad', message: error.message });
   }
+});
+
+// Fallback route (must be last)
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+}
+
+// Start server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 console.log('Server code loaded, NODE_ENV:', process.env.NODE_ENV);

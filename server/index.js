@@ -771,7 +771,7 @@ app.delete('/api/requirements/:key', async (req, res) => {
   }
 });
 
-// Serve React app for any unknown routes in production (fallback)
+// Move fallback route to the very end, just before app.listen
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));

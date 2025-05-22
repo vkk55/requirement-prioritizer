@@ -849,10 +849,12 @@ pool.query(`
 // Get all teams
 app.get('/api/teams', async (req, res) => {
   try {
-    res.set('Cache-Control', 'no-store');
+    console.log('Fetching teams...');
     const result = await pool.query('SELECT * FROM teams');
+    console.log('Teams found:', result.rows);
     res.json({ success: true, data: result.rows });
   } catch (error) {
+    console.error('Error fetching teams:', error);
     res.status(500).json({ error: 'Failed to fetch teams', message: error.message });
   }
 });

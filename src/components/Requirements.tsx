@@ -248,6 +248,21 @@ export const Requirements = () => {
     }
   };
 
+  // Add a helper to calculate weighted score (move this above sortedRequirements)
+  const getWeightedScore = (requirement: Requirement) => {
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+    criteria.forEach(criterion => {
+      const score = requirement.criteria?.[criterion.id] ?? 0;
+      const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+      if (weight) {
+        totalWeightedScore += score * weight;
+        totalWeight += weight;
+      }
+    });
+    return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
+  };
+
   // Sorting and filtering logic
   const filteredRequirements = requirements.filter(r =>
     r.key.toLowerCase().includes(search.toLowerCase()) ||
@@ -290,21 +305,6 @@ export const Requirements = () => {
     const totalRoughEstimate = requirements.filter(r => r.inPlan).reduce((sum, r) => sum + (parseFloat(r.roughEstimate || '0') || 0), 0);
     setCapacityString(`${totalRoughEstimate} / ${totalCapacity}`);
   }, [squads, requirements]);
-
-  // Add a helper to calculate weighted score
-  const getWeightedScore = (requirement: Requirement) => {
-    let totalWeightedScore = 0;
-    let totalWeight = 0;
-    criteria.forEach(criterion => {
-      const score = requirement.criteria?.[criterion.id] ?? 0;
-      const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
-      if (weight) {
-        totalWeightedScore += score * weight;
-        totalWeight += weight;
-      }
-    });
-    return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
-  };
 
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>

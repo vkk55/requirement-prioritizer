@@ -289,6 +289,21 @@ export const Requirements = () => {
     setCapacityString(`${totalRoughEstimate} / ${totalCapacity}`);
   }, [squads, requirements]);
 
+  // Add a helper to calculate weighted score
+  const getWeightedScore = (requirement: Requirement) => {
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+    criteria.forEach(criterion => {
+      const score = requirement.criteria?.[criterion.id] ?? 0;
+      const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+      if (weight) {
+        totalWeightedScore += score * weight;
+        totalWeight += weight;
+      }
+    });
+    return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
+  };
+
   return (
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
@@ -391,19 +406,7 @@ export const Requirements = () => {
                   ))}
                   <TableCell align="right" sx={{ position: 'sticky', right: 0, zIndex: 2, bgcolor: 'background.paper', minWidth: 80 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {(() => {
-                        let totalWeightedScore = 0;
-                        let totalWeight = 0;
-                        criteria.forEach(criterion => {
-                          const score = requirement.criteria?.[criterion.id] ?? 0;
-                          const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
-                          if (weight) {
-                            totalWeightedScore += score * weight;
-                            totalWeight += weight;
-                          }
-                        });
-                        return totalWeight > 0 ? +(totalWeightedScore / totalWeight).toFixed(2) : 0;
-                      })()}
+                      {getWeightedScore(requirement)}
                       <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>
                         {(requirement.comments && requirement.comments.length > 0)
                           ? <ChatBubble fontSize="small" sx={{ color: 'success.main' }} />

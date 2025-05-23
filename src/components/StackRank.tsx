@@ -167,12 +167,26 @@ export const StackRank = () => {
   });
 
   // Sorting logic (do not auto-sort after rank/score update)
+  const getWeightedScore = (requirement: RequirementWithComments) => {
+    let totalWeightedScore = 0;
+    let totalWeight = 0;
+    criteria.forEach(criterion => {
+      const score = requirement.criteria?.[criterion.id] ?? 0;
+      const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+      if (weight) {
+        totalWeightedScore += score * weight;
+        totalWeight += weight;
+      }
+    });
+    return totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
+  };
   const sortedRequirements = [...filteredRequirements].sort((a, b) => {
     if (sortBy === 'rank') {
-      // Ascending: lowest first; Descending: highest first
       return sortOrder === 'asc' ? a.rank - b.rank : b.rank - a.rank;
     } else if (sortBy === 'score') {
-      return sortOrder === 'asc' ? a.score - b.score : b.score - a.score;
+      const aScore = getWeightedScore(a);
+      const bScore = getWeightedScore(b);
+      return sortOrder === 'asc' ? aScore - bScore : bScore - aScore;
     }
     return 0;
   });
@@ -332,7 +346,7 @@ export const StackRank = () => {
           'Rough Estimate': req.roughEstimate || '',
           'Related Customers': req.relatedCustomers || '',
           'Stack Rank': req.rank,
-          'Overall Score': req.score?.toFixed(2) || '0',
+          'Overall Score': getWeightedScore(req).toFixed(2),
           'Product Owner': req.productOwner || '',
         };
 

@@ -104,6 +104,8 @@ const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'All' | 'InPlan'>('InPlan');
   const [customerView, setCustomerView] = useState<'chart' | 'table'>('chart');
+  const [customerSort, setCustomerSort] = useState<'percent' | 'count'>('percent');
+  const [customerSortOrder, setCustomerSortOrder] = useState<'desc' | 'asc'>('desc');
 
   useEffect(() => {
     fetchData();
@@ -591,6 +593,20 @@ const Analytics: React.FC = () => {
     };
   }, [filteredRequirements]);
 
+  // Sort customer table view
+  const customerTableRows = customerLabels.map((label, idx) => ({
+    label,
+    count: customerDataArr[idx],
+    percent: customerPercentArr[idx],
+  }));
+  customerTableRows.sort((a, b) => {
+    if (customerSort === 'percent') {
+      return customerSortOrder === 'desc' ? b.percent - a.percent : a.percent - b.percent;
+    } else {
+      return customerSortOrder === 'desc' ? b.count - a.count : a.count - b.count;
+    }
+  });
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -609,6 +625,21 @@ const Analytics: React.FC = () => {
 
   return (
     <>
+      {/* Filter at the very top */}
+      <Box sx={{ width: '100vw', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', pl: 4, pt: 3, pb: 1 }}>
+        <FormControl size="small">
+          <InputLabel id="analytics-filter-label">Filter</InputLabel>
+          <Select
+            labelId="analytics-filter-label"
+            value={filter}
+            label="Filter"
+            onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
+          >
+            <MenuItem value="All">All</MenuItem>
+            <MenuItem value="InPlan">InPlan</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
       {/* Full-width Requirements by Customer chart outside the centered Stack */}
       <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0, bgcolor: 'transparent', mb: 4 }}>
         <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
@@ -637,16 +668,26 @@ const Analytics: React.FC = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Customer Name</TableCell>
-                      <TableCell align="right"># Requirements</TableCell>
-                      <TableCell align="right">% of Total</TableCell>
+                      <TableCell align="right" sx={{ cursor: 'pointer' }} onClick={() => {
+                        if (customerSort === 'count') setCustomerSortOrder(customerSortOrder === 'desc' ? 'asc' : 'desc');
+                        else { setCustomerSort('count'); setCustomerSortOrder('desc'); }
+                      }}>
+                        # Requirements {customerSort === 'count' ? (customerSortOrder === 'desc' ? '▼' : '▲') : ''}
+                      </TableCell>
+                      <TableCell align="right" sx={{ cursor: 'pointer' }} onClick={() => {
+                        if (customerSort === 'percent') setCustomerSortOrder(customerSortOrder === 'desc' ? 'asc' : 'desc');
+                        else { setCustomerSort('percent'); setCustomerSortOrder('desc'); }
+                      }}>
+                        % of Total {customerSort === 'percent' ? (customerSortOrder === 'desc' ? '▼' : '▲') : ''}
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {customerLabels.map((label, idx) => (
-                      <TableRow key={label}>
-                        <TableCell>{label}</TableCell>
-                        <TableCell align="right">{customerDataArr[idx]}</TableCell>
-                        <TableCell align="right">{customerPercentArr[idx].toFixed(1)}%</TableCell>
+                    {customerTableRows.map(row => (
+                      <TableRow key={row.label}>
+                        <TableCell>{row.label}</TableCell>
+                        <TableCell align="right">{row.count}</TableCell>
+                        <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -658,20 +699,6 @@ const Analytics: React.FC = () => {
       </Box>
       {/* Rest of analytics in centered Stack */}
       <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
-        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <FormControl size="small">
-            <InputLabel id="analytics-filter-label">Filter</InputLabel>
-            <Select
-              labelId="analytics-filter-label"
-              value={filter}
-              label="Filter"
-              onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
-            >
-              <MenuItem value="All">All</MenuItem>
-              <MenuItem value="InPlan">InPlan</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
         <Typography variant="h4" fontWeight={800} gutterBottom>
           Analytics
         </Typography>

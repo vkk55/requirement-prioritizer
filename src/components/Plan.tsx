@@ -118,7 +118,7 @@ const Plan: React.FC = () => {
   useEffect(() => {
     const totalCapacity = squads.reduce((sum, s) => sum + (s.capacity || 0), 0);
     const totalRoughEstimate = requirements.filter(r => r.inPlan).reduce((sum, r) => sum + (parseFloat(r.roughEstimate || '0') || 0), 0);
-    setCapacityString(`${totalCapacity} / ${totalRoughEstimate}`);
+    setCapacityString(`${totalRoughEstimate} / ${totalCapacity}`);
   }, [squads, requirements]);
 
   const handleEdit = (key: string, field: keyof Requirement, value: any) => {

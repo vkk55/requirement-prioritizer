@@ -110,7 +110,7 @@ export const StackRank = () => {
   useEffect(() => {
     const totalCapacity = squads.reduce((sum, s) => sum + (s.capacity || 0), 0);
     const totalRoughEstimate = requirements.filter(r => r.inPlan).reduce((sum, r) => sum + (parseFloat(r.roughEstimate || '0') || 0), 0);
-    setCapacityString(`${totalCapacity} / ${totalRoughEstimate}`);
+    setCapacityString(`${totalRoughEstimate} / ${totalCapacity}`);
   }, [squads, requirements]);
 
   const fetchCriteria = async () => {
@@ -429,6 +429,16 @@ export const StackRank = () => {
               <TableRow>
                 <TableCell sx={{ position: 'sticky', left: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>#</TableCell>
                 <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    Requirement
+                    <Tooltip title="Show Duplicate Ranks">
+                      <IconButton size="small" onClick={() => setDuplicateDialog(true)}>
+                        <InfoOutlined fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>
                   <Button onClick={() => handleSort('rank')} sx={{ fontWeight: 700, textTransform: 'none' }}>
                     Rank
                   </Button>
@@ -452,6 +462,24 @@ export const StackRank = () => {
               {sortedRequirements.map((requirement, index) => (
                 <TableRow key={requirement.key} hover>
                   <TableCell sx={{ position: 'sticky', left: 0, zIndex: 2, bgcolor: 'background.paper', fontWeight: 700 }}>{index + 1}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {requirement.key}
+                        </Typography>
+                        {requirement.summary}
+                      </Box>
+                      <Tooltip title="View Details">
+                        <IconButton
+                          size="small"
+                          onClick={() => setSelectedRequirement(requirement)}
+                        >
+                          <Info fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
                   <TableCell>
                     <TextField
                       type="number"

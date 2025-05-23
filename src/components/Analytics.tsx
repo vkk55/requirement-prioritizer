@@ -232,8 +232,8 @@ const Analytics: React.FC = () => {
         ],
         borderWidth: 1,
         datalabels: {
-          anchor: 'end' as const,
-          align: 'end' as const,
+          anchor: 'center' as const,
+          align: 'center' as const,
           formatter: (value: number, context: any) => {
             const count = criteriaCounts[context.dataIndex];
             return `${count} (${value.toFixed(1)}%)`;

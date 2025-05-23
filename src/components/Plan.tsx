@@ -206,6 +206,7 @@ const Plan: React.FC = () => {
   };
 
   // Compute counts for status bar
+  const scoredCount = requirements.filter(r => typeof r.score === 'number' ? !isNaN(r.score) : !isNaN(parseFloat(r.score as any))).length;
   const roughEstimateCount = requirements.filter(r => r.roughEstimate && r.roughEstimate.trim() !== '').length;
   const inPlanCount = requirements.filter(r => r.inPlan).length;
   const rankedCount = requirements.filter(r => {
@@ -231,7 +232,7 @@ const Plan: React.FC = () => {
     <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
       <Card elevation={2} sx={{ p: 3, borderRadius: 3 }}>
         <StatusBar
-          scoredCount={0}
+          scoredCount={scoredCount}
           rankedCount={rankedCount}
           totalCount={requirements.length}
           capacityString={capacityString}

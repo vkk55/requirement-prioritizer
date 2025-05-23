@@ -627,9 +627,9 @@ const Analytics: React.FC = () => {
         Analytics
       </Typography>
       <Divider sx={{ mb: 2 }} />
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr' }, gap: 4 }}>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 400 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
+        <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
             <Typography variant="h6" gutterBottom>
               Requirements by Customer
             </Typography>
@@ -644,11 +644,11 @@ const Analytics: React.FC = () => {
             </Select>
           </Box>
           {customerView === 'chart' ? (
-            <Box sx={{ height: 340 }}>
+            <Box sx={{ width: '100%', height: 500, px: 3, pb: 3 }}>
               <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
             </Box>
           ) : (
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: 2, px: 3, pb: 3 }}>
               <TableContainer component={Paper}>
                 <Table size="small">
                   <TableHead>

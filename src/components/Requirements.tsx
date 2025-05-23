@@ -74,7 +74,7 @@ export const Requirements = () => {
   const [error, setError] = useState<string>('');
   const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'weight'|'key'|'summary'>("weight");
+  const [sortBy, setSortBy] = useState<'weight'|'key'|'summary'|'score'>("weight");
   const [sortOrder, setSortOrder] = useState<'asc'|'desc'>("desc");
   const [search, setSearch] = useState('');
   const [editingComment, setEditingComment] = useState<{ [key: string]: string }>({});
@@ -261,6 +261,8 @@ export const Requirements = () => {
       cmp = a.key.localeCompare(b.key);
     } else if (sortBy === 'summary') {
       cmp = (a.summary || '').localeCompare(b.summary || '');
+    } else if (sortBy === 'score') {
+      cmp = getWeightedScore(a) - getWeightedScore(b);
     }
     return sortOrder === 'asc' ? -cmp : cmp;
   });
@@ -352,8 +354,13 @@ export const Requirements = () => {
                   <TableCell key={criterion.id} align="center" sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>{criterion.name}</TableCell>
                 ))}
                 <TableCell rowSpan={2} sx={{ verticalAlign: 'bottom', display: 'flex', alignItems: 'center', gap: 1, position: 'sticky', right: 0, top: 0, zIndex: 2, bgcolor: 'background.paper', minWidth: 80 }}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    Score
+                  <span style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                    onClick={() => {
+                      if (sortBy === 'score') setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                      else { setSortBy('score'); setSortOrder('desc'); }
+                    }}
+                  >
+                    Score {sortBy === 'score' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                     <Tooltip title="Score = (Σ (criterion score × criterion weight)) / (Σ weights)">
                       <IconButton size="small" tabIndex={0} aria-label="Scoring formula" sx={{ ml: 0.5 }}>
                         <Info fontSize="small" />

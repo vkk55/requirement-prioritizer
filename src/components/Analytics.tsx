@@ -875,7 +875,7 @@ const Analytics: React.FC = () => {
             <Typography variant="h6" gutterBottom align="center">
               Requirements by Criteria
             </Typography>
-            <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%' }}>
+            <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%', height: 400 }}>
               <Bar data={criteriaData} options={verticalBarOptions} />
             </Box>
           </Card>

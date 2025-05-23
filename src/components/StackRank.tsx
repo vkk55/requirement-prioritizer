@@ -343,18 +343,16 @@ export const StackRank = () => {
           'Assignee': req.assignee || '',
           'Time Spent': req.timeSpent || '',
           'Labels': req.labels || '',
-          'Rough Estimate': req.roughEstimate || '',
+          'Rough Estimate': req.roughEstimate ? parseFloat(req.roughEstimate) : 0,
           'Related Customers': req.relatedCustomers || '',
-          'Stack Rank': req.rank,
-          'Overall Score': getWeightedScore(req).toFixed(2),
+          'Stack Rank': typeof req.rank === 'number' ? req.rank : (parseFloat(req.rank) || 0),
+          'Overall Score': parseFloat(getWeightedScore(req).toFixed(2)),
           'Product Owner': req.productOwner || '',
         };
-
-        // Add criteria scores
+        // Add criteria scores as numbers
         criteria.forEach(criterion => {
-          row[`${criterion.name} Score`] = req.criteria?.[criterion.id]?.toFixed(2) || '0';
+          row[`${criterion.name} Score`] = req.criteria?.[criterion.id] !== undefined ? Number(req.criteria[criterion.id]) : 0;
         });
-
         return row;
       });
 

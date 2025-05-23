@@ -12,6 +12,12 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
 } from '@mui/material';
 import {
   Chart as ChartJS,
@@ -30,6 +36,8 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Bar, Scatter, Pie } from 'react-chartjs-2';
+// @ts-ignore
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 ChartJS.register(
   CategoryScale,
@@ -41,7 +49,8 @@ ChartJS.register(
   Tooltip,
   Legend,
   PieController,
-  ArcElement
+  ArcElement,
+  ChartDataLabels
 );
 
 interface Requirement {
@@ -94,6 +103,7 @@ const Analytics: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'All' | 'InPlan'>('InPlan');
+  const [customerView, setCustomerView] = useState<'chart' | 'table'>('chart');
 
   useEffect(() => {
     fetchData();
@@ -220,52 +230,61 @@ const Analytics: React.FC = () => {
     };
   }, [filteredRequirements]);
 
-  const customerData = useMemo(() => {
-    if (!Array.isArray(normalizedRequirements) || normalizedRequirements.length === 0) {
-      return {
-        labels: [],
-        datasets: [{
-          data: [],
-          backgroundColor: [],
-          borderWidth: 1,
-        }]
-      };
+  const customerCount: Record<string, number> = {};
+  normalizedRequirements.forEach(req => {
+    let customers: string[] = [];
+    if (Array.isArray(req.customers)) {
+      customers = req.customers;
+    } else if (typeof req.relatedCustomers === 'string' && req.relatedCustomers.trim()) {
+      customers = req.relatedCustomers.split(',').map(c => c.trim()).filter(Boolean);
     }
-    const customerCount: Record<string, number> = {};
-    normalizedRequirements.forEach(req => {
-      // Try both customers (array) and relatedCustomers (string)
-      let customers: string[] = [];
-      if (Array.isArray(req.customers)) {
-        customers = req.customers;
-      } else if (typeof req.relatedCustomers === 'string' && req.relatedCustomers.trim()) {
-        customers = req.relatedCustomers.split(',').map(c => c.trim()).filter(Boolean);
+    customers.forEach(customer => {
+      if (customer) {
+        customerCount[customer] = (customerCount[customer] || 0) + 1;
       }
-      customers.forEach(customer => {
-        if (customer) {
-          customerCount[customer] = (customerCount[customer] || 0) + 1;
-        }
-      });
     });
-    const labels = Object.keys(customerCount);
-    const data = labels.map(label => customerCount[label]);
-    if (labels.length === 0) {
-      console.warn('No customer data found in requirements. Check field mapping and import.');
-    }
-    return {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: [
-          'rgba(255, 159, 64, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
-          'rgba(255, 99, 132, 0.8)',
-        ],
-        borderWidth: 1,
-      }]
-    };
-  }, [normalizedRequirements]);
+  });
+  const customerLabels = Object.keys(customerCount);
+  const customerDataArr = customerLabels.map(label => customerCount[label]);
+  const customerTotal = customerDataArr.reduce((a, b) => a + b, 0) || 1;
+  const customerPercentArr = customerDataArr.map(count => ((count / customerTotal) * 100));
+  const customerData = {
+    labels: customerLabels,
+    datasets: [{
+      data: customerDataArr,
+      backgroundColor: [
+        'rgba(255, 159, 64, 0.8)',
+        'rgba(75, 192, 192, 0.8)',
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(153, 102, 255, 0.8)',
+        'rgba(255, 99, 132, 0.8)',
+      ],
+      borderWidth: 1,
+    }],
+  };
+  const customerBarOptions = {
+    indexAxis: 'x' as const,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+      datalabels: {
+        anchor: 'end' as const,
+        align: 'top' as const,
+        formatter: (value: number, context: any) => {
+          const percent = ((value / customerTotal) * 100).toFixed(1);
+          return `${value} (${percent}%)`;
+        },
+        font: { weight: 'bold' as const },
+        color: '#333',
+      },
+    },
+    scales: {
+      x: { beginAtZero: true },
+      y: { beginAtZero: true },
+    },
+  };
 
   const statusData = useMemo(() => {
     if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
@@ -608,21 +627,57 @@ const Analytics: React.FC = () => {
         Analytics
       </Typography>
       <Divider sx={{ mb: 2 }} />
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr' }, gap: 4 }}>
+        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 400 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Requirements by Customer
+            </Typography>
+            <Select
+              size="small"
+              value={customerView}
+              onChange={e => setCustomerView(e.target.value as 'chart' | 'table')}
+              sx={{ minWidth: 120 }}
+            >
+              <MenuItem value="chart">Bar Chart</MenuItem>
+              <MenuItem value="table">Table View</MenuItem>
+            </Select>
+          </Box>
+          {customerView === 'chart' ? (
+            <Box sx={{ height: 340 }}>
+              <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+            </Box>
+          ) : (
+            <Box sx={{ mt: 2 }}>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Customer Name</TableCell>
+                      <TableCell align="right"># Requirements</TableCell>
+                      <TableCell align="right">% of Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {customerLabels.map((label, idx) => (
+                      <TableRow key={label}>
+                        <TableCell>{label}</TableCell>
+                        <TableCell align="right">{customerDataArr[idx]}</TableCell>
+                        <TableCell align="right">{customerPercentArr[idx].toFixed(1)}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </Card>
         <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Criteria
           </Typography>
           <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
             <Pie data={criteriaData} options={pieChartOptions} />
-          </Box>
-        </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-          <Typography variant="h6" gutterBottom align="center">
-            Requirements by Customer
-          </Typography>
-          <Box sx={{ height: 260 }}>
-            <Bar data={customerData} options={horizontalBarOptions} />
           </Box>
         </Card>
         <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>

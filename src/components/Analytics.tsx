@@ -608,128 +608,131 @@ const Analytics: React.FC = () => {
   }
 
   return (
-    <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
-      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <FormControl size="small">
-          <InputLabel id="analytics-filter-label">Filter</InputLabel>
-          <Select
-            labelId="analytics-filter-label"
-            value={filter}
-            label="Filter"
-            onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
-          >
-            <MenuItem value="All">All</MenuItem>
-            <MenuItem value="InPlan">InPlan</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-      <Typography variant="h4" fontWeight={800} gutterBottom>
-        Analytics
-      </Typography>
-      <Divider sx={{ mb: 2 }} />
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
-        {/* Requirements by Customer - truly full width */}
-        <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0 }}>
-          <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Requirements by Customer
-              </Typography>
-              <Select
-                size="small"
-                value={customerView}
-                onChange={e => setCustomerView(e.target.value as 'chart' | 'table')}
-                sx={{ minWidth: 120 }}
-              >
-                <MenuItem value="chart">Bar Chart</MenuItem>
-                <MenuItem value="table">Table View</MenuItem>
-              </Select>
+    <>
+      {/* Full-width Requirements by Customer chart outside the centered Stack */}
+      <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0, bgcolor: 'transparent', mb: 4 }}>
+        <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Requirements by Customer
+            </Typography>
+            <Select
+              size="small"
+              value={customerView}
+              onChange={e => setCustomerView(e.target.value as 'chart' | 'table')}
+              sx={{ minWidth: 120 }}
+            >
+              <MenuItem value="chart">Bar Chart</MenuItem>
+              <MenuItem value="table">Table View</MenuItem>
+            </Select>
+          </Box>
+          {customerView === 'chart' ? (
+            <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
+              <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
             </Box>
-            {customerView === 'chart' ? (
-              <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
-                <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
-              </Box>
-            ) : (
-              <Box sx={{ mt: 2, px: 3, pb: 3 }}>
-                <TableContainer component={Paper}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Customer Name</TableCell>
-                        <TableCell align="right"># Requirements</TableCell>
-                        <TableCell align="right">% of Total</TableCell>
+          ) : (
+            <Box sx={{ mt: 2, px: 3, pb: 3 }}>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Customer Name</TableCell>
+                      <TableCell align="right"># Requirements</TableCell>
+                      <TableCell align="right">% of Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {customerLabels.map((label, idx) => (
+                      <TableRow key={label}>
+                        <TableCell>{label}</TableCell>
+                        <TableCell align="right">{customerDataArr[idx]}</TableCell>
+                        <TableCell align="right">{customerPercentArr[idx].toFixed(1)}%</TableCell>
                       </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {customerLabels.map((label, idx) => (
-                        <TableRow key={label}>
-                          <TableCell>{label}</TableCell>
-                          <TableCell align="right">{customerDataArr[idx]}</TableCell>
-                          <TableCell align="right">{customerPercentArr[idx].toFixed(1)}%</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Box>
-            )}
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </Card>
+      </Box>
+      {/* Rest of analytics in centered Stack */}
+      <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <FormControl size="small">
+            <InputLabel id="analytics-filter-label">Filter</InputLabel>
+            <Select
+              labelId="analytics-filter-label"
+              value={filter}
+              label="Filter"
+              onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
+            >
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="InPlan">InPlan</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+        <Typography variant="h4" fontWeight={800} gutterBottom>
+          Analytics
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
+          <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+            <Typography variant="h6" gutterBottom align="center">
+              Requirements by Criteria
+            </Typography>
+            <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
+              <Pie data={criteriaData} options={pieChartOptions} />
+            </Box>
+          </Card>
+          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+            <Typography variant="h6" gutterBottom align="center">
+              Requirements by Status
+            </Typography>
+            <Box sx={{ height: 260 }}>
+              {Object.keys(statusData.labels).length > 5 ? (
+                <Bar data={statusData} options={verticalBarOptions} />
+              ) : (
+                <Pie data={statusData} options={pieChartOptions} />
+              )}
+            </Box>
+          </Card>
+          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+            <Typography variant="h6" gutterBottom align="center">
+              Requirements by Label
+            </Typography>
+            <Box sx={{ height: 260 }}>
+              <Bar data={labelData} options={horizontalBarOptions} />
+            </Box>
+          </Card>
+          <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+            <Typography variant="h6" gutterBottom align="center">
+              Requirements by Score Range
+            </Typography>
+            <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
+              <Pie data={scoreRangeData} options={pieChartOptions} />
+            </Box>
+          </Card>
+          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+            <Typography variant="h6" gutterBottom align="center">
+              Requirements by Priority
+            </Typography>
+            <Box sx={{ height: 260 }}>
+              <Bar data={priorityData} options={verticalBarOptions} />
+            </Box>
+          </Card>
+          {/* Product Owner Report */}
+          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+            <Typography variant="h6" gutterBottom align="center">
+              Requirements by Product Owner
+            </Typography>
+            <Box sx={{ height: 260 }}>
+              <Bar data={productOwnerData} options={horizontalBarOptions} />
+            </Box>
           </Card>
         </Box>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-          <Typography variant="h6" gutterBottom align="center">
-            Requirements by Criteria
-          </Typography>
-          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
-            <Pie data={criteriaData} options={pieChartOptions} />
-          </Box>
-        </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-          <Typography variant="h6" gutterBottom align="center">
-            Requirements by Status
-          </Typography>
-          <Box sx={{ height: 260 }}>
-            {Object.keys(statusData.labels).length > 5 ? (
-              <Bar data={statusData} options={verticalBarOptions} />
-            ) : (
-              <Pie data={statusData} options={pieChartOptions} />
-            )}
-          </Box>
-        </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-          <Typography variant="h6" gutterBottom align="center">
-            Requirements by Label
-          </Typography>
-          <Box sx={{ height: 260 }}>
-            <Bar data={labelData} options={horizontalBarOptions} />
-          </Box>
-        </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-          <Typography variant="h6" gutterBottom align="center">
-            Requirements by Score Range
-          </Typography>
-          <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
-            <Pie data={scoreRangeData} options={pieChartOptions} />
-          </Box>
-        </Card>
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-          <Typography variant="h6" gutterBottom align="center">
-            Requirements by Priority
-          </Typography>
-          <Box sx={{ height: 260 }}>
-            <Bar data={priorityData} options={verticalBarOptions} />
-          </Box>
-        </Card>
-        {/* Product Owner Report */}
-        <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-          <Typography variant="h6" gutterBottom align="center">
-            Requirements by Product Owner
-          </Typography>
-          <Box sx={{ height: 260 }}>
-            <Bar data={productOwnerData} options={horizontalBarOptions} />
-          </Box>
-        </Card>
-      </Box>
-    </Stack>
+      </Stack>
+    </>
   );
 };
 

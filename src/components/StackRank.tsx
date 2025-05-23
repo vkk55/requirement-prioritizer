@@ -443,7 +443,6 @@ export const StackRank = () => {
                     Rank
                   </Button>
                 </TableCell>
-                <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>Requirement</TableCell>
                 <TableCell sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Button onClick={() => handleSort('score')} sx={{ fontWeight: 700, textTransform: 'none' }}>
@@ -506,24 +505,6 @@ export const StackRank = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {requirement.key}
-                        </Typography>
-                        {requirement.summary}
-                      </Box>
-                      <Tooltip title="View Details">
-                        <IconButton
-                          size="small"
-                          onClick={() => setSelectedRequirement(requirement)}
-                        >
-                          <Info fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right">
                     {requirement.score?.toFixed(2) || 0}
                   </TableCell>
                   <TableCell>

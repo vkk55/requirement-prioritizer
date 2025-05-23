@@ -106,6 +106,7 @@ const Analytics: React.FC = () => {
   const [customerView, setCustomerView] = useState<'chart' | 'table'>('chart');
   const [customerSort, setCustomerSort] = useState<'percent' | 'count'>('percent');
   const [customerSortOrder, setCustomerSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [roughEstimateView, setRoughEstimateView] = useState<'chart' | 'table'>('chart');
 
   useEffect(() => {
     fetchData();
@@ -246,8 +247,9 @@ const Analytics: React.FC = () => {
       }
     });
   });
-  const customerLabels = Object.keys(customerCount);
-  const customerDataArr = customerLabels.map(label => customerCount[label]);
+  const customerEntries = Object.entries(customerCount).sort((a, b) => b[1] - a[1]);
+  const customerLabels = customerEntries.map(([label]) => label);
+  const customerDataArr = customerEntries.map(([, count]) => count);
   const customerTotal = customerDataArr.reduce((a, b) => a + b, 0) || 1;
   const customerPercentArr = customerDataArr.map(count => ((count / customerTotal) * 100));
   const customerData = {
@@ -607,6 +609,50 @@ const Analytics: React.FC = () => {
     }
   });
 
+  // Calculate rough estimate by customer
+  const customerRoughEstimate: Record<string, number> = {};
+  let totalRoughEstimate = 0;
+  normalizedRequirements.forEach(req => {
+    let customers: string[] = [];
+    if (Array.isArray(req.customers)) {
+      customers = req.customers;
+    } else if (typeof req.relatedCustomers === 'string' && req.relatedCustomers.trim()) {
+      customers = req.relatedCustomers.split(',').map(c => c.trim()).filter(Boolean);
+    }
+    const roughEstimate = parseFloat((req as any).roughEstimate || '0') || 0;
+    if (roughEstimate > 0) {
+      customers.forEach(customer => {
+        if (customer) {
+          customerRoughEstimate[customer] = (customerRoughEstimate[customer] || 0) + roughEstimate;
+          totalRoughEstimate += roughEstimate;
+        }
+      });
+    }
+  });
+  const roughEstimateEntries = Object.entries(customerRoughEstimate).sort((a, b) => b[1] - a[1]);
+  const roughEstimateLabels = roughEstimateEntries.map(([label]) => label);
+  const roughEstimateDataArr = roughEstimateEntries.map(([, sum]) => sum);
+  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => ((sum / (totalRoughEstimate || 1)) * 100));
+  const roughEstimateData = {
+    labels: roughEstimateLabels,
+    datasets: [{
+      data: roughEstimateDataArr,
+      backgroundColor: [
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(255, 99, 132, 0.8)',
+        'rgba(255, 206, 86, 0.8)',
+        'rgba(75, 192, 192, 0.8)',
+        'rgba(153, 102, 255, 0.8)',
+      ],
+      borderWidth: 1,
+    }],
+  };
+  const roughEstimateTableRows = roughEstimateLabels.map((label, idx) => ({
+    label,
+    sum: roughEstimateDataArr[idx],
+    percent: roughEstimatePercentArr[idx],
+  }));
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -704,6 +750,53 @@ const Analytics: React.FC = () => {
           )}
         </Card>
       </Box>
+      {/* Rough Estimate by Customer chart */}
+      <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0, bgcolor: 'transparent', mb: 4 }}>
+        <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Rough Estimate by Customer
+            </Typography>
+            <Select
+              size="small"
+              value={roughEstimateView}
+              onChange={e => setRoughEstimateView(e.target.value as 'chart' | 'table')}
+              sx={{ minWidth: 120 }}
+            >
+              <MenuItem value="chart">Bar Chart</MenuItem>
+              <MenuItem value="table">Table View</MenuItem>
+            </Select>
+          </Box>
+          {roughEstimateView === 'chart' ? (
+            <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
+              <Bar data={roughEstimateData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+            </Box>
+          ) : (
+            <Box sx={{ mt: 2, px: 3, pb: 3 }}>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Customer Name</TableCell>
+                      <TableCell align="right">Rough Estimate</TableCell>
+                      <TableCell align="right">% of Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {roughEstimateTableRows.map(row => (
+                      <TableRow key={row.label}>
+                        <TableCell>{row.label}</TableCell>
+                        <TableCell align="right">{row.sum}</TableCell>
+                        <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </Card>
+      </Box>
       {/* Rest of analytics in centered Stack */}
       <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
         <Typography variant="h4" fontWeight={800} gutterBottom>
@@ -715,8 +808,8 @@ const Analytics: React.FC = () => {
             <Typography variant="h6" gutterBottom align="center">
               Requirements by Criteria
             </Typography>
-            <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
-              <Pie data={criteriaData} options={pieChartOptions} />
+            <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%' }}>
+              <Bar data={criteriaData} options={verticalBarOptions} />
             </Box>
           </Card>
           <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>

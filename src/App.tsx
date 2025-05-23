@@ -101,28 +101,35 @@ export default function App() {
               <Tab label="Analytics" />
             </Tabs>
           </AppBar>
-          <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
-            <Card elevation={3} sx={{ p: 4, borderRadius: 4, minHeight: '70vh', boxShadow: 4 }}>
-              <TabPanel value={tabValue} index={0}>
-                <Settings />
-              </TabPanel>
-              <TabPanel value={tabValue} index={1}>
-                <ImportRequirements />
-              </TabPanel>
-              <TabPanel value={tabValue} index={2}>
-                <Requirements />
-              </TabPanel>
-              <TabPanel value={tabValue} index={3}>
-                <StackRank />
-              </TabPanel>
-              <TabPanel value={tabValue} index={4}>
-                <Plan />
-              </TabPanel>
-              <TabPanel value={tabValue} index={5}>
-                <Analytics />
-              </TabPanel>
-            </Card>
-          </Container>
+          {tabValue === 5 ? (
+            <Container maxWidth={false} sx={{ width: '100vw', px: 0, mx: 0, mt: 5, mb: 5, overflow: 'visible' }}>
+              <Card elevation={3} sx={{ p: 0, borderRadius: 4, minHeight: '70vh', boxShadow: 4, width: '100vw', overflow: 'visible' }}>
+                <TabPanel value={tabValue} index={5}>
+                  <Analytics />
+                </TabPanel>
+              </Card>
+            </Container>
+          ) : (
+            <Container maxWidth="lg" sx={{ mt: 5, mb: 5 }}>
+              <Card elevation={3} sx={{ p: 4, borderRadius: 4, minHeight: '70vh', boxShadow: 4 }}>
+                <TabPanel value={tabValue} index={0}>
+                  <Settings />
+                </TabPanel>
+                <TabPanel value={tabValue} index={1}>
+                  <ImportRequirements />
+                </TabPanel>
+                <TabPanel value={tabValue} index={2}>
+                  <Requirements />
+                </TabPanel>
+                <TabPanel value={tabValue} index={3}>
+                  <StackRank />
+                </TabPanel>
+                <TabPanel value={tabValue} index={4}>
+                  <Plan />
+                </TabPanel>
+              </Card>
+            </Container>
+          )}
         </Box>
       </ThemeProvider>
     </PasswordGate>

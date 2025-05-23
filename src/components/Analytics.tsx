@@ -107,6 +107,8 @@ const Analytics: React.FC = () => {
   const [customerSort, setCustomerSort] = useState<'percent' | 'count'>('percent');
   const [customerSortOrder, setCustomerSortOrder] = useState<'desc' | 'asc'>('desc');
   const [roughEstimateView, setRoughEstimateView] = useState<'chart' | 'table'>('chart');
+  const [scoreRangeView, setScoreRangeView] = useState<'chart' | 'table'>('chart');
+  const [ownerView, setOwnerView] = useState<'chart' | 'table'>('chart');
 
   useEffect(() => {
     fetchData();
@@ -214,13 +216,13 @@ const Analytics: React.FC = () => {
       }
     });
 
-    const labels = Object.keys(criteriaCount);
-    const data = labels.map(label => (criteriaCount[label] / filteredRequirements.length) * 100);
-
-    return {
-      labels,
+    const criteriaLabels = Object.keys(criteriaCount);
+    const criteriaCounts = criteriaLabels.map(label => criteriaCount[label]);
+    const criteriaPercents = criteriaLabels.map(label => (criteriaCount[label] / filteredRequirements.length) * 100);
+    const criteriaData = {
+      labels: criteriaLabels,
       datasets: [{
-        data,
+        data: criteriaPercents,
         backgroundColor: [
           'rgba(255, 99, 132, 0.8)',
           'rgba(54, 162, 235, 0.8)',
@@ -229,8 +231,20 @@ const Analytics: React.FC = () => {
           'rgba(153, 102, 255, 0.8)',
         ],
         borderWidth: 1,
-      }]
+        datalabels: {
+          anchor: 'end' as const,
+          align: 'end' as const,
+          formatter: (value: number, context: any) => {
+            const count = criteriaCounts[context.dataIndex];
+            return `${count} (${value.toFixed(1)}%)`;
+          },
+          font: { weight: 'bold' as "bold" },
+          color: '#333',
+        },
+      }],
     };
+
+    return criteriaData;
   }, [filteredRequirements]);
 
   const customerCount: Record<string, number> = {};
@@ -275,12 +289,12 @@ const Analytics: React.FC = () => {
       title: { display: false },
       datalabels: {
         anchor: 'end' as const,
-        align: 'top' as const,
+        align: 'end' as const,
         formatter: (value: number, context: any) => {
           const percent = ((value / customerTotal) * 100).toFixed(1);
           return `${value} (${percent}%)`;
         },
-        font: { weight: 'bold' as const },
+        font: { weight: 'bold' as "bold" },
         color: '#333',
       },
     },
@@ -653,6 +667,59 @@ const Analytics: React.FC = () => {
     percent: roughEstimatePercentArr[idx],
   }));
 
+  // For Requirements by Score Range, make the chart larger, add # and % to the chart, and add a table view
+  const scoreRangeLabels = scoreRangeData.labels;
+  const scoreRangeCounts = scoreRangeData.datasets[0].data;
+  const scoreRangePercents = scoreRangeCounts.map((count: number) => (count / filteredRequirements.length) * 100);
+  const scoreRangeTableRows = scoreRangeLabels.map((label: string, idx: number) => ({
+    label,
+    count: scoreRangeCounts[idx],
+    percent: scoreRangePercents[idx],
+  }));
+  const scoreRangeDataWithLabels = {
+    ...scoreRangeData,
+    datasets: [{
+      ...scoreRangeData.datasets[0],
+      datalabels: {
+        anchor: 'end' as const,
+        align: 'end' as const,
+        formatter: (value: number, context: any) => {
+          const percent = scoreRangePercents[context.dataIndex];
+          return `${value} (${percent.toFixed(1)}%)`;
+        },
+        font: { weight: 'bold' as "bold" },
+        color: '#333',
+      },
+    }],
+  };
+
+  // For Requirements by Product Owner, add % of total to the chart and add a table view
+  const ownerLabels = Object.keys(productOwnerData.labels);
+  const ownerCounts = productOwnerData.datasets[0].data;
+  const ownerTotal = ownerCounts.reduce((a: number, b: number) => a + b, 0) || 1;
+  const ownerPercents = ownerCounts.map((count: number) => (count / ownerTotal) * 100);
+  const ownerTableRows = ownerLabels.map((label: string, idx: number) => ({
+    label,
+    count: ownerCounts[idx],
+    percent: ownerPercents[idx],
+  }));
+  const productOwnerDataWithLabels = {
+    ...productOwnerData,
+    datasets: [{
+      ...productOwnerData.datasets[0],
+      datalabels: {
+        anchor: 'end' as const,
+        align: 'end' as const,
+        formatter: (value: number, context: any) => {
+          const percent = ownerPercents[context.dataIndex];
+          return `${value} (${percent.toFixed(1)}%)`;
+        },
+        font: { weight: 'bold' as "bold" },
+        color: '#333',
+      },
+    }],
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -825,22 +892,50 @@ const Analytics: React.FC = () => {
             </Box>
           </Card>
           <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-            <Typography variant="h6" gutterBottom align="center">
-              Requirements by Label
-            </Typography>
-            <Box sx={{ height: 260 }}>
-              <Bar data={labelData} options={horizontalBarOptions} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" gutterBottom align="center">
+                Requirements by Score Range
+              </Typography>
+              <Select
+                size="small"
+                value={scoreRangeView}
+                onChange={e => setScoreRangeView(e.target.value as 'chart' | 'table')}
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="chart">Bar Chart</MenuItem>
+                <MenuItem value="table">Table View</MenuItem>
+              </Select>
             </Box>
+            {scoreRangeView === 'chart' ? (
+              <Box sx={{ maxWidth: 800, mx: 'auto', width: '100%', height: 400 }}>
+                <Bar data={scoreRangeDataWithLabels} options={verticalBarOptions} />
+              </Box>
+            ) : (
+              <Box sx={{ mt: 2 }}>
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Score Range</TableCell>
+                        <TableCell align="right"># Requirements</TableCell>
+                        <TableCell align="right">% of Total</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {scoreRangeTableRows.map(row => (
+                        <TableRow key={row.label}>
+                          <TableCell>{row.label}</TableCell>
+                          <TableCell align="right">{row.count}</TableCell>
+                          <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
           </Card>
           <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-            <Typography variant="h6" gutterBottom align="center">
-              Requirements by Score Range
-            </Typography>
-            <Box sx={{ maxWidth: 320, mx: 'auto', width: '100%' }}>
-              <Pie data={scoreRangeData} options={pieChartOptions} />
-            </Box>
-          </Card>
-          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
             <Typography variant="h6" gutterBottom align="center">
               Requirements by Priority
             </Typography>
@@ -848,14 +943,49 @@ const Analytics: React.FC = () => {
               <Bar data={priorityData} options={verticalBarOptions} />
             </Box>
           </Card>
-          {/* Product Owner Report */}
           <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-            <Typography variant="h6" gutterBottom align="center">
-              Requirements by Product Owner
-            </Typography>
-            <Box sx={{ height: 260 }}>
-              <Bar data={productOwnerData} options={horizontalBarOptions} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" gutterBottom align="center">
+                Requirements by Product Owner
+              </Typography>
+              <Select
+                size="small"
+                value={ownerView}
+                onChange={e => setOwnerView(e.target.value as 'chart' | 'table')}
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="chart">Bar Chart</MenuItem>
+                <MenuItem value="table">Table View</MenuItem>
+              </Select>
             </Box>
+            {ownerView === 'chart' ? (
+              <Box sx={{ height: 260 }}>
+                <Bar data={productOwnerDataWithLabels} options={horizontalBarOptions} />
+              </Box>
+            ) : (
+              <Box sx={{ mt: 2 }}>
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Product Owner</TableCell>
+                        <TableCell align="right"># Requirements</TableCell>
+                        <TableCell align="right">% of Requirements</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {ownerTableRows.map(row => (
+                        <TableRow key={row.label}>
+                          <TableCell>{row.label}</TableCell>
+                          <TableCell align="right">{row.count}</TableCell>
+                          <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
           </Card>
         </Box>
       </Stack>

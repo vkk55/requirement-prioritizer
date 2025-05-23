@@ -628,50 +628,53 @@ const Analytics: React.FC = () => {
       </Typography>
       <Divider sx={{ mb: 2 }} />
       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
-        <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Requirements by Customer
-            </Typography>
-            <Select
-              size="small"
-              value={customerView}
-              onChange={e => setCustomerView(e.target.value as 'chart' | 'table')}
-              sx={{ minWidth: 120 }}
-            >
-              <MenuItem value="chart">Bar Chart</MenuItem>
-              <MenuItem value="table">Table View</MenuItem>
-            </Select>
-          </Box>
-          {customerView === 'chart' ? (
-            <Box sx={{ width: '100%', height: 500, px: 3, pb: 3 }}>
-              <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+        {/* Requirements by Customer - truly full width */}
+        <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0 }}>
+          <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Requirements by Customer
+              </Typography>
+              <Select
+                size="small"
+                value={customerView}
+                onChange={e => setCustomerView(e.target.value as 'chart' | 'table')}
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="chart">Bar Chart</MenuItem>
+                <MenuItem value="table">Table View</MenuItem>
+              </Select>
             </Box>
-          ) : (
-            <Box sx={{ mt: 2, px: 3, pb: 3 }}>
-              <TableContainer component={Paper}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Customer Name</TableCell>
-                      <TableCell align="right"># Requirements</TableCell>
-                      <TableCell align="right">% of Total</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {customerLabels.map((label, idx) => (
-                      <TableRow key={label}>
-                        <TableCell>{label}</TableCell>
-                        <TableCell align="right">{customerDataArr[idx]}</TableCell>
-                        <TableCell align="right">{customerPercentArr[idx].toFixed(1)}%</TableCell>
+            {customerView === 'chart' ? (
+              <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
+                <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+              </Box>
+            ) : (
+              <Box sx={{ mt: 2, px: 3, pb: 3 }}>
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Customer Name</TableCell>
+                        <TableCell align="right"># Requirements</TableCell>
+                        <TableCell align="right">% of Total</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          )}
-        </Card>
+                    </TableHead>
+                    <TableBody>
+                      {customerLabels.map((label, idx) => (
+                        <TableRow key={label}>
+                          <TableCell>{label}</TableCell>
+                          <TableCell align="right">{customerDataArr[idx]}</TableCell>
+                          <TableCell align="right">{customerPercentArr[idx].toFixed(1)}%</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+          </Card>
+        </Box>
         <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom align="center">
             Requirements by Criteria

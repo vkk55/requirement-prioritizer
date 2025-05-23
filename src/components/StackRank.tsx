@@ -505,7 +505,20 @@ export const StackRank = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    {requirement.score?.toFixed(2) || 0}
+                    {/* Recalculate score using current criteria and weights */}
+                    {(() => {
+                      let totalWeightedScore = 0;
+                      let totalWeight = 0;
+                      criteria.forEach(criterion => {
+                        const score = requirement.criteria?.[criterion.id] ?? 0;
+                        const weight = typeof criterion.weight === 'string' ? parseFloat(criterion.weight) : criterion.weight;
+                        if (weight) {
+                          totalWeightedScore += score * weight;
+                          totalWeight += weight;
+                        }
+                      });
+                      return totalWeight > 0 ? (totalWeightedScore / totalWeight).toFixed(2) : '0.00';
+                    })()}
                   </TableCell>
                   <TableCell>
                     <IconButton size="small" sx={{ ml: 1 }} onClick={e => setCommentPopover({ anchorEl: e.currentTarget, key: requirement.key })}>

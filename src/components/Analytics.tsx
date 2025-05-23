@@ -625,8 +625,15 @@ const Analytics: React.FC = () => {
 
   return (
     <>
-      {/* Filter at the very top */}
-      <Box sx={{ width: '100vw', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', pl: 4, pt: 3, pb: 1 }}>
+      {/* Page title and divider at the very top */}
+      <Box sx={{ width: '100vw', pl: 4, pt: 3, pb: 1 }}>
+        <Typography variant="h4" fontWeight={800} gutterBottom>
+          Analytics
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+      </Box>
+      {/* Filter below the title */}
+      <Box sx={{ width: '100vw', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', pl: 4, pb: 1 }}>
         <FormControl size="small">
           <InputLabel id="analytics-filter-label">Filter</InputLabel>
           <Select

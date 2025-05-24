@@ -630,11 +630,13 @@ const Analytics: React.FC = () => {
   }, [filteredRequirements]);
 
   // Sort customer table view
-  const customerTableRows = customerLabels.map((label, idx) => ({
-    label,
-    count: customerDataArr[idx],
-    percent: customerPercentArr[idx],
-  }));
+  const customerTableRows = Array.isArray(customerLabels) && Array.isArray(customerDataArr) && Array.isArray(customerPercentArr)
+    ? customerLabels.map((label, idx) => ({
+        label,
+        count: customerDataArr[idx],
+        percent: customerPercentArr[idx],
+      }))
+    : [];
   customerTableRows.sort((a, b) => {
     if (customerSort === 'count') {
       return customerSortOrder === 'desc' ? b.count - a.count : a.count - b.count;
@@ -681,21 +683,25 @@ const Analytics: React.FC = () => {
       borderWidth: 1,
     }],
   };
-  const roughEstimateTableRows = roughEstimateLabels.map((label, idx) => ({
-    label,
-    sum: roughEstimateDataArr[idx],
-    percent: roughEstimatePercentArr[idx],
-  }));
+  const roughEstimateTableRows = Array.isArray(roughEstimateLabels) && Array.isArray(roughEstimateDataArr) && Array.isArray(roughEstimatePercentArr)
+    ? roughEstimateLabels.map((label, idx) => ({
+        label,
+        sum: roughEstimateDataArr[idx],
+        percent: roughEstimatePercentArr[idx],
+      }))
+    : [];
 
   // For Requirements by Score Range, make the chart larger, add # and % to the chart, and add a table view
   const scoreRangeLabels = scoreRangeData.labels;
   const scoreRangeCounts = scoreRangeData.datasets[0].data;
   const scoreRangePercents = scoreRangeCounts.map((count: number) => (count / totalRequirements) * 100);
-  const scoreRangeTableRows = scoreRangeLabels.map((label: string, idx: number) => ({
-    label,
-    count: scoreRangeCounts[idx],
-    percent: scoreRangePercents[idx],
-  }));
+  const scoreRangeTableRows = Array.isArray(scoreRangeLabels) && Array.isArray(scoreRangeCounts) && Array.isArray(scoreRangePercents)
+    ? scoreRangeLabels.map((label: string, idx: number) => ({
+        label,
+        count: scoreRangeCounts[idx],
+        percent: scoreRangePercents[idx],
+      }))
+    : [];
   const scoreRangeDataWithLabels = {
     ...scoreRangeData,
     datasets: [{
@@ -720,11 +726,13 @@ const Analytics: React.FC = () => {
   const ownerCounts = productOwnerData.datasets[0].data;
   const ownerTotal = ownerCounts.reduce((a: number, b: number) => a + b, 0) || 1;
   const ownerPercents = ownerCounts.map((count: number) => (count / ownerTotal) * 100);
-  const ownerTableRows = ownerLabels.map((label: string, idx: number) => ({
-    label,
-    count: ownerCounts[idx],
-    percent: ownerPercents[idx],
-  }));
+  const ownerTableRows = Array.isArray(ownerLabels) && Array.isArray(ownerCounts) && Array.isArray(ownerPercents)
+    ? ownerLabels.map((label: string, idx: number) => ({
+        label,
+        count: ownerCounts[idx],
+        percent: ownerPercents[idx],
+      }))
+    : [];
   const productOwnerDataWithLabels = {
     ...productOwnerData,
     datasets: [{
@@ -822,11 +830,13 @@ const Analytics: React.FC = () => {
       },
     }],
   };
-  const ownerRoughEstimateTableRows = ownerRoughEstimateLabels.map((label, idx) => ({
-    label,
-    sum: ownerRoughEstimateDataArr[idx],
-    percent: ownerRoughEstimatePercentArr[idx],
-  }));
+  const ownerRoughEstimateTableRows = Array.isArray(ownerRoughEstimateLabels) && Array.isArray(ownerRoughEstimateDataArr) && Array.isArray(ownerRoughEstimatePercentArr)
+    ? ownerRoughEstimateLabels.map((label, idx) => ({
+        label,
+        sum: ownerRoughEstimateDataArr[idx],
+        percent: ownerRoughEstimatePercentArr[idx],
+      }))
+    : [];
 
   if (loading) {
     return (

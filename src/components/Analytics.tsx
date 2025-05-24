@@ -297,13 +297,15 @@ const Analytics: React.FC = () => {
       title: { display: false },
       datalabels: {
         anchor: 'end' as const,
-        align: 'end' as const,
+        align: 'start' as const,
+        rotation: -90,
+        font: { weight: 'bold' as "bold", size: 14 },
+        color: '#fff',
+        clamp: true,
         formatter: (value: number, context: any) => {
           const percent = ((value / customerTotal) * 100).toFixed(1);
           return `${value} (${percent}%)`;
         },
-        font: { weight: 'bold' as "bold" },
-        color: '#333',
       },
     },
     scales: {
@@ -654,7 +656,7 @@ const Analytics: React.FC = () => {
   const roughEstimateEntries = Object.entries(customerRoughEstimate).sort((a, b) => b[1] - a[1]);
   const roughEstimateLabels = roughEstimateEntries.map(([label]) => label);
   const roughEstimateDataArr = roughEstimateEntries.map(([, sum]) => sum);
-  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => ((sum / (totalRoughEstimate || 1)) * 100));
+  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => Math.round((sum / (totalRoughEstimate || 1)) * 100));
   const roughEstimateData = {
     labels: roughEstimateLabels,
     datasets: [{
@@ -726,6 +728,32 @@ const Analytics: React.FC = () => {
         color: '#333',
       },
     }],
+  };
+
+  const roughEstimateBarOptions = {
+    indexAxis: 'x' as const,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: false },
+      datalabels: {
+        anchor: 'end' as const,
+        align: 'start' as const,
+        rotation: -90,
+        formatter: (value: number, context: any) => {
+          const percent = roughEstimatePercentArr[context.dataIndex];
+          return `${value} (${percent}%)`;
+        },
+        font: { weight: 'bold' as "bold", size: 14 },
+        color: '#fff',
+        clamp: true,
+      },
+    },
+    scales: {
+      x: { beginAtZero: true },
+      y: { beginAtZero: true },
+    },
   };
 
   if (loading) {
@@ -844,7 +872,7 @@ const Analytics: React.FC = () => {
           </Box>
           {roughEstimateView === 'chart' ? (
             <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
-              <Bar data={roughEstimateData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+              <Bar data={roughEstimateData} options={roughEstimateBarOptions} plugins={[ChartDataLabels]} />
             </Box>
           ) : (
             <Box sx={{ mt: 2, px: 3, pb: 3 }}>

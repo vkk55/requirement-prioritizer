@@ -148,7 +148,10 @@ const Analytics: React.FC = () => {
   const normalizedRequirements = useMemo(() => {
     const result = filteredRequirements.map(req => ({
       ...req,
-      relatedCustomers: req.relatedCustomers || (Array.isArray(req.customers) ? req.customers.join(', ') : ''),
+      relatedCustomers:
+        req.relatedCustomers ||
+        (req as any).relatedcustomers ||
+        (Array.isArray(req.customers) ? req.customers.join(', ') : ''),
       roughEstimate: req.roughEstimate || req.roughestimate || '',
     }));
     console.log('Analytics: normalizedRequirements (roughEstimate, relatedCustomers)', result.map(r => ({ key: r.key, relatedCustomers: r.relatedCustomers, roughEstimate: r.roughEstimate })));

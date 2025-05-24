@@ -158,6 +158,8 @@ const Analytics: React.FC = () => {
     return result;
   }, [filteredRequirements]);
 
+  const totalRequirements = normalizedRequirements.length;
+
   const distributionData = useMemo(() => {
     if (!Array.isArray(filteredRequirements) || filteredRequirements.length === 0) {
       return {
@@ -274,8 +276,7 @@ const Analytics: React.FC = () => {
   const customerEntries = Object.entries(customerCount).sort((a, b) => b[1].size - a[1].size);
   const customerLabels = customerEntries.map(([label]) => label);
   const customerDataArr = customerEntries.map(([, set]) => set.size);
-  const customerTotal = customerEntries.length;
-  const customerPercentArr = customerDataArr.map(count => ((count / customerTotal) * 100));
+  const customerPercentArr = customerDataArr.map(count => ((count / totalRequirements) * 100));
   const customerData = {
     labels: customerLabels,
     datasets: [{
@@ -305,7 +306,7 @@ const Analytics: React.FC = () => {
         color: '#fff',
         clamp: true,
         formatter: (value: number, context: any) => {
-          const percent = ((value / customerTotal) * 100).toFixed(1);
+          const percent = ((value / totalRequirements) * 100).toFixed(1);
           return `${value} (${percent}%)`;
         },
       },
@@ -656,7 +657,7 @@ const Analytics: React.FC = () => {
   const roughEstimateEntries = Object.entries(customerRoughEstimate).sort((a, b) => b[1] - a[1]);
   const roughEstimateLabels = roughEstimateEntries.map(([label]) => label);
   const roughEstimateDataArr = roughEstimateEntries.map(([, sum]) => sum);
-  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => Math.round((sum / (totalRoughEstimateAll || 1)) * 100));
+  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => Math.round((sum / totalRoughEstimateAll) * 100));
   const roughEstimateData = {
     labels: roughEstimateLabels,
     datasets: [{
@@ -680,7 +681,7 @@ const Analytics: React.FC = () => {
   // For Requirements by Score Range, make the chart larger, add # and % to the chart, and add a table view
   const scoreRangeLabels = scoreRangeData.labels;
   const scoreRangeCounts = scoreRangeData.datasets[0].data;
-  const scoreRangePercents = scoreRangeCounts.map((count: number) => (count / filteredRequirements.length) * 100);
+  const scoreRangePercents = scoreRangeCounts.map((count: number) => (count / totalRequirements) * 100);
   const scoreRangeTableRows = scoreRangeLabels.map((label: string, idx: number) => ({
     label,
     count: scoreRangeCounts[idx],
@@ -868,7 +869,7 @@ const Analytics: React.FC = () => {
           {/* 1. Show total # of requirements */}
           <Box sx={{ px: 3, pb: 1 }}>
             <Typography variant="subtitle1" color="text.secondary">
-              Total Requirements: {customerTotal}
+              Total Requirements: {totalRequirements}
             </Typography>
           </Box>
           {customerView === 'chart' ? (

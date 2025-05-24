@@ -276,7 +276,9 @@ const Analytics: React.FC = () => {
   const customerEntries = Object.entries(customerCount).sort((a, b) => b[1].size - a[1].size);
   const customerLabels = customerEntries.map(([label]) => label);
   const customerDataArr = customerEntries.map(([, set]) => set.size);
-  const customerPercentArr = customerDataArr.map(count => ((count / totalRequirements) * 100));
+  const customerPercentArr = customerDataArr.map(count =>
+    totalRequirements > 0 ? (count / totalRequirements) * 100 : 0
+  );
   const customerData = {
     labels: customerLabels,
     datasets: [{
@@ -629,10 +631,10 @@ const Analytics: React.FC = () => {
     percent: customerPercentArr[idx],
   }));
   customerTableRows.sort((a, b) => {
-    if (customerSort === 'percent') {
-      return customerSortOrder === 'desc' ? b.percent - a.percent : a.percent - b.percent;
-    } else {
+    if (customerSort === 'count') {
       return customerSortOrder === 'desc' ? b.count - a.count : a.count - b.count;
+    } else {
+      return customerSortOrder === 'desc' ? b.percent - a.percent : a.percent - b.percent;
     }
   });
 
@@ -657,7 +659,9 @@ const Analytics: React.FC = () => {
   const roughEstimateEntries = Object.entries(customerRoughEstimate).sort((a, b) => b[1] - a[1]);
   const roughEstimateLabels = roughEstimateEntries.map(([label]) => label);
   const roughEstimateDataArr = roughEstimateEntries.map(([, sum]) => sum);
-  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => Math.round((sum / totalRoughEstimateAll) * 100));
+  const roughEstimatePercentArr = roughEstimateDataArr.map(sum =>
+    totalRoughEstimateAll > 0 ? Math.round((sum / totalRoughEstimateAll) * 100) : 0
+  );
   const roughEstimateData = {
     labels: roughEstimateLabels,
     datasets: [{
@@ -776,7 +780,9 @@ const Analytics: React.FC = () => {
   const ownerRoughEstimateLabels = ownerRoughEstimateEntries.map(([label]) => label);
   const ownerRoughEstimateDataArr = ownerRoughEstimateEntries.map(([, sum]) => sum);
   const ownerRoughEstimateTotal = ownerRoughEstimateDataArr.reduce((a, b) => a + b, 0) || 1;
-  const ownerRoughEstimatePercentArr = ownerRoughEstimateDataArr.map(sum => Math.round((sum / ownerRoughEstimateTotal) * 100));
+  const ownerRoughEstimatePercentArr = ownerRoughEstimateDataArr.map(sum =>
+    ownerRoughEstimateTotal > 0 ? Math.round((sum / ownerRoughEstimateTotal) * 100) : 0
+  );
   const ownerRoughEstimateData = {
     labels: ownerRoughEstimateLabels,
     datasets: [{
@@ -809,7 +815,8 @@ const Analytics: React.FC = () => {
     percent: ownerRoughEstimatePercentArr[idx],
   }));
 
-  if (loading) {
+  // Guard for loading or empty data
+  if (loading || normalizedRequirements.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
         <CircularProgress />

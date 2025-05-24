@@ -255,7 +255,15 @@ const Analytics: React.FC = () => {
     return criteriaData;
   }, [filteredRequirements]);
 
-  const customerCount: Record<string, number> = {};
+  // 1. Calculate total requirements and total rough estimate (unique requirements only)
+  const totalRequirements = normalizedRequirements.length;
+  const totalRoughEstimateAll = normalizedRequirements.reduce(
+    (sum, req) => sum + (parseFloat(req.roughEstimate || '0') || 0),
+    0
+  );
+
+  // --- Requirements by Customer (unique requirements only) ---
+  const customerCount: Record<string, Set<string>> = {};
   normalizedRequirements.forEach(req => {
     let customers: string[] = [];
     if (Array.isArray(req.customers)) {
@@ -265,14 +273,15 @@ const Analytics: React.FC = () => {
     }
     customers.forEach(customer => {
       if (customer) {
-        customerCount[customer] = (customerCount[customer] || 0) + 1;
+        if (!customerCount[customer]) customerCount[customer] = new Set();
+        customerCount[customer].add(req.key);
       }
     });
   });
-  const customerEntries = Object.entries(customerCount).sort((a, b) => b[1] - a[1]);
+  const customerEntries = Object.entries(customerCount).sort((a, b) => b[1].size - a[1].size);
   const customerLabels = customerEntries.map(([label]) => label);
-  const customerDataArr = customerEntries.map(([, count]) => count);
-  const customerTotal = customerDataArr.reduce((a, b) => a + b, 0) || 1;
+  const customerDataArr = customerEntries.map(([, set]) => set.size);
+  const customerTotal = totalRequirements;
   const customerPercentArr = customerDataArr.map(count => ((count / customerTotal) * 100));
   const customerData = {
     labels: customerLabels,
@@ -635,7 +644,6 @@ const Analytics: React.FC = () => {
 
   // Calculate rough estimate by customer
   const customerRoughEstimate: Record<string, number> = {};
-  let totalRoughEstimateAll = 0;
   normalizedRequirements.forEach(req => {
     let customers: string[] = [];
     if (Array.isArray(req.customers)) {
@@ -648,7 +656,6 @@ const Analytics: React.FC = () => {
       customers.forEach(customer => {
         if (customer) {
           customerRoughEstimate[customer] = (customerRoughEstimate[customer] || 0) + roughEstimate;
-          totalRoughEstimateAll += roughEstimate;
         }
       });
     }

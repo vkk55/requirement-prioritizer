@@ -823,16 +823,6 @@ const Analytics: React.FC = () => {
     );
   }
 
-  if (normalizedRequirements.length === 0) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <Typography variant="h6" color="text.secondary">
-          No requirements found for the selected filter.
-        </Typography>
-      </Box>
-    );
-  }
-
   if (error) {
     return (
       <Box sx={{ p: 4 }}>

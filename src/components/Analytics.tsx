@@ -64,6 +64,8 @@ interface Requirement {
   status?: string;
   labels?: string[];
   priority?: string;
+  roughEstimate?: string;
+  roughestimate?: string;
 }
 
 interface ScoreRange {
@@ -144,10 +146,13 @@ const Analytics: React.FC = () => {
 
   // Defensive normalization: ensure every requirement has a relatedCustomers string
   const normalizedRequirements = useMemo(() => {
-    return filteredRequirements.map(req => ({
+    const result = filteredRequirements.map(req => ({
       ...req,
-      relatedCustomers: req.relatedCustomers || (req as any)['relatedcustomers'] || '',
+      relatedCustomers: req.relatedCustomers || (Array.isArray(req.customers) ? req.customers.join(', ') : ''),
+      roughEstimate: req.roughEstimate || req.roughestimate || '',
     }));
+    console.log('Analytics: normalizedRequirements (roughEstimate, relatedCustomers)', result.map(r => ({ key: r.key, relatedCustomers: r.relatedCustomers, roughEstimate: r.roughEstimate })));
+    return result;
   }, [filteredRequirements]);
 
   const distributionData = useMemo(() => {

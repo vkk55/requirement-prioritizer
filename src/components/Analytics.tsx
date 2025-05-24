@@ -815,11 +815,20 @@ const Analytics: React.FC = () => {
     percent: ownerRoughEstimatePercentArr[idx],
   }));
 
-  // Guard for loading or empty data
-  if (loading || normalizedRequirements.length === 0) {
+  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (normalizedRequirements.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <Typography variant="h6" color="text.secondary">
+          No requirements found for the selected filter.
+        </Typography>
       </Box>
     );
   }

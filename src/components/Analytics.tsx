@@ -293,6 +293,7 @@ const Analytics: React.FC = () => {
       borderWidth: 1,
     }],
   };
+  const hasCustomerData = customerDataArr.length > 0;
   const customerBarOptions = {
     indexAxis: 'x' as const,
     responsive: true,
@@ -300,7 +301,7 @@ const Analytics: React.FC = () => {
     plugins: {
       legend: { display: false },
       title: { display: false },
-      datalabels: {
+      datalabels: hasCustomerData ? {
         anchor: 'end' as const,
         align: 'start' as const,
         rotation: -90,
@@ -308,12 +309,14 @@ const Analytics: React.FC = () => {
         color: '#fff',
         clamp: true,
         formatter: (value: number, context: any) => {
-          const arr = customerPercentArr;
-          const idx = context.dataIndex;
-          const percent = Array.isArray(arr) && idx < arr.length && typeof arr[idx] === 'number' ? arr[idx] : 0;
-          return `${value} (${percent.toFixed(1)}%)`;
+          try {
+            const arr = customerPercentArr;
+            const idx = context.dataIndex;
+            if (!Array.isArray(arr) || idx >= arr.length || typeof arr[idx] !== 'number') return '';
+            return `${value} (${arr[idx].toFixed(1)}%)`;
+          } catch { return ''; }
         },
-      },
+      } : undefined,
     },
     scales: {
       x: { beginAtZero: true },
@@ -918,7 +921,7 @@ const Analytics: React.FC = () => {
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.count}</TableCell>
-                        <TableCell align="right">{(Array.isArray(row.percent) && typeof row.percent === 'number') ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                        <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -971,7 +974,7 @@ const Analytics: React.FC = () => {
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.sum}</TableCell>
-                        <TableCell align="right">{(Array.isArray(row.percent) && typeof row.percent === 'number') ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                        <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1043,7 +1046,7 @@ const Analytics: React.FC = () => {
                         <TableRow key={row.label}>
                           <TableCell>{row.label}</TableCell>
                           <TableCell align="right">{row.count}</TableCell>
-                          <TableCell align="right">{(Array.isArray(row.percent) && typeof row.percent === 'number') ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                          <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1095,7 +1098,7 @@ const Analytics: React.FC = () => {
                         <TableRow key={row.label}>
                           <TableCell>{row.label}</TableCell>
                           <TableCell align="right">{row.count}</TableCell>
-                          <TableCell align="right">{(Array.isArray(row.percent) && typeof row.percent === 'number') ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                          <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1130,7 +1133,7 @@ const Analytics: React.FC = () => {
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.sum}</TableCell>
-                        <TableCell align="right">{(Array.isArray(row.percent) && typeof row.percent === 'number') ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                        <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

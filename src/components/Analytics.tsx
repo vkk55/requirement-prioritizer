@@ -635,7 +635,7 @@ const Analytics: React.FC = () => {
 
   // Calculate rough estimate by customer
   const customerRoughEstimate: Record<string, number> = {};
-  let totalRoughEstimate = 0;
+  let totalRoughEstimateAll = 0;
   normalizedRequirements.forEach(req => {
     let customers: string[] = [];
     if (Array.isArray(req.customers)) {
@@ -648,7 +648,7 @@ const Analytics: React.FC = () => {
       customers.forEach(customer => {
         if (customer) {
           customerRoughEstimate[customer] = (customerRoughEstimate[customer] || 0) + roughEstimate;
-          totalRoughEstimate += roughEstimate;
+          totalRoughEstimateAll += roughEstimate;
         }
       });
     }
@@ -656,7 +656,7 @@ const Analytics: React.FC = () => {
   const roughEstimateEntries = Object.entries(customerRoughEstimate).sort((a, b) => b[1] - a[1]);
   const roughEstimateLabels = roughEstimateEntries.map(([label]) => label);
   const roughEstimateDataArr = roughEstimateEntries.map(([, sum]) => sum);
-  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => Math.round((sum / (totalRoughEstimate || 1)) * 100));
+  const roughEstimatePercentArr = roughEstimateDataArr.map(sum => Math.round((sum / (totalRoughEstimateAll || 1)) * 100));
   const roughEstimateData = {
     labels: roughEstimateLabels,
     datasets: [{
@@ -756,6 +756,55 @@ const Analytics: React.FC = () => {
     },
   };
 
+  // 1. Calculate total requirements and total rough estimate
+  const totalRequirements = filteredRequirements.length;
+
+  // 3. Calculate rough estimate by product owner
+  const ownerRoughEstimate: Record<string, number> = {};
+  normalizedRequirements.forEach(req => {
+    const owner = (req as any).productOwner || 'Unassigned';
+    const roughEstimate = parseFloat((req as any).roughEstimate || '0') || 0;
+    if (roughEstimate > 0) {
+      ownerRoughEstimate[owner] = (ownerRoughEstimate[owner] || 0) + roughEstimate;
+    }
+  });
+  const ownerRoughEstimateEntries = Object.entries(ownerRoughEstimate).sort((a, b) => b[1] - a[1]);
+  const ownerRoughEstimateLabels = ownerRoughEstimateEntries.map(([label]) => label);
+  const ownerRoughEstimateDataArr = ownerRoughEstimateEntries.map(([, sum]) => sum);
+  const ownerRoughEstimateTotal = ownerRoughEstimateDataArr.reduce((a, b) => a + b, 0) || 1;
+  const ownerRoughEstimatePercentArr = ownerRoughEstimateDataArr.map(sum => Math.round((sum / ownerRoughEstimateTotal) * 100));
+  const ownerRoughEstimateData = {
+    labels: ownerRoughEstimateLabels,
+    datasets: [{
+      data: ownerRoughEstimateDataArr,
+      backgroundColor: [
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(255, 99, 132, 0.8)',
+        'rgba(255, 206, 86, 0.8)',
+        'rgba(75, 192, 192, 0.8)',
+        'rgba(153, 102, 255, 0.8)',
+      ],
+      borderWidth: 1,
+      datalabels: {
+        anchor: 'end' as const,
+        align: 'start' as const,
+        rotation: -90,
+        formatter: (value: number, context: any) => {
+          const percent = ownerRoughEstimatePercentArr[context.dataIndex];
+          return `${value} (${percent}%)`;
+        },
+        font: { weight: 'bold' as "bold", size: 14 },
+        color: '#fff',
+        clamp: true,
+      },
+    }],
+  };
+  const ownerRoughEstimateTableRows = ownerRoughEstimateLabels.map((label, idx) => ({
+    label,
+    sum: ownerRoughEstimateDataArr[idx],
+    percent: ownerRoughEstimatePercentArr[idx],
+  }));
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -813,6 +862,12 @@ const Analytics: React.FC = () => {
               <MenuItem value="table">Table View</MenuItem>
             </Select>
           </Box>
+          {/* 1. Show total # of requirements */}
+          <Box sx={{ px: 3, pb: 1 }}>
+            <Typography variant="subtitle1" color="text.secondary">
+              Total Requirements: {totalRequirements}
+            </Typography>
+          </Box>
           {customerView === 'chart' ? (
             <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
               <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
@@ -869,6 +924,12 @@ const Analytics: React.FC = () => {
               <MenuItem value="chart">Bar Chart</MenuItem>
               <MenuItem value="table">Table View</MenuItem>
             </Select>
+          </Box>
+          {/* 2. Show total rough estimate */}
+          <Box sx={{ px: 3, pb: 1 }}>
+            <Typography variant="subtitle1" color="text.secondary">
+              Total Rough Estimate: {totalRoughEstimateAll}
+            </Typography>
           </Box>
           {roughEstimateView === 'chart' ? (
             <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
@@ -1022,6 +1083,40 @@ const Analytics: React.FC = () => {
                 </TableContainer>
               </Box>
             )}
+          </Card>
+          {/* 3. Rough Estimate by Product Owner report */}
+          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" gutterBottom align="center">
+                Rough Estimate by Product Owner
+              </Typography>
+              {/* No chart/table toggle for now, but can add if needed */}
+            </Box>
+            <Box sx={{ height: 260 }}>
+              <Bar data={ownerRoughEstimateData} options={horizontalBarOptions} plugins={[ChartDataLabels]} />
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Product Owner</TableCell>
+                      <TableCell align="right">Rough Estimate</TableCell>
+                      <TableCell align="right">% of Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {ownerRoughEstimateTableRows.map(row => (
+                      <TableRow key={row.label}>
+                        <TableCell>{row.label}</TableCell>
+                        <TableCell align="right">{row.sum}</TableCell>
+                        <TableCell align="right">{row.percent}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           </Card>
         </Box>
       </Stack>

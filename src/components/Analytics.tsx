@@ -892,9 +892,15 @@ const Analytics: React.FC = () => {
             </Typography>
           </Box>
           {customerView === 'chart' ? (
-            <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
-              <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
-            </Box>
+            customerDataArr.length > 0 ? (
+              <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
+                <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+              </Box>
+            ) : (
+              <Box sx={{ width: '100%', height: 600, px: 3, pb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography color="text.secondary">No data to display</Typography>
+              </Box>
+            )
           ) : (
             <Box sx={{ mt: 2, px: 3, pb: 3 }}>
               <TableContainer component={Paper}>

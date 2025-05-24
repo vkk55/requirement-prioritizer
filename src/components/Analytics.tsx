@@ -923,7 +923,7 @@ const Analytics: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {customerTableRows.map(row => (
+                    {(Array.isArray(customerTableRows) ? customerTableRows : []).map(row => (
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.count}</TableCell>
@@ -976,7 +976,7 @@ const Analytics: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {roughEstimateTableRows.map(row => (
+                    {(Array.isArray(roughEstimateTableRows) ? roughEstimateTableRows : []).map(row => (
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.sum}</TableCell>
@@ -1048,7 +1048,7 @@ const Analytics: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {scoreRangeTableRows.map(row => (
+                      {(Array.isArray(scoreRangeTableRows) ? scoreRangeTableRows : []).map(row => (
                         <TableRow key={row.label}>
                           <TableCell>{row.label}</TableCell>
                           <TableCell align="right">{row.count}</TableCell>
@@ -1100,7 +1100,7 @@ const Analytics: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {ownerTableRows.map(row => (
+                      {(Array.isArray(ownerTableRows) ? ownerTableRows : []).map(row => (
                         <TableRow key={row.label}>
                           <TableCell>{row.label}</TableCell>
                           <TableCell align="right">{row.count}</TableCell>
@@ -1135,7 +1135,7 @@ const Analytics: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {ownerRoughEstimateTableRows.map(row => (
+                    {(Array.isArray(ownerRoughEstimateTableRows) ? ownerRoughEstimateTableRows : []).map(row => (
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.sum}</TableCell>

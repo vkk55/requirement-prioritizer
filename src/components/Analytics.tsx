@@ -255,13 +255,6 @@ const Analytics: React.FC = () => {
     return criteriaData;
   }, [filteredRequirements]);
 
-  // 1. Calculate total requirements and total rough estimate (unique requirements only)
-  const totalRequirements = normalizedRequirements.length;
-  const totalRoughEstimateAll = normalizedRequirements.reduce(
-    (sum, req) => sum + (parseFloat(req.roughEstimate || '0') || 0),
-    0
-  );
-
   // --- Requirements by Customer (unique requirements only) ---
   const customerCount: Record<string, Set<string>> = {};
   normalizedRequirements.forEach(req => {
@@ -281,7 +274,7 @@ const Analytics: React.FC = () => {
   const customerEntries = Object.entries(customerCount).sort((a, b) => b[1].size - a[1].size);
   const customerLabels = customerEntries.map(([label]) => label);
   const customerDataArr = customerEntries.map(([, set]) => set.size);
-  const customerTotal = totalRequirements;
+  const customerTotal = customerEntries.length;
   const customerPercentArr = customerDataArr.map(count => ((count / customerTotal) * 100));
   const customerData = {
     labels: customerLabels,
@@ -764,7 +757,10 @@ const Analytics: React.FC = () => {
   };
 
   // 1. Calculate total requirements and total rough estimate
-  const totalRequirements = filteredRequirements.length;
+  const totalRoughEstimateAll = normalizedRequirements.reduce(
+    (sum, req) => sum + (parseFloat(req.roughEstimate || '0') || 0),
+    0
+  );
 
   // 3. Calculate rough estimate by product owner
   const ownerRoughEstimate: Record<string, number> = {};
@@ -872,7 +868,7 @@ const Analytics: React.FC = () => {
           {/* 1. Show total # of requirements */}
           <Box sx={{ px: 3, pb: 1 }}>
             <Typography variant="subtitle1" color="text.secondary">
-              Total Requirements: {totalRequirements}
+              Total Requirements: {customerTotal}
             </Typography>
           </Box>
           {customerView === 'chart' ? (

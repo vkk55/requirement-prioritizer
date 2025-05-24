@@ -308,8 +308,8 @@ const Analytics: React.FC = () => {
         color: '#fff',
         clamp: true,
         formatter: (value: number, context: any) => {
-          const percent = ((value / totalRequirements) * 100).toFixed(1);
-          return `${value} (${percent}%)`;
+          const percent = customerPercentArr[context.dataIndex] ?? 0;
+          return `${value} (${percent.toFixed(1)}%)`;
         },
       },
     },
@@ -699,7 +699,7 @@ const Analytics: React.FC = () => {
         anchor: 'end' as const,
         align: 'end' as const,
         formatter: (value: number, context: any) => {
-          const percent = scoreRangePercents[context.dataIndex];
+          const percent = scoreRangePercents[context.dataIndex] ?? 0;
           return `${value} (${percent.toFixed(1)}%)`;
         },
         font: { weight: 'bold' as "bold" },
@@ -726,7 +726,7 @@ const Analytics: React.FC = () => {
         anchor: 'end' as const,
         align: 'end' as const,
         formatter: (value: number, context: any) => {
-          const percent = ownerPercents[context.dataIndex];
+          const percent = ownerPercents[context.dataIndex] ?? 0;
           return `${value} (${percent.toFixed(1)}%)`;
         },
         font: { weight: 'bold' as "bold" },
@@ -747,8 +747,8 @@ const Analytics: React.FC = () => {
         align: 'start' as const,
         rotation: -90,
         formatter: (value: number, context: any) => {
-          const percent = roughEstimatePercentArr[context.dataIndex];
-          return `${value} (${percent}%)`;
+          const percent = roughEstimatePercentArr[context.dataIndex] ?? 0;
+          return `${value} (${percent.toFixed(1)}%)`;
         },
         font: { weight: 'bold' as "bold", size: 14 },
         color: '#fff',
@@ -800,8 +800,8 @@ const Analytics: React.FC = () => {
         align: 'start' as const,
         rotation: -90,
         formatter: (value: number, context: any) => {
-          const percent = ownerRoughEstimatePercentArr[context.dataIndex];
-          return `${value} (${percent}%)`;
+          const percent = ownerRoughEstimatePercentArr[context.dataIndex] ?? 0;
+          return `${value} (${percent.toFixed(1)}%)`;
         },
         font: { weight: 'bold' as "bold", size: 14 },
         color: '#fff',
@@ -908,7 +908,7 @@ const Analytics: React.FC = () => {
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.count}</TableCell>
-                        <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                        <TableCell align="right">{row.percent !== undefined ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -961,7 +961,7 @@ const Analytics: React.FC = () => {
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.sum}</TableCell>
-                        <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                        <TableCell align="right">{row.percent !== undefined ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1033,7 +1033,7 @@ const Analytics: React.FC = () => {
                         <TableRow key={row.label}>
                           <TableCell>{row.label}</TableCell>
                           <TableCell align="right">{row.count}</TableCell>
-                          <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                          <TableCell align="right">{row.percent !== undefined ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1085,7 +1085,7 @@ const Analytics: React.FC = () => {
                         <TableRow key={row.label}>
                           <TableCell>{row.label}</TableCell>
                           <TableCell align="right">{row.count}</TableCell>
-                          <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                          <TableCell align="right">{row.percent !== undefined ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1120,7 +1120,7 @@ const Analytics: React.FC = () => {
                       <TableRow key={row.label}>
                         <TableCell>{row.label}</TableCell>
                         <TableCell align="right">{row.sum}</TableCell>
-                        <TableCell align="right">{row.percent}%</TableCell>
+                        <TableCell align="right">{row.percent !== undefined ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

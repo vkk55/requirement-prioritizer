@@ -260,11 +260,20 @@ const Analytics: React.FC = () => {
   // --- Requirements by Customer (unique requirements only) ---
   const customerCount: Record<string, Set<string>> = {};
   normalizedRequirements.forEach(req => {
+    // Defensive: Only process requirements with a valid string key
+    if (!req || typeof req.key !== 'string' || !req.key.trim()) {
+      console.warn('Skipping requirement with invalid key:', req);
+      return;
+    }
     let customers: string[] = [];
     if (Array.isArray(req.customers)) {
-      customers = req.customers;
+      customers = req.customers.filter(c => typeof c === 'string' && c.trim());
     } else if (typeof req.relatedCustomers === 'string' && req.relatedCustomers.trim()) {
       customers = req.relatedCustomers.split(',').map(c => c.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(customers)) {
+      console.warn('Skipping requirement with invalid customers:', req);
+      return;
     }
     customers.forEach(customer => {
       if (customer) {

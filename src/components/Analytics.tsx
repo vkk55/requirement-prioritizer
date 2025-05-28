@@ -79,11 +79,9 @@ const Analytics: React.FC = () => {
   const [scoreRangeView, setScoreRangeView] = useState<'chart' | 'table'>('chart');
   const [ownerView, setOwnerView] = useState<'chart' | 'table'>('chart');
 
-  // Comment out all useMemo, useEffect, and top-level computations except filter state and fetchData
-  // useEffect(() => { fetchData(); }, []);
-  // const filteredRequirements = ...
-  // const normalizedRequirements = useMemo(...)
-  // ... (comment out all other useMemo, useEffect, and top-level computations)
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {

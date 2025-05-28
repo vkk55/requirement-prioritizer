@@ -257,10 +257,12 @@ const Analytics: React.FC = () => {
     return criteriaData;
   }, [filteredRequirements]);
 
+  // Log normalizedRequirements before customer extraction
+  console.log('DEBUG: normalizedRequirements', normalizedRequirements);
+
   // --- Requirements by Customer (unique requirements only) ---
   const customerCount: Record<string, Set<string>> = {};
   normalizedRequirements.forEach(req => {
-    // Defensive: Only process requirements with a valid string key
     if (!req || typeof req.key !== 'string' || !req.key.trim()) {
       console.warn('Skipping requirement with invalid key:', req);
       return;
@@ -288,6 +290,9 @@ const Analytics: React.FC = () => {
   const customerPercentArr = Array.isArray(customerDataArr) ? customerDataArr.map(count =>
     totalRequirements > 0 ? (count / totalRequirements) * 100 : 0
   ) : [];
+  console.log('DEBUG: customerLabels', customerLabels);
+  console.log('DEBUG: customerDataArr', customerDataArr);
+  console.log('DEBUG: customerTableRows', customerLabels.map((label, idx) => ({ label, count: customerDataArr[idx], percent: customerPercentArr[idx] })));
   const customerData = {
     labels: customerLabels,
     datasets: [{
@@ -913,13 +918,13 @@ const Analytics: React.FC = () => {
               </Typography>
             </Box>
             {customerView === 'chart' ? (
-              customerDataArr.length > 0 ? (
+              customerLabels.length > 0 && customerDataArr.length > 0 ? (
                 <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
                   <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
                 </Box>
               ) : (
                 <Box sx={{ width: '100%', height: 600, px: 3, pb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography color="text.secondary">No data to display</Typography>
+                  <Typography color="text.secondary">No data to display (customerLabels or customerDataArr is empty)</Typography>
                 </Box>
               )
             ) : (
@@ -944,13 +949,16 @@ const Analytics: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {(Array.isArray(customerTableRows) ? customerTableRows : []).map(row => (
-                        <TableRow key={row.label}>
-                          <TableCell>{row.label}</TableCell>
-                          <TableCell align="right">{row.count}</TableCell>
-                          <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
-                        </TableRow>
-                      ))}
+                      {(Array.isArray(customerTableRows) ? customerTableRows : []).map(row => {
+                        console.log('DEBUG: customerTableRows row', row);
+                        return (
+                          <TableRow key={row.label}>
+                            <TableCell>{row.label}</TableCell>
+                            <TableCell align="right">{row.count}</TableCell>
+                            <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </TableContainer>

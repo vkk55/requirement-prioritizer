@@ -787,7 +787,25 @@ const Analytics: React.FC = () => {
   }
 
   try {
-    return <div>Test Render</div>;
+    return (
+      <>
+        <Box sx={{ width: '100vw', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', pl: 4, pb: 1 }}>
+          <FormControl size="small">
+            <InputLabel id="analytics-filter-label">Filter</InputLabel>
+            <Select
+              labelId="analytics-filter-label"
+              value={filter}
+              label="Filter"
+              onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
+            >
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="InPlan">InPlan</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+        <div>Test Render</div>
+      </>
+    );
   } catch (err) {
     console.error('Analytics render error:', err);
     return <div>Error rendering analytics: {String(err instanceof Error ? err.message : err)}</div>;

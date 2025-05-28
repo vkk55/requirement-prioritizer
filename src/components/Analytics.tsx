@@ -112,12 +112,6 @@ const Analytics: React.FC = () => {
   const [scoreRangeView, setScoreRangeView] = useState<'chart' | 'table'>('chart');
   const [ownerView, setOwnerView] = useState<'chart' | 'table'>('chart');
 
-  let customerTableRows: any[] = [];
-  let roughEstimateTableRows: any[] = [];
-  let scoreRangeTableRows: any[] = [];
-  let ownerTableRows: any[] = [];
-  let ownerRoughEstimateTableRows: any[] = [];
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -636,19 +630,21 @@ const Analytics: React.FC = () => {
   }, [filteredRequirements]);
 
   // Sort customer table view
-  console.log('customerTableRows', customerTableRows);
-  customerTableRows = customerLabels.map((label, idx) => ({
-    label,
-    count: customerDataArr[idx],
-    percent: customerPercentArr[idx],
-  }));
-  customerTableRows.sort((a, b) => {
-    if (customerSort === 'count') {
-      return customerSortOrder === 'desc' ? b.count - a.count : a.count - b.count;
-    } else {
-      return customerSortOrder === 'desc' ? b.percent - a.percent : a.percent - b.percent;
-    }
-  });
+  const customerTableRows = useMemo(() => {
+    const rows = customerLabels.map((label, idx) => ({
+      label,
+      count: customerDataArr[idx],
+      percent: customerPercentArr[idx],
+    }));
+    rows.sort((a, b) => {
+      if (customerSort === 'count') {
+        return customerSortOrder === 'desc' ? b.count - a.count : a.count - b.count;
+      } else {
+        return customerSortOrder === 'desc' ? b.percent - a.percent : a.percent - b.percent;
+      }
+    });
+    return rows;
+  }, [customerLabels, customerDataArr, customerPercentArr, customerSort, customerSortOrder]);
 
   // Calculate rough estimate by customer
   const customerRoughEstimate: Record<string, number> = {};
@@ -688,23 +684,25 @@ const Analytics: React.FC = () => {
       borderWidth: 1,
     }],
   };
-  console.log('roughEstimateTableRows', roughEstimateTableRows);
-  roughEstimateTableRows = roughEstimateLabels.map((label, idx) => ({
-    label,
-    sum: roughEstimateDataArr[idx],
-    percent: roughEstimatePercentArr[idx],
-  }));
+  const roughEstimateTableRows = useMemo(() => {
+    return roughEstimateLabels.map((label, idx) => ({
+      label,
+      sum: roughEstimateDataArr[idx],
+      percent: roughEstimatePercentArr[idx],
+    }));
+  }, [roughEstimateLabels, roughEstimateDataArr, roughEstimatePercentArr]);
 
   // For Requirements by Score Range, make the chart larger, add # and % to the chart, and add a table view
   const scoreRangeLabels = scoreRangeData.labels;
   const scoreRangeCounts = scoreRangeData.datasets[0].data;
   const scoreRangePercents = scoreRangeCounts.map((count: number) => (count / totalRequirements) * 100);
-  console.log('scoreRangeTableRows', scoreRangeTableRows);
-  scoreRangeTableRows = scoreRangeLabels.map((label, idx) => ({
-    label,
-    count: scoreRangeCounts[idx],
-    percent: scoreRangePercents[idx],
-  }));
+  const scoreRangeTableRows = useMemo(() => {
+    return scoreRangeLabels.map((label, idx) => ({
+      label,
+      count: scoreRangeCounts[idx],
+      percent: scoreRangePercents[idx],
+    }));
+  }, [scoreRangeLabels, scoreRangeCounts, scoreRangePercents]);
   const scoreRangeDataWithLabels = {
     ...scoreRangeData,
     datasets: [{
@@ -729,12 +727,13 @@ const Analytics: React.FC = () => {
   const ownerCounts = productOwnerData.datasets[0].data;
   const ownerTotal = ownerCounts.reduce((a: number, b: number) => a + b, 0) || 1;
   const ownerPercents = ownerCounts.map((count: number) => (count / ownerTotal) * 100);
-  console.log('ownerTableRows', ownerTableRows);
-  ownerTableRows = ownerLabels.map((label, idx) => ({
-    label,
-    count: ownerCounts[idx],
-    percent: ownerPercents[idx],
-  }));
+  const ownerTableRows = useMemo(() => {
+    return ownerLabels.map((label, idx) => ({
+      label,
+      count: ownerCounts[idx],
+      percent: ownerPercents[idx],
+    }));
+  }, [ownerLabels, ownerCounts, ownerPercents]);
   const productOwnerDataWithLabels = {
     ...productOwnerData,
     datasets: [{
@@ -832,12 +831,13 @@ const Analytics: React.FC = () => {
       },
     }],
   };
-  console.log('ownerRoughEstimateTableRows', ownerRoughEstimateTableRows);
-  ownerRoughEstimateTableRows = ownerRoughEstimateLabels.map((label, idx) => ({
-    label,
-    sum: ownerRoughEstimateDataArr[idx],
-    percent: ownerRoughEstimatePercentArr[idx],
-  }));
+  const ownerRoughEstimateTableRows = useMemo(() => {
+    return ownerRoughEstimateLabels.map((label, idx) => ({
+      label,
+      sum: ownerRoughEstimateDataArr[idx],
+      percent: ownerRoughEstimatePercentArr[idx],
+    }));
+  }, [ownerRoughEstimateLabels, ownerRoughEstimateDataArr, ownerRoughEstimatePercentArr]);
 
   if (loading) {
     return (
@@ -1111,13 +1111,15 @@ const Analytics: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {(Array.isArray(ownerTableRows) ? ownerTableRows : []).map(row => (
-                        <TableRow key={row.label}>
-                          <TableCell>{row.label}</TableCell>
-                          <TableCell align="right">{row.count}</TableCell>
-                          <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
-                        </TableRow>
-                      ))}
+                      {Array.isArray(ownerTableRows)
+                        ? ownerTableRows.map((row: { label: string; count: number; percent: number }) => (
+                            <TableRow key={row.label}>
+                              <TableCell>{row.label}</TableCell>
+                              <TableCell align="right">{row.count}</TableCell>
+                              <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                            </TableRow>
+                          ))
+                        : null}
                     </TableBody>
                   </Table>
                 </TableContainer>
@@ -1146,13 +1148,15 @@ const Analytics: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {(Array.isArray(ownerRoughEstimateTableRows) ? ownerRoughEstimateTableRows : []).map(row => (
-                      <TableRow key={row.label}>
-                        <TableCell>{row.label}</TableCell>
-                        <TableCell align="right">{row.sum}</TableCell>
-                        <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
-                      </TableRow>
-                    ))}
+                    {Array.isArray(ownerRoughEstimateTableRows)
+                      ? ownerRoughEstimateTableRows.map((row: { label: string; sum: number; percent: number }) => (
+                          <TableRow key={row.label}>
+                            <TableCell>{row.label}</TableCell>
+                            <TableCell align="right">{row.sum}</TableCell>
+                            <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                          </TableRow>
+                        ))
+                      : null}
                   </TableBody>
                 </Table>
               </TableContainer>

@@ -273,12 +273,12 @@ const Analytics: React.FC = () => {
       }
     });
   });
-  const customerEntries = Object.entries(customerCount).sort((a, b) => b[1].size - a[1].size);
-  const customerLabels = customerEntries.map(([label]) => label);
-  const customerDataArr = customerEntries.map(([, set]) => set.size);
-  const customerPercentArr = customerDataArr.map(count =>
+  const customerEntries = Array.isArray(Object.entries(customerCount)) ? Object.entries(customerCount).sort((a, b) => b[1].size - a[1].size) : [];
+  const customerLabels = Array.isArray(customerEntries) ? customerEntries.map(([label]) => label) : [];
+  const customerDataArr = Array.isArray(customerEntries) ? customerEntries.map(([, set]) => set.size) : [];
+  const customerPercentArr = Array.isArray(customerDataArr) ? customerDataArr.map(count =>
     totalRequirements > 0 ? (count / totalRequirements) * 100 : 0
-  );
+  ) : [];
   const customerData = {
     labels: customerLabels,
     datasets: [{
@@ -855,211 +855,87 @@ const Analytics: React.FC = () => {
     );
   }
 
-  return (
-    <>
-      {/* Page title and divider at the very top */}
-      <Box sx={{ width: '100vw', pl: 4, pt: 3, pb: 1 }}>
-        <Typography variant="h4" fontWeight={800} gutterBottom>
-          Analytics
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-      </Box>
-      {/* Filter below the title */}
-      <Box sx={{ width: '100vw', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', pl: 4, pb: 1 }}>
-        <FormControl size="small">
-          <InputLabel id="analytics-filter-label">Filter</InputLabel>
-          <Select
-            labelId="analytics-filter-label"
-            value={filter}
-            label="Filter"
-            onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
-          >
-            <MenuItem value="All">All</MenuItem>
-            <MenuItem value="InPlan">InPlan</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-      {/* Full-width Requirements by Customer chart outside the centered Stack */}
-      <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0, bgcolor: 'transparent', mb: 4 }}>
-        <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Requirements by Customer
-            </Typography>
+  try {
+    return (
+      <>
+        {/* Page title and divider at the very top */}
+        <Box sx={{ width: '100vw', pl: 4, pt: 3, pb: 1 }}>
+          <Typography variant="h4" fontWeight={800} gutterBottom>
+            Analytics
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+        </Box>
+        {/* Filter below the title */}
+        <Box sx={{ width: '100vw', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', pl: 4, pb: 1 }}>
+          <FormControl size="small">
+            <InputLabel id="analytics-filter-label">Filter</InputLabel>
             <Select
-              size="small"
-              value={customerView}
-              onChange={e => setCustomerView(e.target.value as 'chart' | 'table')}
-              sx={{ minWidth: 120 }}
+              labelId="analytics-filter-label"
+              value={filter}
+              label="Filter"
+              onChange={e => setFilter(e.target.value as 'All' | 'InPlan')}
             >
-              <MenuItem value="chart">Bar Chart</MenuItem>
-              <MenuItem value="table">Table View</MenuItem>
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="InPlan">InPlan</MenuItem>
             </Select>
-          </Box>
-          {/* 1. Show total # of requirements */}
-          <Box sx={{ px: 3, pb: 1 }}>
-            <Typography variant="subtitle1" color="text.secondary">
-              Total Requirements: {totalRequirements}
-            </Typography>
-          </Box>
-          {customerView === 'chart' ? (
-            customerDataArr.length > 0 ? (
-              <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
-                <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
-              </Box>
-            ) : (
-              <Box sx={{ width: '100%', height: 600, px: 3, pb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography color="text.secondary">No data to display</Typography>
-              </Box>
-            )
-          ) : (
-            <Box sx={{ mt: 2, px: 3, pb: 3 }}>
-              <TableContainer component={Paper}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Customer Name</TableCell>
-                      <TableCell align="right" sx={{ cursor: 'pointer' }} onClick={() => {
-                        if (customerSort === 'count') setCustomerSortOrder(customerSortOrder === 'desc' ? 'asc' : 'desc');
-                        else { setCustomerSort('count'); setCustomerSortOrder('desc'); }
-                      }}>
-                        # Requirements {customerSort === 'count' ? (customerSortOrder === 'desc' ? '▼' : '▲') : ''}
-                      </TableCell>
-                      <TableCell align="right" sx={{ cursor: 'pointer' }} onClick={() => {
-                        if (customerSort === 'percent') setCustomerSortOrder(customerSortOrder === 'desc' ? 'asc' : 'desc');
-                        else { setCustomerSort('percent'); setCustomerSortOrder('desc'); }
-                      }}>
-                        % of Total {customerSort === 'percent' ? (customerSortOrder === 'desc' ? '▼' : '▲') : ''}
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(Array.isArray(customerTableRows) ? customerTableRows : []).map(row => (
-                      <TableRow key={row.label}>
-                        <TableCell>{row.label}</TableCell>
-                        <TableCell align="right">{row.count}</TableCell>
-                        <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          )}
-        </Card>
-      </Box>
-      {/* Rough Estimate by Customer chart */}
-      <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0, bgcolor: 'transparent', mb: 4 }}>
-        <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Rough Estimate by Customer
-            </Typography>
-            <Select
-              size="small"
-              value={roughEstimateView}
-              onChange={e => setRoughEstimateView(e.target.value as 'chart' | 'table')}
-              sx={{ minWidth: 120 }}
-            >
-              <MenuItem value="chart">Bar Chart</MenuItem>
-              <MenuItem value="table">Table View</MenuItem>
-            </Select>
-          </Box>
-          {/* 2. Show total rough estimate */}
-          <Box sx={{ px: 3, pb: 1 }}>
-            <Typography variant="subtitle1" color="text.secondary">
-              Total Rough Estimate: {totalRoughEstimateAll}
-            </Typography>
-          </Box>
-          {roughEstimateView === 'chart' ? (
-            <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
-              <Bar data={roughEstimateData} options={roughEstimateBarOptions} plugins={[ChartDataLabels]} />
-            </Box>
-          ) : (
-            <Box sx={{ mt: 2, px: 3, pb: 3 }}>
-              <TableContainer component={Paper}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Customer Name</TableCell>
-                      <TableCell align="right">Rough Estimate</TableCell>
-                      <TableCell align="right">% of Total</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(Array.isArray(roughEstimateTableRows) ? roughEstimateTableRows : []).map(row => (
-                      <TableRow key={row.label}>
-                        <TableCell>{row.label}</TableCell>
-                        <TableCell align="right">{row.sum}</TableCell>
-                        <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          )}
-        </Card>
-      </Box>
-      {/* Rest of analytics in centered Stack */}
-      <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
-        <Typography variant="h4" fontWeight={800} gutterBottom>
-          Analytics
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
-          <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-            <Typography variant="h6" gutterBottom align="center">
-              Requirements by Criteria
-            </Typography>
-            <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%', height: 400 }}>
-              <Bar data={criteriaData} options={verticalBarOptions} />
-            </Box>
-          </Card>
-          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-            <Typography variant="h6" gutterBottom align="center">
-              Requirements by Status
-            </Typography>
-            <Box sx={{ height: 260 }}>
-              {Object.keys(statusData.labels).length > 5 ? (
-                <Bar data={statusData} options={verticalBarOptions} />
-              ) : (
-                <Pie data={statusData} options={pieChartOptions} />
-              )}
-            </Box>
-          </Card>
-          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" gutterBottom align="center">
-                Requirements by Score Range
+          </FormControl>
+        </Box>
+        {/* Full-width Requirements by Customer chart outside the centered Stack */}
+        <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0, bgcolor: 'transparent', mb: 4 }}>
+          <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Requirements by Customer
               </Typography>
               <Select
                 size="small"
-                value={scoreRangeView}
-                onChange={e => setScoreRangeView(e.target.value as 'chart' | 'table')}
+                value={customerView}
+                onChange={e => setCustomerView(e.target.value as 'chart' | 'table')}
                 sx={{ minWidth: 120 }}
               >
                 <MenuItem value="chart">Bar Chart</MenuItem>
                 <MenuItem value="table">Table View</MenuItem>
               </Select>
             </Box>
-            {scoreRangeView === 'chart' ? (
-              <Box sx={{ maxWidth: 800, mx: 'auto', width: '100%', height: 400 }}>
-                <Bar data={scoreRangeDataWithLabels} options={verticalBarOptions} />
-              </Box>
+            {/* 1. Show total # of requirements */}
+            <Box sx={{ px: 3, pb: 1 }}>
+              <Typography variant="subtitle1" color="text.secondary">
+                Total Requirements: {totalRequirements}
+              </Typography>
+            </Box>
+            {customerView === 'chart' ? (
+              customerDataArr.length > 0 ? (
+                <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
+                  <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+                </Box>
+              ) : (
+                <Box sx={{ width: '100%', height: 600, px: 3, pb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Typography color="text.secondary">No data to display</Typography>
+                </Box>
+              )
             ) : (
-              <Box sx={{ mt: 2 }}>
+              <Box sx={{ mt: 2, px: 3, pb: 3 }}>
                 <TableContainer component={Paper}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Score Range</TableCell>
-                        <TableCell align="right"># Requirements</TableCell>
-                        <TableCell align="right">% of Total</TableCell>
+                        <TableCell>Customer Name</TableCell>
+                        <TableCell align="right" sx={{ cursor: 'pointer' }} onClick={() => {
+                          if (customerSort === 'count') setCustomerSortOrder(customerSortOrder === 'desc' ? 'asc' : 'desc');
+                          else { setCustomerSort('count'); setCustomerSortOrder('desc'); }
+                        }}>
+                          # Requirements {customerSort === 'count' ? (customerSortOrder === 'desc' ? '▼' : '▲') : ''}
+                        </TableCell>
+                        <TableCell align="right" sx={{ cursor: 'pointer' }} onClick={() => {
+                          if (customerSort === 'percent') setCustomerSortOrder(customerSortOrder === 'desc' ? 'asc' : 'desc');
+                          else { setCustomerSort('percent'); setCustomerSortOrder('desc'); }
+                        }}>
+                          % of Total {customerSort === 'percent' ? (customerSortOrder === 'desc' ? '▼' : '▲') : ''}
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {(Array.isArray(scoreRangeTableRows) ? scoreRangeTableRows : []).map(row => (
+                      {(Array.isArray(customerTableRows) ? customerTableRows : []).map(row => (
                         <TableRow key={row.label}>
                           <TableCell>{row.label}</TableCell>
                           <TableCell align="right">{row.count}</TableCell>
@@ -1072,50 +948,212 @@ const Analytics: React.FC = () => {
               </Box>
             )}
           </Card>
-          <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-            <Typography variant="h6" gutterBottom align="center">
-              Requirements by Priority
-            </Typography>
-            <Box sx={{ height: 260 }}>
-              <Bar data={priorityData} options={verticalBarOptions} />
-            </Box>
-          </Card>
-          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" gutterBottom align="center">
-                Requirements by Product Owner
+        </Box>
+        {/* Rough Estimate by Customer chart */}
+        <Box sx={{ width: '100vw', position: 'relative', left: '50%', right: '50%', ml: '-50vw', mr: '-50vw', px: 0, bgcolor: 'transparent', mb: 4 }}>
+          <Card elevation={2} sx={{ borderRadius: 3, boxShadow: 1, width: '100%', m: 0 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 3, pt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Rough Estimate by Customer
               </Typography>
               <Select
                 size="small"
-                value={ownerView}
-                onChange={e => setOwnerView(e.target.value as 'chart' | 'table')}
+                value={roughEstimateView}
+                onChange={e => setRoughEstimateView(e.target.value as 'chart' | 'table')}
                 sx={{ minWidth: 120 }}
               >
                 <MenuItem value="chart">Bar Chart</MenuItem>
                 <MenuItem value="table">Table View</MenuItem>
               </Select>
             </Box>
-            {ownerView === 'chart' ? (
-              <Box sx={{ height: 260 }}>
-                <Bar data={productOwnerDataWithLabels} options={horizontalBarOptions} />
+            {/* 2. Show total rough estimate */}
+            <Box sx={{ px: 3, pb: 1 }}>
+              <Typography variant="subtitle1" color="text.secondary">
+                Total Rough Estimate: {totalRoughEstimateAll}
+              </Typography>
+            </Box>
+            {roughEstimateView === 'chart' ? (
+              <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
+                <Bar data={roughEstimateData} options={roughEstimateBarOptions} plugins={[ChartDataLabels]} />
               </Box>
             ) : (
+              <Box sx={{ mt: 2, px: 3, pb: 3 }}>
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Customer Name</TableCell>
+                        <TableCell align="right">Rough Estimate</TableCell>
+                        <TableCell align="right">% of Total</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(Array.isArray(roughEstimateTableRows) ? roughEstimateTableRows : []).map(row => (
+                        <TableRow key={row.label}>
+                          <TableCell>{row.label}</TableCell>
+                          <TableCell align="right">{row.sum}</TableCell>
+                          <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+          </Card>
+        </Box>
+        {/* Rest of analytics in centered Stack */}
+        <Stack spacing={4} sx={{ p: { xs: 1, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+          <Typography variant="h4" fontWeight={800} gutterBottom>
+            Analytics
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4 }}>
+            <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+              <Typography variant="h6" gutterBottom align="center">
+                Requirements by Criteria
+              </Typography>
+              <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%', height: 400 }}>
+                <Bar data={criteriaData} options={verticalBarOptions} />
+              </Box>
+            </Card>
+            <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+              <Typography variant="h6" gutterBottom align="center">
+                Requirements by Status
+              </Typography>
+              <Box sx={{ height: 260 }}>
+                {Object.keys(statusData.labels).length > 5 ? (
+                  <Bar data={statusData} options={verticalBarOptions} />
+                ) : (
+                  <Pie data={statusData} options={pieChartOptions} />
+                )}
+              </Box>
+            </Card>
+            <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" gutterBottom align="center">
+                  Requirements by Score Range
+                </Typography>
+                <Select
+                  size="small"
+                  value={scoreRangeView}
+                  onChange={e => setScoreRangeView(e.target.value as 'chart' | 'table')}
+                  sx={{ minWidth: 120 }}
+                >
+                  <MenuItem value="chart">Bar Chart</MenuItem>
+                  <MenuItem value="table">Table View</MenuItem>
+                </Select>
+              </Box>
+              {scoreRangeView === 'chart' ? (
+                <Box sx={{ maxWidth: 800, mx: 'auto', width: '100%', height: 400 }}>
+                  <Bar data={scoreRangeDataWithLabels} options={verticalBarOptions} />
+                </Box>
+              ) : (
+                <Box sx={{ mt: 2 }}>
+                  <TableContainer component={Paper}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Score Range</TableCell>
+                          <TableCell align="right"># Requirements</TableCell>
+                          <TableCell align="right">% of Total</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {(Array.isArray(scoreRangeTableRows) ? scoreRangeTableRows : []).map(row => (
+                          <TableRow key={row.label}>
+                            <TableCell>{row.label}</TableCell>
+                            <TableCell align="right">{row.count}</TableCell>
+                            <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+            </Card>
+            <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+              <Typography variant="h6" gutterBottom align="center">
+                Requirements by Priority
+              </Typography>
+              <Box sx={{ height: 260 }}>
+                <Bar data={priorityData} options={verticalBarOptions} />
+              </Box>
+            </Card>
+            <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" gutterBottom align="center">
+                  Requirements by Product Owner
+                </Typography>
+                <Select
+                  size="small"
+                  value={ownerView}
+                  onChange={e => setOwnerView(e.target.value as 'chart' | 'table')}
+                  sx={{ minWidth: 120 }}
+                >
+                  <MenuItem value="chart">Bar Chart</MenuItem>
+                  <MenuItem value="table">Table View</MenuItem>
+                </Select>
+              </Box>
+              {ownerView === 'chart' ? (
+                <Box sx={{ height: 260 }}>
+                  <Bar data={productOwnerDataWithLabels} options={horizontalBarOptions} />
+                </Box>
+              ) : (
+                <Box sx={{ mt: 2 }}>
+                  <TableContainer component={Paper}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Product Owner</TableCell>
+                          <TableCell align="right"># Requirements</TableCell>
+                          <TableCell align="right">% of Requirements</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {Array.isArray(ownerTableRows)
+                          ? ownerTableRows.map((row: { label: string; count: number; percent: number }) => (
+                              <TableRow key={row.label}>
+                                <TableCell>{row.label}</TableCell>
+                                <TableCell align="right">{row.count}</TableCell>
+                                <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
+                              </TableRow>
+                            ))
+                          : null}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+            </Card>
+            {/* 3. Rough Estimate by Product Owner report */}
+            <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" gutterBottom align="center">
+                  Rough Estimate by Product Owner
+                </Typography>
+                {/* No chart/table toggle for now, but can add if needed */}
+              </Box>
+              <Box sx={{ height: 260 }}>
+                <Bar data={ownerRoughEstimateData} options={horizontalBarOptions} plugins={[ChartDataLabels]} />
+              </Box>
               <Box sx={{ mt: 2 }}>
                 <TableContainer component={Paper}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
                         <TableCell>Product Owner</TableCell>
-                        <TableCell align="right"># Requirements</TableCell>
-                        <TableCell align="right">% of Requirements</TableCell>
+                        <TableCell align="right">Rough Estimate</TableCell>
+                        <TableCell align="right">% of Total</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {Array.isArray(ownerTableRows)
-                        ? ownerTableRows.map((row: { label: string; count: number; percent: number }) => (
+                      {Array.isArray(ownerRoughEstimateTableRows)
+                        ? ownerRoughEstimateTableRows.map((row: { label: string; sum: number; percent: number }) => (
                             <TableRow key={row.label}>
                               <TableCell>{row.label}</TableCell>
-                              <TableCell align="right">{row.count}</TableCell>
+                              <TableCell align="right">{row.sum}</TableCell>
                               <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
                             </TableRow>
                           ))
@@ -1124,48 +1162,15 @@ const Analytics: React.FC = () => {
                   </Table>
                 </TableContainer>
               </Box>
-            )}
-          </Card>
-          {/* 3. Rough Estimate by Product Owner report */}
-          <Card elevation={2} sx={{ p: 2, borderRadius: 3, minHeight: 320 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" gutterBottom align="center">
-                Rough Estimate by Product Owner
-              </Typography>
-              {/* No chart/table toggle for now, but can add if needed */}
-            </Box>
-            <Box sx={{ height: 260 }}>
-              <Bar data={ownerRoughEstimateData} options={horizontalBarOptions} plugins={[ChartDataLabels]} />
-            </Box>
-            <Box sx={{ mt: 2 }}>
-              <TableContainer component={Paper}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Product Owner</TableCell>
-                      <TableCell align="right">Rough Estimate</TableCell>
-                      <TableCell align="right">% of Total</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {Array.isArray(ownerRoughEstimateTableRows)
-                      ? ownerRoughEstimateTableRows.map((row: { label: string; sum: number; percent: number }) => (
-                          <TableRow key={row.label}>
-                            <TableCell>{row.label}</TableCell>
-                            <TableCell align="right">{row.sum}</TableCell>
-                            <TableCell align="right">{typeof row.percent === 'number' && isFinite(row.percent) ? row.percent.toFixed(1) : '0.0'}%</TableCell>
-                          </TableRow>
-                        ))
-                      : null}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          </Card>
-        </Box>
-      </Stack>
-    </>
-  );
+            </Card>
+          </Box>
+        </Stack>
+      </>
+    );
+  } catch (err) {
+    console.error('Analytics render error:', err);
+    return <div>Error rendering analytics: {String(err instanceof Error ? err.message : err)}</div>;
+  }
 };
 
 export default Analytics; 

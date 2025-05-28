@@ -72,7 +72,7 @@ const AnalyticsPlus: React.FC = () => {
   const filteredRequirements = useMemo(() =>
     filter === "InPlan"
       ? requirements.filter(
-          (r) => (r as any)["InPlan?"] === true || (r as any).inPlan === true
+          (r) => (r as any)["InPlan?"] === true
         )
       : requirements,
     [requirements, filter]
@@ -80,14 +80,14 @@ const AnalyticsPlus: React.FC = () => {
 
   // Unique customer extraction and requirement count
   const customerStats = useMemo(() => {
-    // 1. Build a unique customer set from all relatedCustomers fields
+    // 1. Build a unique customer set from all relatedcustomers fields
     const customerSet = new Set<string>();
     filteredRequirements.forEach((req) => {
       let customers: string[] = [];
-      if (Array.isArray(req.customers)) {
-        customers = req.customers;
-      } else if (typeof req.relatedCustomers === "string" && req.relatedCustomers.trim()) {
-        customers = req.relatedCustomers.split(",").map((c) => c.trim()).filter(Boolean);
+      if (Array.isArray((req as any).customers)) {
+        customers = (req as any).customers;
+      } else if (typeof (req as any).relatedcustomers === "string" && (req as any).relatedcustomers.trim()) {
+        customers = (req as any).relatedcustomers.split(",").map((c: string) => c.trim()).filter(Boolean);
       }
       customers.forEach((customer) => {
         if (customer) customerSet.add(customer);
@@ -99,10 +99,10 @@ const AnalyticsPlus: React.FC = () => {
       let count = 0;
       filteredRequirements.forEach((req) => {
         let customers: string[] = [];
-        if (Array.isArray(req.customers)) {
-          customers = req.customers;
-        } else if (typeof req.relatedCustomers === "string" && req.relatedCustomers.trim()) {
-          customers = req.relatedCustomers.split(",").map((c) => c.trim()).filter(Boolean);
+        if (Array.isArray((req as any).customers)) {
+          customers = (req as any).customers;
+        } else if (typeof (req as any).relatedcustomers === "string" && (req as any).relatedcustomers.trim()) {
+          customers = (req as any).relatedcustomers.split(",").map((c: string) => c.trim()).filter(Boolean);
         }
         if (customers.includes(customer)) count++;
       });

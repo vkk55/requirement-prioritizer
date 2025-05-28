@@ -916,7 +916,7 @@ const Analytics: React.FC = () => {
             {customerView === 'chart' ? (
               customerLabels.length > 0 && customerDataArr.length > 0 ? (
                 <Box sx={{ width: '100%', height: 600, px: 3, pb: 3 }}>
-                  <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} />
+                  {/* <Bar data={customerData} options={customerBarOptions} plugins={[ChartDataLabels]} /> */}
                 </Box>
               ) : (
                 <Box sx={{ width: '100%', height: 600, px: 3, pb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

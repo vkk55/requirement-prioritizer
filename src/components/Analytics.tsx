@@ -19,39 +19,6 @@ import {
   TableRow,
   TableCell,
 } from '@mui/material';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartOptions,
-  ScaleOptions,
-  ChartData,
-  PieController,
-  ArcElement,
-} from 'chart.js';
-import { Bar, Scatter, Pie } from 'react-chartjs-2';
-// @ts-ignore
-import ChartDataLabels from 'chartjs-plugin-datalabels';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  PieController,
-  ArcElement,
-  ChartDataLabels
-);
 
 interface Requirement {
   key: string;
@@ -335,14 +302,6 @@ const Analytics: React.FC = () => {
         font: { weight: 'bold' as "bold", size: 14 },
         color: '#fff',
         clamp: true,
-        formatter: (value: number, context: any) => {
-          try {
-            const arr = customerPercentArr;
-            const idx = context.dataIndex;
-            if (!Array.isArray(arr) || idx >= arr.length || typeof arr[idx] !== 'number') return '';
-            return `${value} (${arr[idx].toFixed(1)}%)`;
-          } catch { return ''; }
-        },
       } : undefined,
     },
     scales: {
@@ -420,7 +379,7 @@ const Analytics: React.FC = () => {
     };
   }, [filteredRequirements]);
 
-  const pieChartOptions = useMemo<ChartOptions<'pie'>>(() => ({
+  const pieChartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -442,7 +401,7 @@ const Analytics: React.FC = () => {
     }
   }), []);
 
-  const distributionOptions = useMemo<ChartOptions<'bar'>>(() => ({
+  const distributionOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -491,7 +450,7 @@ const Analytics: React.FC = () => {
     }
   }), []);
 
-  const correlationOptions = useMemo<ChartOptions<'scatter'>>(() => ({
+  const correlationOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -717,18 +676,6 @@ const Analytics: React.FC = () => {
     ...scoreRangeData,
     datasets: [{
       ...scoreRangeData.datasets[0],
-      datalabels: {
-        anchor: 'end' as const,
-        align: 'end' as const,
-        formatter: (value: number, context: any) => {
-          const arr = scoreRangePercents;
-          const idx = context.dataIndex;
-          const percent = Array.isArray(arr) && idx < arr.length && typeof arr[idx] === 'number' ? arr[idx] : 0;
-          return `${value} (${percent.toFixed(1)}%)`;
-        },
-        font: { weight: 'bold' as "bold" },
-        color: '#333',
-      },
     }],
   };
 
@@ -748,18 +695,6 @@ const Analytics: React.FC = () => {
     ...productOwnerData,
     datasets: [{
       ...productOwnerData.datasets[0],
-      datalabels: {
-        anchor: 'end' as const,
-        align: 'end' as const,
-        formatter: (value: number, context: any) => {
-          const arr = ownerPercents;
-          const idx = context.dataIndex;
-          const percent = Array.isArray(arr) && idx < arr.length && typeof arr[idx] === 'number' ? arr[idx] : 0;
-          return `${value} (${percent.toFixed(1)}%)`;
-        },
-        font: { weight: 'bold' as "bold" },
-        color: '#333',
-      },
     }],
   };
 
@@ -825,20 +760,6 @@ const Analytics: React.FC = () => {
         'rgba(153, 102, 255, 0.8)',
       ],
       borderWidth: 1,
-      datalabels: {
-        anchor: 'end' as const,
-        align: 'start' as const,
-        rotation: -90,
-        formatter: (value: number, context: any) => {
-          const arr = ownerRoughEstimatePercentArr;
-          const idx = context.dataIndex;
-          const percent = Array.isArray(arr) && idx < arr.length && typeof arr[idx] === 'number' ? arr[idx] : 0;
-          return `${value} (${percent.toFixed(1)}%)`;
-        },
-        font: { weight: 'bold' as "bold", size: 14 },
-        color: '#fff',
-        clamp: true,
-      },
     }],
   };
   const ownerRoughEstimateTableRows = useMemo(() => {

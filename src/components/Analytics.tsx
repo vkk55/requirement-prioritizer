@@ -268,10 +268,13 @@ const Analytics: React.FC = () => {
       return;
     }
     let customers: string[] = [];
-    if (Array.isArray(req.customers)) {
+    if (Array.isArray(req.customers) && req.customers.length > 0) {
       customers = req.customers.filter(c => typeof c === 'string' && c.trim());
     } else if (typeof req.relatedCustomers === 'string' && req.relatedCustomers.trim()) {
       customers = req.relatedCustomers.split(',').map(c => c.trim()).filter(Boolean);
+    } else {
+      // Log requirements with no customer info for inspection
+      console.warn('Requirement has no customers or relatedCustomers:', req);
     }
     if (!Array.isArray(customers)) {
       console.warn('Skipping requirement with invalid customers:', req);
@@ -290,9 +293,19 @@ const Analytics: React.FC = () => {
   const customerPercentArr = Array.isArray(customerDataArr) ? customerDataArr.map(count =>
     totalRequirements > 0 ? (count / totalRequirements) * 100 : 0
   ) : [];
-  console.log('DEBUG: customerLabels', customerLabels);
-  console.log('DEBUG: customerDataArr', customerDataArr);
-  console.log('DEBUG: customerTableRows', customerLabels.map((label, idx) => ({ label, count: customerDataArr[idx], percent: customerPercentArr[idx] })));
+
+  // Move customerTableRows calculation to useMemo
+  const customerTableRows = React.useMemo(() => {
+    return customerLabels.map((label, idx) => ({
+      label,
+      count: customerDataArr[idx],
+      percent: customerPercentArr[idx],
+    }));
+  }, [customerLabels, customerDataArr, customerPercentArr]);
+
+  // Log customerTableRows before rendering
+  console.log('DEBUG: customerTableRows (useMemo)', customerTableRows);
+
   const customerData = {
     labels: customerLabels,
     datasets: [{
@@ -642,23 +655,6 @@ const Analytics: React.FC = () => {
       }]
     };
   }, [filteredRequirements]);
-
-  // Sort customer table view
-  const customerTableRows = useMemo(() => {
-    const rows = customerLabels.map((label, idx) => ({
-      label,
-      count: customerDataArr[idx],
-      percent: customerPercentArr[idx],
-    }));
-    rows.sort((a, b) => {
-      if (customerSort === 'count') {
-        return customerSortOrder === 'desc' ? b.count - a.count : a.count - b.count;
-      } else {
-        return customerSortOrder === 'desc' ? b.percent - a.percent : a.percent - b.percent;
-      }
-    });
-    return rows;
-  }, [customerLabels, customerDataArr, customerPercentArr, customerSort, customerSortOrder]);
 
   // Calculate rough estimate by customer
   const customerRoughEstimate: Record<string, number> = {};

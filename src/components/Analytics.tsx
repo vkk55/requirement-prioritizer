@@ -925,7 +925,7 @@ const Analytics: React.FC = () => {
               )
             ) : (
               <Box sx={{ mt: 2, px: 3, pb: 3 }}>
-                <TableContainer component={Paper}>
+                {/* <TableContainer component={Paper}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -957,7 +957,7 @@ const Analytics: React.FC = () => {
                       })}
                     </TableBody>
                   </Table>
-                </TableContainer>
+                </TableContainer> */}
               </Box>
             )}
           </Card>

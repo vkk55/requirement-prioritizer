@@ -228,66 +228,24 @@ const Analytics: React.FC = () => {
   console.log('DEBUG: normalizedRequirements', normalizedRequirements);
 
   // --- Requirements by Customer (unique requirements only) ---
-  const customerCount: Record<string, Set<string>> = {};
-  normalizedRequirements.forEach(req => {
-    if (!req || typeof req.key !== 'string' || !req.key.trim()) {
-      console.warn('Skipping requirement with invalid key:', req);
-      return;
-    }
-    let customers: string[] = [];
-    if (Array.isArray(req.customers) && req.customers.length > 0) {
-      customers = req.customers.filter(c => typeof c === 'string' && c.trim());
-    } else if (typeof req.relatedCustomers === 'string' && req.relatedCustomers.trim()) {
-      customers = req.relatedCustomers.split(',').map(c => c.trim()).filter(Boolean);
-    } else {
-      // Log requirements with no customer info for inspection
-      console.warn('Requirement has no customers or relatedCustomers:', req);
-    }
-    if (!Array.isArray(customers)) {
-      console.warn('Skipping requirement with invalid customers:', req);
-      return;
-    }
-    customers.forEach(customer => {
-      if (customer) {
-        if (!customerCount[customer]) customerCount[customer] = new Set();
-        customerCount[customer].add(req.key);
-      }
-    });
-  });
-  const customerEntries = Array.isArray(Object.entries(customerCount)) ? Object.entries(customerCount).sort((a, b) => b[1].size - a[1].size) : [];
-  const customerLabels = Array.isArray(customerEntries) ? customerEntries.map(([label]) => label) : [];
-  const customerDataArr = Array.isArray(customerEntries) ? customerEntries.map(([, set]) => set.size) : [];
-  const customerPercentArr = Array.isArray(customerDataArr) ? customerDataArr.map(count =>
-    totalRequirements > 0 ? (count / totalRequirements) * 100 : 0
-  ) : [];
-
-  // Move customerTableRows calculation to useMemo
-  const customerTableRows = React.useMemo(() => {
-    return customerLabels.map((label, idx) => ({
-      label,
-      count: customerDataArr[idx],
-      percent: customerPercentArr[idx],
-    }));
-  }, [customerLabels, customerDataArr, customerPercentArr]);
-
-  // Log customerTableRows before rendering
-  console.log('DEBUG: customerTableRows (useMemo)', customerTableRows);
+  // const customerCount: Record<string, Set<string>> = {};
+  // normalizedRequirements.forEach(...)
+  // const customerEntries = ...
+  // const customerLabels = ...
+  // const customerDataArr = ...
+  // const customerPercentArr = ...
+  // const customerTableRows = ...
+  // console.log('DEBUG: customerTableRows (useMemo)', customerTableRows);
 
   const customerData = {
-    labels: customerLabels,
+    labels: [],
     datasets: [{
-      data: customerDataArr,
-      backgroundColor: [
-        'rgba(255, 159, 64, 0.8)',
-        'rgba(75, 192, 192, 0.8)',
-        'rgba(54, 162, 235, 0.8)',
-        'rgba(153, 102, 255, 0.8)',
-        'rgba(255, 99, 132, 0.8)',
-      ],
+      data: [],
+      backgroundColor: [],
       borderWidth: 1,
     }],
   };
-  const hasCustomerData = customerDataArr.length > 0;
+  const hasCustomerData = false;
   const customerBarOptions = {
     indexAxis: 'x' as const,
     responsive: true,

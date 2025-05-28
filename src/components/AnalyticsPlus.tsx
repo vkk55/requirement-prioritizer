@@ -80,7 +80,8 @@ const AnalyticsPlus: React.FC = () => {
 
   // Unique customer extraction and requirement count
   const customerStats = useMemo(() => {
-    const customerMap: Record<string, Set<string>> = {};
+    // 1. Build a unique customer set from all relatedCustomers fields
+    const customerSet = new Set<string>();
     filteredRequirements.forEach((req) => {
       let customers: string[] = [];
       if (Array.isArray(req.customers)) {
@@ -89,16 +90,28 @@ const AnalyticsPlus: React.FC = () => {
         customers = req.relatedCustomers.split(",").map((c) => c.trim()).filter(Boolean);
       }
       customers.forEach((customer) => {
-        if (!customerMap[customer]) customerMap[customer] = new Set();
-        customerMap[customer].add(req.key);
+        if (customer) customerSet.add(customer);
       });
     });
-    const total = filteredRequirements.length || 1;
-    const stats = Object.entries(customerMap).map(([customer, reqSet]) => ({
-      customer,
-      count: reqSet.size,
-      percent: (reqSet.size / total) * 100,
-    }));
+    const uniqueCustomers = Array.from(customerSet);
+    // 2. For each customer, count how many requirements they appear in
+    const stats = uniqueCustomers.map((customer) => {
+      let count = 0;
+      filteredRequirements.forEach((req) => {
+        let customers: string[] = [];
+        if (Array.isArray(req.customers)) {
+          customers = req.customers;
+        } else if (typeof req.relatedCustomers === "string" && req.relatedCustomers.trim()) {
+          customers = req.relatedCustomers.split(",").map((c) => c.trim()).filter(Boolean);
+        }
+        if (customers.includes(customer)) count++;
+      });
+      return {
+        customer,
+        count,
+        percent: filteredRequirements.length > 0 ? (count / filteredRequirements.length) * 100 : 0,
+      };
+    });
     // Sort by count descending
     stats.sort((a, b) => b.count - a.count);
     return stats;

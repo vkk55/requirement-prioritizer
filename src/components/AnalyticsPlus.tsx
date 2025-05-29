@@ -47,6 +47,9 @@ const AnalyticsPlus: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"All" | "InPlan">("InPlan");
   const [view, setView] = useState<"chart" | "table">("chart");
+  const [squads, setSquads] = useState<{ name: string; capacity: number }[]>([]);
+  const [squadsLoading, setSquadsLoading] = useState(true);
+  const [squadsError, setSquadsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +70,28 @@ const AnalyticsPlus: React.FC = () => {
       }
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchSquads = async () => {
+      setSquadsLoading(true);
+      setSquadsError(null);
+      try {
+        const res = await fetch('/api/squads');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setSquads(data.data);
+        } else {
+          setSquads([]);
+        }
+      } catch (err) {
+        setSquadsError('Failed to fetch squads');
+        setSquads([]);
+      } finally {
+        setSquadsLoading(false);
+      }
+    };
+    fetchSquads();
   }, []);
 
   const filteredRequirements = useMemo(() =>
@@ -267,6 +292,12 @@ const AnalyticsPlus: React.FC = () => {
     },
   }), [roughEstimateStats, totalRoughEstimate]);
 
+  // Use squad capacity sum for total capacity
+  const totalSquadCapacity = useMemo(
+    () => squads.reduce((sum, squad) => sum + (parseFloat(squad.capacity as any) || 0), 0),
+    [squads]
+  );
+
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", p: 3 }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>
@@ -346,7 +377,7 @@ const AnalyticsPlus: React.FC = () => {
           Rough Estimate by Customer
         </Typography>
         <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
-          Total Capacity: {totalRoughEstimate.toLocaleString()}
+          Total Capacity: {squadsLoading ? 'Loading...' : squadsError ? squadsError : totalSquadCapacity.toLocaleString()}
         </Typography>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>

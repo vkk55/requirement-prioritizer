@@ -165,6 +165,94 @@ const AnalyticsPlus: React.FC = () => {
     },
   }), [customerStats]);
 
+  // --- Rough Estimate by Customer ---
+  const roughEstimateStats = useMemo(() => {
+    // 1. Build a unique customer set from all relatedcustomers fields
+    const customerSet = new Set<string>();
+    filteredRequirements.forEach((req) => {
+      let customers: string[] = [];
+      if (Array.isArray((req as any).customers)) {
+        customers = (req as any).customers;
+      } else if (typeof (req as any).relatedcustomers === "string" && (req as any).relatedcustomers.trim()) {
+        customers = (req as any).relatedcustomers.split(",").map((c: string) => c.trim()).filter(Boolean);
+      }
+      customers.forEach((customer) => {
+        if (customer) customerSet.add(customer);
+      });
+    });
+    const uniqueCustomers = Array.from(customerSet);
+    // 2. For each customer, sum roughEstimate for requirements they appear in
+    const stats = uniqueCustomers.map((customer) => {
+      let sum = 0;
+      filteredRequirements.forEach((req) => {
+        let customers: string[] = [];
+        if (Array.isArray((req as any).customers)) {
+          customers = (req as any).customers;
+        } else if (typeof (req as any).relatedcustomers === "string" && (req as any).relatedcustomers.trim()) {
+          customers = (req as any).relatedcustomers.split(",").map((c: string) => c.trim()).filter(Boolean);
+        }
+        if (customers.includes(customer)) {
+          const re = parseFloat((req as any).roughEstimate || (req as any).roughestimate || '0') || 0;
+          sum += re;
+        }
+      });
+      return {
+        customer,
+        sum,
+      };
+    });
+    // Sort by sum descending
+    stats.sort((a, b) => b.sum - a.sum);
+    return stats;
+  }, [filteredRequirements]);
+
+  const roughEstimateChartData = useMemo(() => ({
+    labels: roughEstimateStats.map((s) => s.customer),
+    datasets: [
+      {
+        label: 'Rough Estimate',
+        data: roughEstimateStats.map((s) => s.sum),
+        backgroundColor: 'rgba(255, 206, 86, 0.7)',
+        borderRadius: 6,
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+        },
+      },
+    ],
+  }), [roughEstimateStats]);
+
+  const roughEstimateChartOptions = useMemo(() => ({
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            const idx = context.dataIndex;
+            const stat = roughEstimateStats[idx];
+            return `${stat.sum}`;
+          },
+        },
+      },
+      datalabels: {
+        anchor: 'center',
+        align: 'center',
+        color: '#fff',
+        font: { weight: 'bold' as const, size: 14 },
+        formatter: (value: number, context: any) => {
+          const idx = context.dataIndex;
+          const stat = roughEstimateStats[idx];
+          return `${stat.sum}`;
+        },
+      },
+    },
+    scales: {
+      x: { beginAtZero: true, title: { display: false } },
+      y: { beginAtZero: true, title: { display: false }, ticks: { precision: 0 } },
+    },
+  }), [roughEstimateStats]);
+
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", p: 3 }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>
@@ -195,6 +283,9 @@ const AnalyticsPlus: React.FC = () => {
         </ToggleButtonGroup>
       </Box>
       <Card sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Requirements by Customer
+        </Typography>
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
             <CircularProgress />
@@ -203,9 +294,6 @@ const AnalyticsPlus: React.FC = () => {
           <Alert severity="error">{error}</Alert>
         ) : (
           <>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Requirements by Customer
-            </Typography>
             {view === "chart" ? (
               <Box sx={{ width: "100%", height: 400 }}>
                 <Bar data={chartData} options={chartOptions} />
@@ -226,6 +314,46 @@ const AnalyticsPlus: React.FC = () => {
                         <TableCell>{row.customer}</TableCell>
                         <TableCell align="right">{row.count}</TableCell>
                         <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </>
+        )}
+      </Card>
+      {/* New Rough Estimate by Customer report */}
+      <Card sx={{ p: 3, mt: 4 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Rough Estimate by Customer
+        </Typography>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert severity="error">{error}</Alert>
+        ) : (
+          <>
+            {view === 'chart' ? (
+              <Box sx={{ width: '100%', height: 400 }}>
+                <Bar data={roughEstimateChartData} options={roughEstimateChartOptions} />
+              </Box>
+            ) : (
+              <TableContainer component={Paper} sx={{ mt: 2 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Customer Name</TableCell>
+                      <TableCell align="right">Rough Estimate</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {roughEstimateStats.map((row) => (
+                      <TableRow key={row.customer}>
+                        <TableCell>{row.customer}</TableCell>
+                        <TableCell align="right">{row.sum}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

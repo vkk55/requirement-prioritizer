@@ -206,6 +206,10 @@ const AnalyticsPlus: React.FC = () => {
     return stats;
   }, [filteredRequirements]);
 
+  // Calculate totals for display
+  const totalRequirements = filteredRequirements.length;
+  const totalRoughEstimate = useMemo(() => roughEstimateStats.reduce((sum, s) => sum + s.sum, 0), [roughEstimateStats]);
+
   const roughEstimateChartData = useMemo(() => ({
     labels: roughEstimateStats.map((s) => s.customer),
     datasets: [
@@ -231,7 +235,8 @@ const AnalyticsPlus: React.FC = () => {
           label: (context: any) => {
             const idx = context.dataIndex;
             const stat = roughEstimateStats[idx];
-            return `${stat.sum}`;
+            const percent = totalRoughEstimate > 0 ? (stat.sum / totalRoughEstimate) * 100 : 0;
+            return `${stat.sum.toLocaleString()} (${percent.toFixed(1)}%)`;
           },
         },
       },
@@ -243,7 +248,8 @@ const AnalyticsPlus: React.FC = () => {
         formatter: (value: number, context: any) => {
           const idx = context.dataIndex;
           const stat = roughEstimateStats[idx];
-          return `${stat.sum}`;
+          const percent = totalRoughEstimate > 0 ? (stat.sum / totalRoughEstimate) * 100 : 0;
+          return `${stat.sum.toLocaleString()}\n${percent.toFixed(1)}%`;
         },
       },
     },
@@ -251,7 +257,7 @@ const AnalyticsPlus: React.FC = () => {
       x: { beginAtZero: true, title: { display: false } },
       y: { beginAtZero: true, title: { display: false }, ticks: { precision: 0 } },
     },
-  }), [roughEstimateStats]);
+  }), [roughEstimateStats, totalRoughEstimate]);
 
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", p: 3 }}>
@@ -283,8 +289,11 @@ const AnalyticsPlus: React.FC = () => {
         </ToggleButtonGroup>
       </Box>
       <Card sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>
           Requirements by Customer
+        </Typography>
+        <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+          Total Requirements: {totalRequirements}
         </Typography>
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
@@ -325,8 +334,11 @@ const AnalyticsPlus: React.FC = () => {
       </Card>
       {/* New Rough Estimate by Customer report */}
       <Card sx={{ p: 3, mt: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>
           Rough Estimate by Customer
+        </Typography>
+        <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+          Total Capacity: {totalRoughEstimate.toLocaleString()}
         </Typography>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -347,13 +359,15 @@ const AnalyticsPlus: React.FC = () => {
                     <TableRow>
                       <TableCell>Customer Name</TableCell>
                       <TableCell align="right">Rough Estimate</TableCell>
+                      <TableCell align="right">% of Total</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {roughEstimateStats.map((row) => (
                       <TableRow key={row.customer}>
                         <TableCell>{row.customer}</TableCell>
-                        <TableCell align="right">{row.sum}</TableCell>
+                        <TableCell align="right">{row.sum.toLocaleString()}</TableCell>
+                        <TableCell align="right">{totalRoughEstimate > 0 ? ((row.sum / totalRoughEstimate) * 100).toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

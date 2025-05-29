@@ -208,7 +208,15 @@ const AnalyticsPlus: React.FC = () => {
 
   // Calculate totals for display
   const totalRequirements = filteredRequirements.length;
-  const totalRoughEstimate = useMemo(() => roughEstimateStats.reduce((sum, s) => sum + s.sum, 0), [roughEstimateStats]);
+  const totalRoughEstimate = useMemo(
+    () =>
+      filteredRequirements.reduce(
+        (sum, req) =>
+          sum + (parseFloat((req as any).roughEstimate || (req as any).roughestimate || '0') || 0),
+        0
+      ),
+    [filteredRequirements]
+  );
 
   const roughEstimateChartData = useMemo(() => ({
     labels: roughEstimateStats.map((s) => s.customer),

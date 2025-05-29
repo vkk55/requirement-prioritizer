@@ -298,6 +298,160 @@ const AnalyticsPlus: React.FC = () => {
     [squads]
   );
 
+  // --- Requirements by Product Owner ---
+  const productOwnerStats = useMemo(() => {
+    // 1. Build a unique product owner set
+    const ownerSet = new Set<string>();
+    filteredRequirements.forEach((req) => {
+      const owner = (req as any).productOwner || (req as any).productowner || 'Unassigned';
+      if (owner) ownerSet.add(owner);
+    });
+    const uniqueOwners = Array.from(ownerSet);
+    // 2. For each owner, count requirements
+    const stats = uniqueOwners.map((owner) => {
+      let count = 0;
+      filteredRequirements.forEach((req) => {
+        const reqOwner = (req as any).productOwner || (req as any).productowner || 'Unassigned';
+        if (reqOwner === owner) count++;
+      });
+      return {
+        owner,
+        count,
+        percent: totalRequirements > 0 ? (count / totalRequirements) * 100 : 0,
+      };
+    });
+    stats.sort((a, b) => b.count - a.count);
+    return stats;
+  }, [filteredRequirements, totalRequirements]);
+
+  const productOwnerChartData = useMemo(() => ({
+    labels: productOwnerStats.map((s) => s.owner),
+    datasets: [
+      {
+        label: '# Requirements',
+        data: productOwnerStats.map((s) => s.count),
+        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+        borderRadius: 6,
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+        },
+      },
+    ],
+  }), [productOwnerStats]);
+
+  const productOwnerChartOptions = useMemo(() => ({
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            const idx = context.dataIndex;
+            const stat = productOwnerStats[idx];
+            return `${stat.count} (${stat.percent.toFixed(1)}%)`;
+          },
+        },
+      },
+      datalabels: {
+        anchor: 'center',
+        align: 'center',
+        color: '#fff',
+        font: { weight: 'bold' as const, size: 14 },
+        formatter: (value: number, context: any) => {
+          const idx = context.dataIndex;
+          const stat = productOwnerStats[idx];
+          return `${stat.count}\n${stat.percent.toFixed(1)}%`;
+        },
+      },
+    },
+    scales: {
+      x: { beginAtZero: true, title: { display: false } },
+      y: { beginAtZero: true, title: { display: false }, ticks: { precision: 0 } },
+    },
+  }), [productOwnerStats]);
+
+  // --- Rough Estimate by Product Owner ---
+  const roughEstimateOwnerStats = useMemo(() => {
+    const ownerSet = new Set<string>();
+    filteredRequirements.forEach((req) => {
+      const owner = (req as any).productOwner || (req as any).productowner || 'Unassigned';
+      if (owner) ownerSet.add(owner);
+    });
+    const uniqueOwners = Array.from(ownerSet);
+    // 2. For each owner, sum roughEstimate for requirements they own
+    const stats = uniqueOwners.map((owner) => {
+      let sum = 0;
+      filteredRequirements.forEach((req) => {
+        const reqOwner = (req as any).productOwner || (req as any).productowner || 'Unassigned';
+        if (reqOwner === owner) {
+          const re = parseFloat((req as any).roughEstimate || (req as any).roughestimate || '0') || 0;
+          sum += re;
+        }
+      });
+      return {
+        owner,
+        sum,
+      };
+    });
+    stats.sort((a, b) => b.sum - a.sum);
+    return stats;
+  }, [filteredRequirements]);
+
+  const totalRoughEstimateOwner = useMemo(
+    () => roughEstimateOwnerStats.reduce((sum, s) => sum + s.sum, 0),
+    [roughEstimateOwnerStats]
+  );
+
+  const roughEstimateOwnerChartData = useMemo(() => ({
+    labels: roughEstimateOwnerStats.map((s) => s.owner),
+    datasets: [
+      {
+        label: 'Rough Estimate',
+        data: roughEstimateOwnerStats.map((s) => s.sum),
+        backgroundColor: 'rgba(255, 159, 64, 0.7)',
+        borderRadius: 6,
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+        },
+      },
+    ],
+  }), [roughEstimateOwnerStats]);
+
+  const roughEstimateOwnerChartOptions = useMemo(() => ({
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            const idx = context.dataIndex;
+            const stat = roughEstimateOwnerStats[idx];
+            const percent = totalRoughEstimateOwner > 0 ? (stat.sum / totalRoughEstimateOwner) * 100 : 0;
+            return `${stat.sum.toLocaleString()} (${percent.toFixed(1)}%)`;
+          },
+        },
+      },
+      datalabels: {
+        anchor: 'center',
+        align: 'center',
+        color: '#fff',
+        font: { weight: 'bold' as const, size: 14 },
+        formatter: (value: number, context: any) => {
+          const idx = context.dataIndex;
+          const stat = roughEstimateOwnerStats[idx];
+          const percent = totalRoughEstimateOwner > 0 ? (stat.sum / totalRoughEstimateOwner) * 100 : 0;
+          return `${stat.sum.toLocaleString()}\n${percent.toFixed(1)}%`;
+        },
+      },
+    },
+    scales: {
+      x: { beginAtZero: true, title: { display: false } },
+      y: { beginAtZero: true, title: { display: false }, ticks: { precision: 0 } },
+    },
+  }), [roughEstimateOwnerStats, totalRoughEstimateOwner]);
+
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", p: 3 }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>
@@ -409,6 +563,99 @@ const AnalyticsPlus: React.FC = () => {
                         <TableCell align="right">{totalRoughEstimate > 0 ? ((row.sum / totalRoughEstimate) * 100).toFixed(1) : '0.0'}%</TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </>
+        )}
+      </Card>
+      {/* Requirements by Product Owner report */}
+      <Card sx={{ p: 3, mt: 4 }}>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>
+          Requirements by Product Owner
+        </Typography>
+        <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+          Total Requirements: {totalRequirements}
+        </Typography>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert severity="error">{error}</Alert>
+        ) : (
+          <>
+            {view === 'chart' ? (
+              <Box sx={{ width: '100%', height: 400 }}>
+                <Bar data={productOwnerChartData} options={productOwnerChartOptions} />
+              </Box>
+            ) : (
+              <TableContainer component={Paper} sx={{ mt: 2 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Product Owner</TableCell>
+                      <TableCell align="right"># Requirements</TableCell>
+                      <TableCell align="right">% of Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {productOwnerStats.map((row) => (
+                      <TableRow key={row.owner}>
+                        <TableCell>{row.owner}</TableCell>
+                        <TableCell align="right">{row.count}</TableCell>
+                        <TableCell align="right">{row.percent.toFixed(1)}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </>
+        )}
+      </Card>
+      {/* Rough Estimate by Product Owner report */}
+      <Card sx={{ p: 3, mt: 4 }}>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>
+          Rough Estimate by Product Owner
+        </Typography>
+        <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+          Total Rough Estimate: {totalRoughEstimateOwner.toLocaleString()}
+        </Typography>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert severity="error">{error}</Alert>
+        ) : (
+          <>
+            {view === 'chart' ? (
+              <Box sx={{ width: '100%', height: 400 }}>
+                <Bar data={roughEstimateOwnerChartData} options={roughEstimateOwnerChartOptions} />
+              </Box>
+            ) : (
+              <TableContainer component={Paper} sx={{ mt: 2 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Product Owner</TableCell>
+                      <TableCell align="right">Rough Estimate</TableCell>
+                      <TableCell align="right">% of Total</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {roughEstimateOwnerStats.map((row) => {
+                      const percent = totalRoughEstimateOwner > 0 ? (row.sum / totalRoughEstimateOwner) * 100 : 0;
+                      return (
+                        <TableRow key={row.owner}>
+                          <TableCell>{row.owner}</TableCell>
+                          <TableCell align="right">{row.sum.toLocaleString()}</TableCell>
+                          <TableCell align="right">{percent.toFixed(1)}%</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>

@@ -4,7 +4,6 @@ import { Settings } from './components/Settings';
 import ImportRequirements from './components/ImportRequirements';
 import { Requirements } from './components/Requirements';
 import { StackRank } from './components/StackRank';
-import Analytics from './components/Analytics';
 import AnalyticsPlus from './components/AnalyticsPlus';
 import PasswordGate from './components/PasswordGate';
 import Plan from './components/Plan';
@@ -97,17 +96,13 @@ export default function App() {
               <Tab label="Score" />
               <Tab label="Rank" />
               <Tab label="Plan" />
-              <Tab label="Analytics" />
               <Tab label="Analytics+" />
             </Tabs>
           </AppBar>
-          {tabValue === 5 || tabValue === 6 ? (
+          {tabValue === 5 ? (
             <Container maxWidth={false} sx={{ width: '100vw', px: 0, mx: 0, mt: 5, mb: 5, overflow: 'visible' }}>
               <Card elevation={3} sx={{ p: 0, borderRadius: 4, minHeight: '70vh', boxShadow: 4, width: '100vw', overflow: 'visible' }}>
                 <TabPanel value={tabValue} index={5}>
-                  <Analytics />
-                </TabPanel>
-                <TabPanel value={tabValue} index={6}>
                   <AnalyticsPlus />
                 </TabPanel>
               </Card>

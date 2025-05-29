@@ -809,13 +809,21 @@ pool.query(`
 app.post('/api/requirements', async (req, res) => {
   const r = req.body;
   try {
+    // Defensive: If relatedCustomers is null/undefined, fetch current value from DB
+    let relatedCustomers = r.relatedCustomers;
+    if ((relatedCustomers === null || relatedCustomers === undefined) && r.key) {
+      const existing = await pool.query('SELECT "relatedCustomers" FROM requirements WHERE key = $1', [r.key]);
+      if (existing.rows.length > 0) {
+        relatedCustomers = existing.rows[0].relatedcustomers;
+      }
+    }
     await pool.query(
       `INSERT INTO requirements (key, summary, priority, status, assignee, created, updated, timeSpent, labels, roughEstimate, relatedCustomers, prioritization, weight, score, criteria, lastScored, rank, comments, "InPlan?", "MinorRelCandidate?", "Team(s)")
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
        ON CONFLICT (key) DO UPDATE SET
          summary=EXCLUDED.summary, priority=EXCLUDED.priority, status=EXCLUDED.status, assignee=EXCLUDED.assignee, updated=EXCLUDED.updated, timeSpent=EXCLUDED.timeSpent, labels=EXCLUDED.labels, roughEstimate=EXCLUDED.roughEstimate, relatedCustomers=EXCLUDED.relatedCustomers, prioritization=EXCLUDED.prioritization, weight=EXCLUDED.weight, score=EXCLUDED.score, criteria=EXCLUDED.criteria, lastScored=EXCLUDED.lastScored, rank=EXCLUDED.rank, comments=EXCLUDED.comments, "InPlan?"=EXCLUDED."InPlan?", "MinorRelCandidate?"=EXCLUDED."MinorRelCandidate?", "Team(s)"=EXCLUDED."Team(s)"
       `,
-      [r.key, r.summary, r.priority, r.status, r.assignee, r.created, r.updated, r.timeSpent, r.labels, r.roughEstimate, r.relatedCustomers, r.prioritization, r.weight, r.score, r.criteria, r.lastScored, r.rank, r.comments, r["InPlan?"], r["MinorRelCandidate?"], r["Team(s)"]]
+      [r.key, r.summary, r.priority, r.status, r.assignee, r.created, r.updated, r.timeSpent, r.labels, r.roughEstimate, relatedCustomers, r.prioritization, r.weight, r.score, r.criteria, r.lastScored, r.rank, r.comments, r["InPlan?"], r["MinorRelCandidate?"], r["Team(s)"]]
     );
     res.json({ success: true });
   } catch (error) {

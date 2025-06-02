@@ -7,6 +7,9 @@ const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -14,6 +17,14 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
+
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+const OTP_EXPIRY_MINUTES = 5;
+const OTP_LENGTH = 6;
+const OTP_RATE_LIMIT = 3; // max OTPs per email per hour
+
+// In-memory rate limit (for demo; use Redis for production)
+const otpRequestCounts = {};
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -60,6 +71,98 @@ app.use(express.json());
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));
 }
+
+// Create login_otps table if not exists
+pool.query(`
+  CREATE TABLE IF NOT EXISTS login_otps (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL,
+    otp_hash TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE
+  )
+`);
+
+// Helper: generate random 6-digit OTP
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Helper: send OTP email (configure as needed)
+async function sendOtpEmail(email, otp) {
+  // Configure your SMTP or use SendGrid/Mailgun/SES
+  const transporter = nodemailer.createTransport({
+    service: 'gmail', // or 'SendGrid', 'Mailgun', etc.
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: email,
+    subject: 'Your Login Code',
+    text: `Your one-time login code is: ${otp}\nThis code will expire in ${OTP_EXPIRY_MINUTES} minutes.`,
+  });
+}
+
+// Endpoint: Request OTP
+app.post('/api/auth/request-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string' || !email.endsWith('@viseven.com')) {
+    return res.status(400).json({ error: 'Only viseven.com email addresses are allowed.' });
+  }
+  // Rate limit (basic, per hour)
+  const now = Date.now();
+  otpRequestCounts[email] = otpRequestCounts[email] || [];
+  otpRequestCounts[email] = otpRequestCounts[email].filter(ts => now - ts < 60 * 60 * 1000);
+  if (otpRequestCounts[email].length >= OTP_RATE_LIMIT) {
+    return res.status(429).json({ error: 'Too many OTP requests. Please try again later.' });
+  }
+  otpRequestCounts[email].push(now);
+  // Generate and hash OTP
+  const otp = generateOTP();
+  const otp_hash = await bcrypt.hash(otp, 10);
+  const expires_at = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+  // Store in DB
+  await pool.query(
+    'INSERT INTO login_otps (email, otp_hash, expires_at, used) VALUES ($1, $2, $3, false)',
+    [email, otp_hash, expires_at]
+  );
+  // Send email
+  try {
+    await sendOtpEmail(email, otp);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to send OTP email.' });
+  }
+  res.json({ success: true, message: 'OTP sent to your email.' });
+});
+
+// Endpoint: Verify OTP
+app.post('/api/auth/verify-otp', async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and OTP are required.' });
+  }
+  // Find latest, unused, unexpired OTP for this email
+  const result = await pool.query(
+    'SELECT * FROM login_otps WHERE email = $1 AND used = false AND expires_at > NOW() ORDER BY expires_at DESC LIMIT 1',
+    [email]
+  );
+  if (result.rows.length === 0) {
+    return res.status(400).json({ error: 'No valid OTP found or OTP expired.' });
+  }
+  const otpRow = result.rows[0];
+  const valid = await bcrypt.compare(otp, otpRow.otp_hash);
+  if (!valid) {
+    return res.status(401).json({ error: 'Invalid OTP.' });
+  }
+  // Mark OTP as used
+  await pool.query('UPDATE login_otps SET used = true WHERE id = $1', [otpRow.id]);
+  // Issue JWT (or session)
+  const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '8h' });
+  res.json({ success: true, token });
+});
 
 // Helper function to normalize column names
 function normalizeColumnNames(data) {

@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
 const { Pool } = require('pg');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 
